@@ -10,7 +10,8 @@
     "drop_pct": 20.0,
     "baseline_days": 30,
     "max_results_per_source": 15,
-    "top_n_report": 5
+    "top_n_report": 5,
+    "max_miles": 25.0
   },
   "notify": {
     "discord_target": "000000000000000000",
@@ -38,7 +39,8 @@
         "case for",
         "compressed gas"
       ],
-      "notes": "Wolfbox MF50/MF60 or Fanttik B10 Pro class; wishlist budget ~$35"
+      "notes": "Wolfbox MF50/MF60 or Fanttik B10 Pro class; wishlist budget ~$35",
+      "max_miles": null
     },
     {
       "id": "standing-desk",
@@ -63,7 +65,8 @@
         "drawer",
         "chair"
       ],
-      "notes": "Budget/size not given by user; target is a guess"
+      "notes": "Budget/size not given by user; target is a guess",
+      "max_miles": null
     },
     {
       "id": "laser-1470nm-15w",
@@ -82,7 +85,8 @@
         "1470"
       ],
       "exclude": [],
-      "notes": "Module vs complete system TBD; best seen $450 AS-IS / $700 Lumics 16W (2026-10-04)"
+      "notes": "Module vs complete system TBD; best seen $450 AS-IS / $700 Lumics 16W (2026-10-04)",
+      "max_miles": null
     },
     {
       "id": "bts7960-motor-driver",
@@ -101,7 +105,8 @@
         "bts7960|ibt-2|43a"
       ],
       "exclude": [],
-      "notes": "Replace fried HW-039/IBT-2 on desk controller"
+      "notes": "Replace fried HW-039/IBT-2 on desk controller",
+      "max_miles": null
     },
     {
       "id": "electric-precision-screwdriver",
@@ -122,7 +127,8 @@
         "replacement bit",
         "bit set only"
       ],
-      "notes": "Slim pen, fwd/rev buttons, bit set"
+      "notes": "Slim pen, fwd/rev buttons, bit set",
+      "max_miles": null
     },
     {
       "id": "power-bank-10k",
@@ -132,7 +138,7 @@
       "condition": "any",
       "price_min": 8,
       "price_max": 45,
-      "target_price": 15,
+      "target_price": 10.0,
       "drop_pct": null,
       "must_include": [
         "power bank|portable charger|powerbank|battery pack",
@@ -142,7 +148,8 @@
         "case",
         "cable only"
       ],
-      "notes": "Specs assumed (10k mAh, USB-C PD)"
+      "notes": "Specs assumed (10k mAh, USB-C PD). Target $10 sticker (user 2026-10-06); pickup within 10 mi.",
+      "max_miles": 10.0
     },
     {
       "id": "smart-plug-alexa",
@@ -161,7 +168,8 @@
       "exclude": [
         "adapter only"
       ],
-      "notes": "Single-plug price; multi-packs are cheaper per plug (compare manually)"
+      "notes": "Single-plug price; multi-packs are cheaper per plug (compare manually)",
+      "max_miles": null
     },
     {
       "id": "desktop-pc-64gb-ram",
@@ -187,9 +195,26 @@
         "wanted",
         "iso ",
         "for parts",
-        "barebone"
+        "barebone",
+        "pc parts",
+        "computer parts",
+        "parts:",
+        "part out",
+        "parting out",
+        "selling parts",
+        "motherboard",
+        "up to 64gb",
+        "up to 128gb",
+        "max 64gb",
+        "max 128gb",
+        "supports 64gb",
+        "supports 128gb",
+        "support 64gb",
+        "support 128gb",
+        "supports up to"
       ],
-      "notes": "User: <$30, >=64GB RAM, >=512GB storage (knowingly unrealistic). price_max 250 so report shows nearest misses; alerts only <= $30. Storage not reliably in titles - verify per listing."
+      "notes": "User: <$30, >=64GB RAM, >=512GB storage (knowingly unrealistic). price_max 250 so report shows nearest misses; alerts only <= $30. Storage not reliably in titles - verify per listing. Parts sales list one per-part price for a whole build - excluded (user 2026-10-06).",
+      "max_miles": 40.0
     }
   ]
 }

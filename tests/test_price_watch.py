@@ -64,7 +64,7 @@ def test_fetch_filters_dedupes_and_uses_landed_price() -> None:
     item = WatchItem("d", "air duster", exclude=["case"])
     res = asyncio.run(fetch_item(Fake(), item, D))
     assert [o.listing_id for o in res.observations] == ["1"]
-    assert res.observations[0].price == 21.88
+    assert res.observations[0].price == 20.0  # sticker, not tax-inclusive 21.88
     assert res.dropped == {"excluded_keyword": 1, "no_price": 1}
     assert res.source_errors == {"offerup": "boom"}
 
@@ -169,10 +169,11 @@ def test_fb_private_sale_price_has_no_sales_tax() -> None:
     assert res.observations[0].price == 20.0
 
 
-def test_fb_pickup_outside_bay_area_dropped_but_shippable_kept() -> None:
-    res = asyncio.run(fetch_item(FakeFB(), WatchItem("d", "air duster"), D))
-    assert [(o.listing_id, o.location) for o in res.observations] == [
-        ("local", "San Jose, California"), ("ships", "Shelton, Washington (ships)")]
+def test_fb_pickup_beyond_max_miles_dropped_but_shippable_kept() -> None:
+    miles = {"San Jose, California": 6.0, "Sacramento, California": 95.0}
+    res = asyncio.run(fetch_item(FakeFB(), WatchItem("d", "air duster", max_miles=10), D,
+                                 distance=lambda loc: miles.get(loc)))
+    assert [(o.listing_id, o.distance_mi) for o in res.observations] == [("local", 6.0), ("ships", None)]
 
 
 # --- review follow-ups: re-alert semantics, cap, run loop delivery -------------
@@ -212,10 +213,9 @@ def test_history_uses_calendar_window(store: Store) -> None:
     assert [r[1] for r in store.history("duster", 30)] == [40.0]
 
 
-def test_locality_matches_user_cities_case_insensitively() -> None:
-    from price_watch.fetch import locality_reason
-    listing = {"source": "facebook_marketplace", "location": "Santa Cruz, CA", "shipping": "Local pickup"}
-    assert locality_reason(listing, ["Santa Cruz"]) is None
+def test_pickup_with_unknown_distance_is_dropped() -> None:
+    res = asyncio.run(fetch_item(FakeFB(), WatchItem("d", "air duster"), D, distance=lambda loc: None))
+    assert res.dropped == {"distance_unknown": 2}
 
 
 class FakeService:
@@ -303,3 +303,200 @@ def test_official_ebay_replaces_public_scrape_when_configured() -> None:
 def test_unconfigured_sources_are_skipped() -> None:
     from price_watch.fetch import resolve_sources
     assert resolve_sources(["ebay_public", "serpapi_google_shopping"], {"ebay_public"}) == ["ebay_public"]
+
+
+# --- distance, geocoding, Amazon cheapest-first -----------------------------------
+def test_item_max_miles_overrides_default() -> None:
+    miles = {"San Jose, California": 6.0, "Sacramento, California": 20.0}
+    res = asyncio.run(fetch_item(FakeFB(), WatchItem("d", "air duster"), Defaults(max_miles=25), distance=miles.get))
+    assert [o.listing_id for o in res.observations] == ["local", "far", "ships"]
+
+
+def test_normalize_place_handles_each_source_format() -> None:
+    from price_watch.geo import normalize_place
+    assert [normalize_place(x) for x in ["San Jose, California", "Santa Clara, CA", "sfbay: sunset / parkside",
+                                         "sfbay", "Shelton, Washington (ships)", None]] == [
+        "san jose, california", "santa clara, ca", "sunset, ca", None, "shelton, washington", None]
+
+
+def test_haversine_milpitas_to_pleasanton_is_about_16_miles() -> None:
+    from price_watch.geo import haversine_miles
+    assert round(haversine_miles((37.4000, -121.9000), (37.6624, -121.8747))) == 16
+
+
+class FakeHttp:
+    def __init__(self, rows: list):
+        self.rows, self.calls = rows, 0
+
+    def get(self, url: str, params: dict) -> "FakeHttp":
+        self.calls += 1
+        return self
+
+    def raise_for_status(self) -> None:
+        return None
+
+    def json(self) -> list:
+        return self.rows
+
+
+def test_geocoder_caches_hits(tmp_path: Path) -> None:
+    import sqlite3
+    from price_watch.geo import Geocoder
+    http = FakeHttp([{"lat": "37.6624", "lon": "-121.8747"}])
+    geo = Geocoder(sqlite3.connect(tmp_path / "g.db"), client=http)
+    first, second = geo.distance_miles("Pleasanton, CA"), geo.distance_miles("Pleasanton, CA")
+    assert (first, second, http.calls) == (16.0, 16.0, 1)
+
+
+def test_geocoder_caches_misses_after_unbounded_retry(tmp_path: Path) -> None:
+    import sqlite3
+    from price_watch.geo import Geocoder
+    http = FakeHttp([])
+    geo = Geocoder(sqlite3.connect(tmp_path / "g.db"), client=http)
+    first, second = geo.distance_miles("nowhere, CA"), geo.distance_miles("nowhere, CA")
+    assert (first, second, http.calls) == (None, None, 2)
+
+
+def test_cheapest_url_sorts_by_price_and_filters_band_in_cents() -> None:
+    from price_watch.amazon_cheap import cheapest_url
+    assert cheapest_url("power bank", 8, 45) == \
+        "https://www.amazon.com/s?k=power+bank&s=price-asc-rank&rh=p_36%3A800-4500"
+
+
+def test_parse_cards_reads_asin_price_and_rating() -> None:
+    from price_watch.amazon_cheap import parse_cards
+    html = ('<div data-component-type="s-search-result" data-asin="B0TEST0001"><h2><span>Slim Power Bank 10000mAh'
+            '</span></h2><span class="a-price"><span class="a-offscreen">$9.99</span></span>'
+            '<span class="a-icon-alt">4.3 out of 5 stars</span></div>')
+    [listing] = parse_cards(html, 5)
+    assert (listing.id, listing.price, listing.seller_rating, listing.url) == (
+        "B0TEST0001", 9.99, 4.3, "https://www.amazon.com/dp/B0TEST0001")
+
+
+class FakeAmazon:
+    async def find_best_deals(self, query: str, **kw: object) -> dict:
+        return {"best_deals": [{"listing": {"id": "B1", "source": "amazon", "title": "Power Bank", "url": "u1",
+                                            "price": 17.0}}]}
+
+
+def test_amazon_cheapest_pass_is_merged_and_deduped() -> None:
+    async def cheapest(q: str, lo: object, hi: object, n: int) -> list[dict]:
+        return [{"listing": {"id": "B2", "source": "amazon", "title": "Power Bank", "url": "u2", "price": 9.99}},
+                {"listing": {"id": "B1", "source": "amazon", "title": "Power Bank", "url": "u1", "price": 17.0}}]
+    res = asyncio.run(fetch_item(FakeAmazon(), WatchItem("p", "power bank", sources=["amazon"]), D,
+                                 amazon_cheapest=cheapest))
+    assert sorted(o.listing_id for o in res.observations) == ["B1", "B2"]
+
+
+def test_amazon_cheapest_failure_keeps_featured_results() -> None:
+    async def boom(q: str, lo: object, hi: object, n: int) -> list[dict]:
+        raise RuntimeError("captcha")
+    res = asyncio.run(fetch_item(FakeAmazon(), WatchItem("p", "power bank", sources=["amazon"]), D,
+                                 amazon_cheapest=boom))
+    assert ([o.listing_id for o in res.observations], list(res.source_errors)) == (["B1"], ["amazon_cheapest"])
+
+
+def test_target_compares_sticker_price_before_tax() -> None:
+    class Taxed:
+        async def find_best_deals(self, query: str, **kw: object) -> dict:
+            return {"best_deals": [{"listing": {"id": "B3", "source": "amazon", "title": "Power Bank", "url": "u",
+                                                "price": 9.99, "total_with_tax": 10.93}}]}
+    res = asyncio.run(fetch_item(Taxed(), WatchItem("p", "power bank", sources=["amazon"]), D))
+    assert res.observations[0].price == 9.99
+
+
+# --- review follow-ups: all local sources, geocoder outage, ratings, migration -----
+class FakeLocal:
+    async def find_best_deals(self, query: str, **kw: object) -> dict:
+        mk = lambda i, src, loc: {"listing": {"id": i, "source": src, "title": "Power Bank", "url": i, "price": 10,
+                                              "location": loc, "shipping": "Local pickup"}}
+        return {"best_deals": [mk("cl", "craigslist", "sfbay: pleasanton"), mk("ou", "offerup", "Pleasanton, CA"),
+                               mk("fb", "facebook_marketplace", "Milpitas, California")]}
+
+
+def test_craigslist_and_offerup_pickups_are_distance_filtered_too() -> None:
+    miles = {"sfbay: pleasanton": 16.0, "Pleasanton, CA": 16.0, "Milpitas, California": 1.0}
+    res = asyncio.run(fetch_item(FakeLocal(), WatchItem("p", "power bank", max_miles=10), D, distance=miles.get))
+    assert [o.listing_id for o in res.observations] == ["fb"]
+
+
+def test_non_place_locations_are_not_geocoded() -> None:
+    from price_watch.geo import normalize_place
+    assert [normalize_place(x) for x in ["Remote", "Local pickup", "sfbay: downtown / civic / van ness"]] == [
+        None, None, None]
+
+
+class BrokenHttp:
+    def __init__(self):
+        self.calls = 0
+
+    def get(self, url: str, params: dict) -> None:
+        import httpx
+        self.calls += 1
+        raise httpx.ConnectTimeout("down")
+
+
+def test_geocoder_outage_is_not_cached_and_trips_breaker(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    import sqlite3
+    from price_watch import geo as geo_mod
+    monkeypatch.setattr(geo_mod.time, "sleep", lambda s: None)
+    http = BrokenHttp()
+    g = geo_mod.Geocoder(sqlite3.connect(tmp_path / "g.db"), client=http)
+    results = [g.distance_miles(p) for p in ["a, ca", "a, ca", "b, ca", "c, ca", "d, ca", "e, ca"]]
+    cached = g.conn.execute("SELECT COUNT(*) FROM geocache").fetchone()[0]
+    assert (results, http.calls, cached, g.error is not None) == ([None] * 6, 3, 0, True)
+
+
+def test_geocoder_waits_between_requests(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    import sqlite3
+    from price_watch import geo as geo_mod
+    sleeps: list[float] = []
+    monkeypatch.setattr(geo_mod.time, "sleep", sleeps.append)
+    g = geo_mod.Geocoder(sqlite3.connect(tmp_path / "g.db"), client=FakeHttp([{"lat": "37.5", "lon": "-121.9"}]))
+    g.distance_miles("x, ca")
+    g.distance_miles("y, ca")
+    assert len(sleeps) == 1 and sleeps[0] > 1.0
+
+
+def test_ebay_feedback_percent_is_not_shown_as_stars() -> None:
+    class Ebay:
+        async def find_best_deals(self, query: str, **kw: object) -> dict:
+            return {"best_deals": [{"listing": {"id": "e1", "source": "ebay", "title": "Power Bank", "url": "u",
+                                                "price": 9.0, "seller_rating": 99.8}}]}
+    res = asyncio.run(fetch_item(Ebay(), WatchItem("p", "power bank", sources=["ebay"]), D))
+    assert res.observations[0].rating is None
+
+
+def test_report_shows_distance_and_stars(store: Store) -> None:
+    item = WatchItem("duster", "q")
+    o = obs("a", 20)
+    o.distance_mi, o.rating = 6.4, 4.5
+    s = run_day(store, item, date(2026, 10, 1), [o])
+    assert "| 6 mi | 4.5 |" in report.render([s], datetime(2026, 10, 1, 8), 5)
+
+
+def test_old_tax_inclusive_amazon_rows_migrate_to_sticker(tmp_path: Path) -> None:
+    import sqlite3
+    db = tmp_path / "m.db"
+    with Store(db) as s:
+        s.conn.execute("DELETE FROM meta")
+        run = s.start_run()
+        s.add_observations(run, [Observation("p", "amazon", "B1", "t", "u", 10.93, 9.99, "new", None)],
+                           datetime(2026, 10, 5, 8))
+        s.record_alert("p", "amazon:B1", 10.93, "target_hit")
+        s.conn.commit()
+    with Store(db) as s:
+        prices = (s.conn.execute("SELECT price FROM observations").fetchone()[0],
+                  s.conn.execute("SELECT price FROM alerts_sent").fetchone()[0])
+    assert prices == (9.99, 9.99)
+
+
+def test_amazon_bot_challenge_page_raises(monkeypatch: pytest.MonkeyPatch) -> None:
+    from price_watch import amazon_cheap
+    from shopping_deals_mcp.sources import amazon as amazon_src
+
+    async def captcha(url: str) -> str:
+        return "<html><body>Enter the characters you see below</body></html>"
+    monkeypatch.setattr(amazon_src, "_fetch_with_browser", captcha)
+    with pytest.raises(RuntimeError, match="no result cards"):
+        asyncio.run(amazon_cheap.fetch_cheapest("power bank", 8, 45, 5))
