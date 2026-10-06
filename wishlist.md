@@ -4,7 +4,7 @@ One row per item. Status: `want` → `searching` → `found` → `bought` / `dro
 
 | Item | Max budget | New/used OK? | Must-haves | Status | Best deal so far (price, where, link, date) |
 |------|-----------|--------------|------------|--------|---------------------------------------------|
-| Electric air duster (Wolfbox MF50 or similar) | ~$35 | either | ~110k RPM, brushless, 3 speeds, USB-C, well rated | found | $32 (condition not stated), FB San Mateo, https://www.facebook.com/marketplace/item/1543874493957637 (2026-10-04); new: wolfbox.com $55.99 list, Amazon often ~$28-32 on deal |
+| Electric air duster (Wolfbox MF50 or similar) | ~$35 | either | ~110k RPM, brushless, 3 speeds, USB-C, well rated | dropped | $32 (condition not stated), FB San Mateo, https://www.facebook.com/marketplace/item/1543874493957637 (2026-10-04); new: wolfbox.com $55.99 list, Amazon often ~$28-32 on deal |
 | Standing desk (electric sit-stand) | ? (ask) | either | electric height adjust; size TBD | dropped | $50 used, FB San Jose, https://www.facebook.com/marketplace/item/29120973764155284 (2026-10-04); new: FlexiSpot EN1 48x24 $109.96 Amazon https://www.amazon.com/dp/B08BHPMYGK |
 | 1470 nm 15 W laser | ? (ask) | either | 1470 nm, ~15 W; module vs complete system TBD | dropped | $700 used, eBay Lumics LU1470D160 16W module, https://www.ebay.com/itm/176730578273 (2026-10-04) |
 | Desk motor driver (replace fried BTS7960) + desk cable management | cheap | new | single DC motor, Arduino PWM; supply voltage TBD | dropped | BTS7960 2-pack $14.99 https://www.amazon.com/dp/B0D732VYGZ ; Cytron MD13S $15.30 https://www.amazon.com/dp/B07CW3GRL6 (2026-10-04) |

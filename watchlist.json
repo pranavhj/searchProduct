@@ -21,7 +21,7 @@
     {
       "id": "air-duster",
       "query": "electric air duster 110000 rpm",
-      "enabled": true,
+      "enabled": false,
       "sources": null,
       "condition": "any",
       "price_min": 15,
