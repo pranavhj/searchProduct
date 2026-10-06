@@ -29,6 +29,13 @@ stores every relevant listing in `data/price_watch.db`, writes `reports/price-wa
 and alerts on: price ≤ `target_price`, best ≥ `drop_pct` below the 30-day median (after 3 days),
 or a seen listing cutting its price ≥ `drop_pct`. Alerts → Discord (if `notify.discord_target`
 set) + Windows toast; each listing alerted once per price level.
+- Prices are sticker + shipping, **before tax**; `target_price` compares against that.
+- Local pickup listings (FB/Craigslist/OfferUp) farther than the item's `max_miles` (straight line from
+  Milpitas, geocoded via OpenStreetMap Nominatim, cached in the DB) or with unknown location are dropped;
+  shippable listings are exempt. Default 25 mi; power bank 10, PC 40.
+- Amazon is searched twice: default featured sort + cheapest-first within the item's price band
+  (`tools/price_watch/amazon_cheap.py`) — page 1 of the featured sort misses cheap listings.
+- Watch for per-part pricing (parts sales, motherboards "supporting 64GB"): keep excludes on spec items.
 
 ## Available Automation
 - `pricewatch list | add "query" --target 30 --include "a|b" --exclude x | remove/enable/disable ID | history ID`
