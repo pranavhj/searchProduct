@@ -11,6 +11,7 @@ One row per item. Status: `want` → `searching` → `found` → `bought` / `dro
 | Electric precision screwdriver (slim pen, fwd/rev buttons, bit set) | cheap | either | thin, 2 buttons, decent torque, many bits | found | HOTO 25-in-1 $32.99 Amazon https://www.amazon.com/dp/B09MR5HFPB ; cheapest SHARDEN $19.99 https://www.amazon.com/dp/B0CY2LCWBZ (2026-10-04) |
 | Power bank | cheap | either | capacity/wattage not specified (assumed 10k mAh, USB-C PD) | found | INIU 10000mAh 45W $21.99 Amazon https://www.amazon.com/dp/B0CB1FW5FC ; used: Tzumi 10k USB-C PD $15 FB Fairview https://www.facebook.com/marketplace/item/1604190321416603 (2026-10-05) |
 | Smart plug (works with Alexa) | cheap | either | Alexa-compatible, no hub; qty not given | found | Kasa HS103P2 2-pack $14.99 Amazon https://www.amazon.com/dp/B07B8W2KHZ ; used: Amazon Smart Plug NEW $8 Craigslist Santa Clara (2026-10-05) |
+| Desktop PC | $30 (knowingly unrealistic) | either | ≥64 GB RAM, ≥512 GB storage | searching | none ≤ $30; closest 64 GB: HP Z620 $160 FB WA (far); parts lot $150 CL SF (2026-10-06) |
 
 ## Notes per item
 <!-- ### <Item name>
@@ -119,3 +120,11 @@ One row per item. Status: `want` → `searching` → `found` → `bought` / `dro
   - "Alexa Smart Plug" $5 OfferUp San Jose https://offerup.com/item/detail/f80c87a4-228b-374c-809a-f8e9b51ba882
   - Amazon Smart Plug $10 FB Mountain View https://www.facebook.com/marketplace/item/856371850367085
   - Bundle (TP-Link bulb + Gosund plugs + Amazon plug) $10 FB Danville https://www.facebook.com/marketplace/item/2144310656205987
+
+### Desktop PC (≥64 GB RAM, ≥512 GB storage, < $30) — added 2026-10-06
+- User knows this is unrealistic; watched daily as `desktop-pc-64gb-ram` in watchlist.json (alerts only ≤ $30; report shows matches up to $250).
+- Live search 2026-10-06 (FB/Craigslist/OfferUp/Amazon; eBay blocked): no complete 64 GB desktop anywhere near $30.
+  - Closest real: Craigslist SF "Babied PC Parts: 64gb RAM | 2080 Super | SSD | 4TB NAS" $150 (parts sale, price likely per part) https://www.craigslist.org/view/d/san-francisco-babied-pc-parts-64gb-ram/rwkUzf6qk2NxxTmL9vyjfP
+  - FB Federal Way WA (too far) 16-core HP Z620 64 GB RAM 1.5 TB SSD $160 https://www.facebook.com/marketplace/item/2239136673537508
+  - Cheap DIY angle: 16× 4 GB DDR3 (64 GB) $5 FB Sunnyvale https://www.facebook.com/marketplace/item/1419504083526781 — needs an old DDR3 workstation with 8–16 slots
+  - Typical cheap desktops in area: $80–120 (8–16 GB RAM, 128–256 GB SSD), e.g. Dell OptiPlex 3040 16 GB/256 GB $80 FB Pleasanton https://www.facebook.com/marketplace/item/1121870666903564
