@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 import re
 from dataclasses import dataclass
-from typing import Any, Protocol
+from typing import Any, Awaitable, Callable, Protocol
 
 from price_watch.config import Defaults, WatchItem
 
@@ -22,11 +22,13 @@ class Observation:
     listing_id: str
     title: str
     url: str
-    price: float  # landed: price + shipping (+ est. tax for shipped offers, per service)
+    price: float  # sticker price + shipping, before sales tax
     list_price: float | None
     condition: str
     location: str | None
     deal_score: float | None = None
+    distance_mi: float | None = None  # straight-line miles from home; None for shipped/online
+    rating: float | None = None  # stars out of 5 where the source shows them (Amazon)
 
     @property
     def key(self) -> str:
@@ -62,29 +64,29 @@ def relevance_reason(item: WatchItem, title: str, price: float) -> str | None:
     return None
 
 
-# Person-to-person marketplaces: no sales tax on a private sale, so skip the service's tax estimate.
-PRIVATE_SALE_SOURCES = {"facebook_marketplace", "craigslist", "offerup"}
+# Person-to-person marketplaces: listings are local pickup unless they say shipping is offered.
+LOCAL_SOURCES = {"facebook_marketplace", "craigslist", "offerup"}
+
+DistanceFn = Callable[[str | None], float | None]
+CheapestFn = Callable[[str, float | None, float | None, int], Awaitable[list[dict]]]
 
 
-def _effective(listing: dict) -> float | None:
-    # Shipped FB/OfferUp orders go through the platform and are taxed; only pickup is tax-free.
-    private_pickup = listing.get("source") in PRIVATE_SALE_SOURCES and listing.get("shipping") != "Shipping offered"
-    keys = ("total_price", "price") if private_pickup else ("total_with_tax", "total_price", "price")
-    for k in keys:
+def _sticker(listing: dict) -> float | None:
+    """Price + shipping, before tax: what the listing shows, comparable across sources."""
+    for k in ("total_price", "price"):
         if listing.get(k) is not None:
             return float(listing[k])
     return None
 
 
-def locality_reason(listing: dict, local_cities: list[str]) -> str | None:
-    """FB only: reject pickup-only listings outside the local city list."""
-    if listing.get("source") != "facebook_marketplace" or listing.get("shipping") == "Shipping offered":
-        return None
-    loc = _norm(listing.get("location") or "")
-    if not loc:
-        return None  # unknown location: keep, can't judge
-    city = loc.split(",")[0].strip()
-    return None if city in {c.strip().lower() for c in local_cities} else "outside_area"
+def is_pickup(listing: dict) -> bool:
+    return listing.get("source") in LOCAL_SOURCES and listing.get("shipping") != "Shipping offered"
+
+
+def distance_reason(dist: float | None, max_miles: float) -> str | None:
+    if dist is None:
+        return "distance_unknown"
+    return "too_far" if dist > max_miles else None
 
 
 def resolve_sources(requested: list[str], available: set[str] | None) -> list[str]:
@@ -104,8 +106,10 @@ def resolve_sources(requested: list[str], available: set[str] | None) -> list[st
 
 
 async def fetch_item(service: DealsService, item: WatchItem, defaults: Defaults,
-                     sources: list[str] | None = None) -> FetchResult:
+                     sources: list[str] | None = None, distance: DistanceFn | None = None,
+                     amazon_cheapest: CheapestFn | None = None) -> FetchResult:
     sources = sources or item.sources or defaults.sources
+    max_miles = item.max_miles if item.max_miles is not None else defaults.max_miles
     log.info("fetch item=%s query=%r sources=%s", item.id, item.query, sources)
     result = await service.find_best_deals(
         item.query,
@@ -124,15 +128,25 @@ async def fetch_item(service: DealsService, item: WatchItem, defaults: Defaults,
     observations: list[Observation] = []
     dropped: dict[str, int] = {}
     seen: set[str] = set()
-    deals = result.get("best_deals", [])
+    deals = list(result.get("best_deals", []))
+    if amazon_cheapest is not None and "amazon" in sources:
+        try:
+            deals += await amazon_cheapest(item.query, item.price_min, item.price_max,
+                                           defaults.max_results_per_source)
+        except Exception as exc:  # the featured-sort results above still count
+            log.warning("item=%s amazon cheapest-first failed: %s", item.id, exc)
+            errors = {**errors, "amazon_cheapest": f"{type(exc).__name__}: {exc}"}
     for deal in deals:
         listing = deal["listing"]
-        price = _effective(listing)
+        price = _sticker(listing)
         if price is None:
             dropped["no_price"] = dropped.get("no_price", 0) + 1
             continue
-        reason = relevance_reason(item, listing.get("title", ""), price) or locality_reason(
-            listing, defaults.local_cities)
+        reason = relevance_reason(item, listing.get("title", ""), price)
+        dist = None
+        if not reason and is_pickup(listing) and distance is not None:
+            dist = distance(listing.get("location"))
+            reason = distance_reason(dist, max_miles)
         if reason:
             dropped[reason] = dropped.get(reason, 0) + 1
             continue
@@ -148,6 +162,9 @@ async def fetch_item(service: DealsService, item: WatchItem, defaults: Defaults,
             location=(f"{listing.get('location')} (ships)" if listing.get("shipping") == "Shipping offered"
                       else listing.get("location")),
             deal_score=deal.get("deal_score"),
+            distance_mi=dist,
+            # Amazon gives stars; eBay's seller_rating is a feedback % - not comparable.
+            rating=listing.get("seller_rating") if listing.get("source") == "amazon" else None,
         )
         if obs.key in seen:
             continue

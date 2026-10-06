@@ -2,6 +2,7 @@
 data/
 reports/
 .claude/state/
+.claude/worktrees/
 __pycache__/
 .pytest_cache/
 *.tmp
