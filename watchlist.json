@@ -162,6 +162,34 @@
         "adapter only"
       ],
       "notes": "Single-plug price; multi-packs are cheaper per plug (compare manually)"
+    },
+    {
+      "id": "desktop-pc-64gb-ram",
+      "query": "desktop pc 64gb ram",
+      "enabled": true,
+      "sources": null,
+      "condition": "any",
+      "price_min": null,
+      "price_max": 250.0,
+      "target_price": 30.0,
+      "drop_pct": null,
+      "must_include": [
+        "pc|desktop|computer|workstation|tower|server|optiplex|thinkcentre|elitedesk|precision|z440|z640|z840|mac pro|mac studio",
+        "64gb ram|64gb ddr|64 gb ram|64 gb ddr|96gb ram|96gb ddr|96 gb ram|96 gb ddr|128gb ram|128gb ddr|128 gb ram|128 gb ddr|192gb ram|192gb ddr|192 gb ram|192 gb ddr|256gb ram|256gb ddr|256 gb ram|256 gb ddr"
+      ],
+      "exclude": [
+        "laptop",
+        "notebook",
+        "ram only",
+        "memory kit",
+        "ram kit",
+        "sodimm",
+        "wanted",
+        "iso ",
+        "for parts",
+        "barebone"
+      ],
+      "notes": "User: <$30, >=64GB RAM, >=512GB storage (knowingly unrealistic). price_max 250 so report shows nearest misses; alerts only <= $30. Storage not reliably in titles - verify per listing."
     }
   ]
 }
