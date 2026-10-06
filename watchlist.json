@@ -43,7 +43,7 @@
     {
       "id": "standing-desk",
       "query": "electric standing desk",
-      "enabled": true,
+      "enabled": false,
       "sources": null,
       "condition": "any",
       "price_min": 30,
@@ -68,7 +68,7 @@
     {
       "id": "laser-1470nm-15w",
       "query": "1470nm laser 15W",
-      "enabled": true,
+      "enabled": false,
       "sources": [
         "ebay_public",
         "facebook_marketplace"
@@ -87,7 +87,7 @@
     {
       "id": "bts7960-motor-driver",
       "query": "BTS7960 motor driver",
-      "enabled": true,
+      "enabled": false,
       "sources": [
         "amazon",
         "ebay_public"
@@ -106,7 +106,7 @@
     {
       "id": "electric-precision-screwdriver",
       "query": "electric precision screwdriver",
-      "enabled": true,
+      "enabled": false,
       "sources": null,
       "condition": "any",
       "price_min": 10,
@@ -147,7 +147,7 @@
     {
       "id": "smart-plug-alexa",
       "query": "smart plug alexa",
-      "enabled": true,
+      "enabled": false,
       "sources": null,
       "condition": "any",
       "price_min": 4,
