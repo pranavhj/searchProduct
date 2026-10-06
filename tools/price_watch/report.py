@@ -22,7 +22,10 @@ def _cell(text: str | None) -> str:
 
 def alert_line(a: Alert, md_links: bool = True) -> str:
     link = f"[link]({a.obs.url})" if md_links else f"<{a.obs.url}>"
-    return f"{KIND_LABEL.get(a.kind, a.kind)} — **{a.item_id}**: {a.message} — {_cell(a.obs.title)[:80]} ({a.obs.source}) {link}"
+    where = f", {a.obs.distance_mi:.0f} mi" if a.obs.distance_mi is not None else ""
+    stars = f", {a.obs.rating:.1f}★" if a.obs.rating is not None else ""
+    return (f"{KIND_LABEL.get(a.kind, a.kind)} — **{a.item_id}**: {a.message} — {_cell(a.obs.title)[:80]} "
+            f"({a.obs.source}{where}{stars}) {link}")
 
 
 def render(summaries: list[ItemSummary], run_at: datetime, top_n: int) -> str:
@@ -30,8 +33,10 @@ def render(summaries: list[ItemSummary], run_at: datetime, top_n: int) -> str:
     out = [f"# Price watch — {run_at:%Y-%m-%d %H:%M}", ""]
     out.append(f"{len(summaries)} items checked · {len(alerts)} alert(s)")
     out.append("")
-    out.append("Prices are landed totals (price + shipping + est. tax where the source provides them); "
-               "Amazon prices exclude clip-on coupons. Used listings: verify condition before buying.")
+    out.append("Prices are sticker price + shipping, before sales tax (~9.4% on store purchases; none on private "
+               "pickup). Amazon prices exclude clip-on coupons. Distance is straight-line from home; pickup listings "
+               "beyond each item's max miles are dropped. Used listings: verify condition — and that the price is "
+               "for the whole item, not one part — before buying.")
     out.append("")
     if alerts:
         out += ["## Alerts", ""] + [f"- {alert_line(a)}" for a in alerts] + [""]
@@ -60,10 +65,12 @@ def render(summaries: list[ItemSummary], run_at: datetime, top_n: int) -> str:
             out += ["_No relevant listings this run._", ""]
             continue
         new_keys = {o.key for o in s.new_listings}
-        out += ["| Price | Source | Condition | Location | Title | |", "|---|---|---|---|---|---|"]
+        out += ["| Price | Source | Condition | Location | Dist | ★ | Title | |", "|---|---|---|---|---|---|---|---|"]
         for o in obs:
             tag = " 🆕" if o.key in new_keys else ""
-            out.append(f"| {_money(o.price)} | {o.source} | {_cell(o.condition)} | {_cell(o.location)} | "
+            dist = f"{o.distance_mi:.0f} mi" if o.distance_mi is not None else "—"
+            stars = f"{o.rating:.1f}" if o.rating is not None else "—"
+            out.append(f"| {_money(o.price)} | {o.source} | {_cell(o.condition)} | {_cell(o.location)} | {dist} | {stars} | "
                        f"{_cell(o.title)[:90]}{tag} | [open]({o.url}) |")
         out.append("")
     return "\n".join(out)
@@ -87,7 +94,8 @@ def digest(summaries: list[ItemSummary], report_path: Path) -> str:
     for s in summaries:
         if s.best:
             chg = f" ({s.change_pct:+.0f}%)" if s.change_pct is not None else ""
-            lines.append(f"• {s.item.id}: best {_money(s.best.price)}{chg} — {s.best.source} <{s.best.url}>")
+            where = f", {s.best.distance_mi:.0f} mi" if s.best.distance_mi is not None else ""
+            lines.append(f"• {s.item.id}: best {_money(s.best.price)}{chg} — {s.best.source}{where} <{s.best.url}>")
         else:
             lines.append(f"• {s.item.id}: no relevant listings")
     lines.append(f"Report: {report_path}")

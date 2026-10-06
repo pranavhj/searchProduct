@@ -20,19 +20,6 @@ REPORTS_DIR = PROJECT_ROOT / "reports" / "price-watch"
 # serpapi_google_shopping is opt-in per item: each query spends a SerpApi credit (daily x N items adds up).
 DEFAULT_SOURCES = ["amazon", "ebay_public", "craigslist", "offerup", "facebook_marketplace"]
 
-# FB Marketplace returns pickup listings far outside the requested radius; pickup-only FB listings
-# are kept only if their city is in this list (shippable ones are always kept).
-BAY_AREA_CITIES = [
-    "milpitas", "san jose", "santa clara", "sunnyvale", "mountain view", "cupertino", "campbell", "los gatos",
-    "saratoga", "los altos", "palo alto", "east palo alto", "menlo park", "atherton", "redwood city", "san carlos",
-    "belmont", "san mateo", "foster city", "hillsborough", "burlingame", "millbrae", "san bruno", "brisbane",
-    "south san francisco", "daly city", "pacifica", "san francisco", "fremont", "newark", "union city", "hayward",
-    "castro valley", "fairview", "san lorenzo", "san leandro", "alameda", "oakland", "emeryville", "berkeley",
-    "albany", "el cerrito", "richmond", "pleasanton", "dublin", "livermore", "sunol", "san ramon", "danville",
-    "walnut creek", "lafayette", "orinda", "moraga", "concord", "pleasant hill", "morgan hill", "gilroy",
-    "monte sereno", "woodside", "portola valley", "alviso", "los altos hills", "stanford", "san martin",
-    "half moon bay", "scotts valley", "santa cruz", "el sobrante", "pinole", "hercules", "san pablo",
-]
 
 
 @dataclass
@@ -44,8 +31,9 @@ class WatchItem:
     condition: str = "any"  # any | new | used
     price_min: float | None = None  # floor that drops accessories / junk
     price_max: float | None = None
-    target_price: float | None = None  # alert when best total <= this
+    target_price: float | None = None  # alert when sticker price (+ shipping, before tax) <= this
     drop_pct: float | None = None  # None -> defaults.drop_pct
+    max_miles: float | None = None  # pickup listings farther than this (straight line) are dropped; None -> defaults
     must_include: list[str] = field(default_factory=list)  # each entry: "a|b" = a OR b; all entries required
     exclude: list[str] = field(default_factory=list)
     notes: str = ""
@@ -58,7 +46,7 @@ class Defaults:
     baseline_days: int = 30
     max_results_per_source: int = 15
     top_n_report: int = 5
-    local_cities: list[str] = field(default_factory=lambda: list(BAY_AREA_CITIES))
+    max_miles: float = 25.0
 
 
 @dataclass
@@ -113,10 +101,7 @@ def load_watchlist(path: Path = WATCHLIST_PATH) -> Watchlist:
 
 
 def save_watchlist(wl: Watchlist, path: Path = WATCHLIST_PATH) -> None:
-    defaults = asdict(wl.defaults)
-    if defaults["local_cities"] == BAY_AREA_CITIES:
-        del defaults["local_cities"]  # keep code default live instead of freezing it into the file
-    data = {"defaults": defaults, "notify": asdict(wl.notify), "items": [asdict(i) for i in wl.items]}
+    data = {"defaults": asdict(wl.defaults), "notify": asdict(wl.notify), "items": [asdict(i) for i in wl.items]}
     tmp = path.with_suffix(".json.tmp")
     tmp.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
     tmp.replace(path)

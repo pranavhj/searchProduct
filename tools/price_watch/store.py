@@ -41,6 +41,7 @@ CREATE TABLE IF NOT EXISTS alerts_sent (
     sent_at TEXT NOT NULL,
     PRIMARY KEY (item_id, listing_key, price)
 );
+CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT);
 CREATE TABLE IF NOT EXISTS pending_alerts (
     item_id TEXT NOT NULL,
     listing_key TEXT NOT NULL,
@@ -63,7 +64,25 @@ class Store:
         path.parent.mkdir(parents=True, exist_ok=True)
         self.conn = sqlite3.connect(path)
         self.conn.executescript(SCHEMA)
+        self._migrate_sticker_prices()
         log.debug("opened store %s", path)
+
+    def _migrate_sticker_prices(self) -> None:
+        """Before 2026-10-06 retail/shipped prices were stored tax-inclusive (x1.09375); prices are now sticker.
+
+        Converting old rows keeps drop/target comparisons honest instead of showing a fake ~8.6% cut.
+        """
+        if self.conn.execute("SELECT 1 FROM meta WHERE key='sticker_prices_v1'").fetchone():
+            return
+        taxed = ("(source IN ('amazon','ebay','ebay_public','serpapi_google_shopping') "
+                 "OR location LIKE '%(ships)')")
+        n = self.conn.execute(f"UPDATE observations SET price=ROUND(price/1.09375, 2) WHERE {taxed}").rowcount
+        a = self.conn.execute(
+            "UPDATE OR IGNORE alerts_sent SET price=ROUND(price/1.09375, 2) WHERE substr(listing_key,1,instr(listing_key,':')-1) "
+            "IN ('amazon','ebay','ebay_public','serpapi_google_shopping')").rowcount
+        self.conn.execute("INSERT INTO meta VALUES ('sticker_prices_v1', ?)", (_now().isoformat(),))
+        self.conn.commit()
+        log.info("migrated %d observations + %d sent alerts from tax-inclusive to sticker prices", n, a)
 
     def close(self) -> None:
         self.conn.close()
