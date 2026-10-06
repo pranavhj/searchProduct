@@ -1,0 +1,12 @@
+# runtime data / generated output
+data/
+reports/
+.claude/state/
+__pycache__/
+.pytest_cache/
+*.tmp
+# secrets
+.env
+*.env
+# third-party clone with its own git; local changes saved in tools/shopping-deals-local.patch
+tools/shopping-deals-mcp-server/
