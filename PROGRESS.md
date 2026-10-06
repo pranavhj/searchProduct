@@ -11,7 +11,8 @@ Last session: 2026-10-05 (built tools/price_watch; plan/current.md)
 - Location set to Milpitas CA 95035
 
 ## Next
-- Price watch: set notify.discord_target; eBay 403 → need API keys; tune targets in watchlist.json
+- Price watch: Discord set (channel 1482473282925101217, tested 2026-10-06); eBay needs user to create Production keyset + setx EBAY_APP_ID/EBAY_CERT_ID; tune targets
+- Repo: github.com/pranavhj/searchProduct (private), branch price-watch
 - SerpApi key set (user env var SERPAPI_API_KEY) 2026-10-04 — Google Shopping verified available
 - **ASK USER (on/after 2026-10-05):** is eBay dev registration approved? Then setx EBAY_APP_ID, EBAY_CERT_ID, EBAY_CLIENT_ID, EBAY_CLIENT_SECRET
 - First search done (air duster) 2026-10-04; standing desk searched 2026-10-04 (budget/size still unknown); 1470nm 15W laser searched 2026-10-04 (eBay via Playwright scratch script)
