@@ -1,0 +1,167 @@
+{
+  "defaults": {
+    "sources": [
+      "amazon",
+      "ebay_public",
+      "craigslist",
+      "offerup",
+      "facebook_marketplace"
+    ],
+    "drop_pct": 20.0,
+    "baseline_days": 30,
+    "max_results_per_source": 15,
+    "top_n_report": 5
+  },
+  "notify": {
+    "discord_target": "000000000000000000",
+    "discord_digest_always": true,
+    "toast": true
+  },
+  "items": [
+    {
+      "id": "air-duster",
+      "query": "electric air duster 110000 rpm",
+      "enabled": true,
+      "sources": null,
+      "condition": "any",
+      "price_min": 15,
+      "price_max": 80,
+      "target_price": 28,
+      "drop_pct": null,
+      "must_include": [
+        "duster|blower"
+      ],
+      "exclude": [
+        "replacement",
+        "nozzle",
+        "filter",
+        "case for",
+        "compressed gas"
+      ],
+      "notes": "Wolfbox MF50/MF60 or Fanttik B10 Pro class; wishlist budget ~$35"
+    },
+    {
+      "id": "standing-desk",
+      "query": "electric standing desk",
+      "enabled": true,
+      "sources": null,
+      "condition": "any",
+      "price_min": 30,
+      "price_max": 300,
+      "target_price": 70,
+      "drop_pct": null,
+      "must_include": [
+        "desk",
+        "electric|motor|height adjustable|sit stand|standing|stand up"
+      ],
+      "exclude": [
+        "converter",
+        "riser",
+        "mat",
+        "keyboard tray",
+        "monitor arm",
+        "drawer",
+        "chair"
+      ],
+      "notes": "Budget/size not given by user; target is a guess"
+    },
+    {
+      "id": "laser-1470nm-15w",
+      "query": "1470nm laser 15W",
+      "enabled": true,
+      "sources": [
+        "ebay_public",
+        "facebook_marketplace"
+      ],
+      "condition": "any",
+      "price_min": 100,
+      "price_max": 3000,
+      "target_price": 500,
+      "drop_pct": null,
+      "must_include": [
+        "1470"
+      ],
+      "exclude": [],
+      "notes": "Module vs complete system TBD; best seen $450 AS-IS / $700 Lumics 16W (2026-10-04)"
+    },
+    {
+      "id": "bts7960-motor-driver",
+      "query": "BTS7960 motor driver",
+      "enabled": true,
+      "sources": [
+        "amazon",
+        "ebay_public"
+      ],
+      "condition": "new",
+      "price_min": 4,
+      "price_max": 30,
+      "target_price": 9,
+      "drop_pct": null,
+      "must_include": [
+        "bts7960|ibt-2|43a"
+      ],
+      "exclude": [],
+      "notes": "Replace fried HW-039/IBT-2 on desk controller"
+    },
+    {
+      "id": "electric-precision-screwdriver",
+      "query": "electric precision screwdriver",
+      "enabled": true,
+      "sources": null,
+      "condition": "any",
+      "price_min": 10,
+      "price_max": 50,
+      "target_price": 15,
+      "drop_pct": null,
+      "must_include": [
+        "screwdriver",
+        "electric|cordless|rechargeable|power"
+      ],
+      "exclude": [
+        "bits only",
+        "replacement bit",
+        "bit set only"
+      ],
+      "notes": "Slim pen, fwd/rev buttons, bit set"
+    },
+    {
+      "id": "power-bank-10k",
+      "query": "power bank 10000mAh usb-c",
+      "enabled": true,
+      "sources": null,
+      "condition": "any",
+      "price_min": 8,
+      "price_max": 45,
+      "target_price": 15,
+      "drop_pct": null,
+      "must_include": [
+        "power bank|portable charger|powerbank|battery pack",
+        "10000|10,000|10k|20000|20,000|20k"
+      ],
+      "exclude": [
+        "case",
+        "cable only"
+      ],
+      "notes": "Specs assumed (10k mAh, USB-C PD)"
+    },
+    {
+      "id": "smart-plug-alexa",
+      "query": "smart plug alexa",
+      "enabled": true,
+      "sources": null,
+      "condition": "any",
+      "price_min": 4,
+      "price_max": 40,
+      "target_price": 7,
+      "drop_pct": null,
+      "must_include": [
+        "plug",
+        "smart|alexa|wifi|wi-fi"
+      ],
+      "exclude": [
+        "adapter only"
+      ],
+      "notes": "Single-plug price; multi-packs are cheaper per plug (compare manually)"
+    }
+  ]
+}

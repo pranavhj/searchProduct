@@ -1,0 +1,145 @@
+diff --git a/pyproject.toml b/pyproject.toml
+index 5999f3d..aa5d3f5 100644
+--- a/pyproject.toml
++++ b/pyproject.toml
+@@ -8,6 +8,7 @@ dependencies = [
+     "beautifulsoup4>=4.12",
+     "httpx>=0.28",
+     "mcp[cli]>=1.27,<2",
++    "playwright>=1.59",
+     "pydantic>=2.7",
+     "python-dotenv>=1.0",
+ ]
+diff --git a/src/shopping_deals_mcp/sources/amazon.py b/src/shopping_deals_mcp/sources/amazon.py
+index ee27153..724fd4c 100644
+--- a/src/shopping_deals_mcp/sources/amazon.py
++++ b/src/shopping_deals_mcp/sources/amazon.py
+@@ -2,6 +2,8 @@
+ 
+ from __future__ import annotations
+ 
++import logging
++import re
+ from urllib.parse import quote_plus, urljoin
+ 
+ import httpx
+@@ -12,6 +14,10 @@ from shopping_deals_mcp.models import Listing, SourceStatus
+ from shopping_deals_mcp.pricing import parse_price
+ from shopping_deals_mcp.sources.base import MarketplaceSource
+ 
++logger = logging.getLogger(__name__)
++
++RESULT_CARD = '[data-component-type="s-search-result"]'
++
+ 
+ class AmazonSearchSource(MarketplaceSource):
+     name = "amazon"
+@@ -26,7 +32,7 @@ class AmazonSearchSource(MarketplaceSource):
+             display_name=self.display_name,
+             available=self.config.enable_amazon_scrape,
+             requires=[] if self.config.enable_amazon_scrape else ["SHOPPING_ENABLE_AMAZON_SCRAPE=true"],
+-            notes="Public HTML parser. Amazon may block automated requests.",
++            notes="Public HTML parser; falls back to headless Playwright Chromium when Amazon serves its JS bot challenge.",
+         )
+ 
+     async def search(
+@@ -55,9 +61,20 @@ class AmazonSearchSource(MarketplaceSource):
+             response.raise_for_status()
+ 
+         soup = BeautifulSoup(response.text, "html.parser")
++        if not soup.select(RESULT_CARD):
++            logger.info("amazon: plain HTTP got no result cards (likely bot challenge); using Playwright for %r", query)
++            soup = BeautifulSoup(await _fetch_with_browser(url), "html.parser")
++            if not soup.select(RESULT_CARD):
++                logger.warning("amazon: Playwright also got no result cards for %r", query)
+         listings: list[Listing] = []
+-        for card in soup.select('[data-component-type="s-search-result"]')[:max_results]:
++        seen_asins: set[str] = set()
++        for card in soup.select(RESULT_CARD):
++            if len(listings) >= max_results:
++                break
+             asin = card.get("data-asin")
++            if asin in seen_asins:
++                continue  # same product shown again (e.g. sponsored + organic)
++            seen_asins.add(asin)
+             title_link = card.select_one("a.a-link-normal.s-line-clamp-2")
+             title_el = title_link or card.select_one('[data-cy="title-recipe"]') or card.select_one("h2 span")
+             href_el = title_link or card.select_one("h2 a")
+@@ -78,13 +95,13 @@ class AmazonSearchSource(MarketplaceSource):
+                     source=self.name,
+                     marketplace="Amazon",
+                     title=title,
+-                    url=urljoin("https://www.amazon.com", href),
++                    url=f"https://www.amazon.com/dp/{asin}" if asin else urljoin("https://www.amazon.com", href),
+                     price=price,
+                     currency="USD",
+                     condition="new",
+                     image_url=image_el.get("src") if image_el else None,
+                     seller="Amazon",
+-                    seller_rating=parse_price(rating_el.get_text(" ", strip=True) if rating_el else None),
++                    seller_rating=_parse_rating(rating_el.get_text(" ", strip=True) if rating_el else None),
+                     shipping=None,
+                     raw={},
+                 )
+@@ -93,8 +110,37 @@ class AmazonSearchSource(MarketplaceSource):
+         return [listing for listing in listings if listing.title and listing.url]
+ 
+ 
++async def _fetch_with_browser(url: str) -> str:
++    # Imported lazily so the source still loads without Playwright installed.
++    from playwright.async_api import TimeoutError as PlaywrightTimeout
++    from playwright.async_api import async_playwright
++
++    async with async_playwright() as pw:
++        # Own Playwright browser, closed via its API - never kill chrome by image name.
++        browser = await pw.chromium.launch(headless=True)
++        try:
++            page = await (await browser.new_context(locale="en-US")).new_page()
++            await page.goto(url, timeout=30000)
++            try:
++                await page.wait_for_selector(RESULT_CARD, timeout=15000)
++            except PlaywrightTimeout:
++                logger.warning("amazon: no result cards after 15s wait; returning page as loaded")
++            return await page.content()
++        finally:
++            await browser.close()
++
++
++def _parse_rating(value: str | None) -> float | None:
++    """'4.5 out of 5 stars' -> 4.5"""
++    match = re.match(r"\s*(\d+(?:\.\d+)?) out of 5", value or "")
++    return float(match.group(1)) if match else None
++
++
+ def _clean_title(value: str) -> str:
+     value = value.strip()
++    for badge in ("New & Notable ", "Best Seller ", "Amazon's Choice ", "Overall Pick "):
++        while value.startswith(badge):
++            value = value[len(badge):].strip()
+     prefixes = [
+         "Sponsored Sponsored You’re seeing this ad based on the product’s relevance to your search query. Leave ad feedback ",
+         "Sponsored Sponsored You're seeing this ad based on the product's relevance to your search query. Leave ad feedback ",
+diff --git a/tests/test_amazon.py b/tests/test_amazon.py
+index 6064af9..cd2aa2d 100644
+--- a/tests/test_amazon.py
++++ b/tests/test_amazon.py
+@@ -8,3 +8,19 @@ def test_clean_amazon_sponsored_title_prefix():
+     )
+ 
+     assert _clean_title(raw) == "DJI Osmo Pocket 4 Standard Combo"
++
++
++def test_rating_text_parses_to_star_value():
++    from shopping_deals_mcp.sources.amazon import _parse_rating
++
++    assert _parse_rating("4.5 out of 5 stars") == 4.5
++
++
++def test_missing_rating_text_parses_to_none():
++    from shopping_deals_mcp.sources.amazon import _parse_rating
++
++    assert _parse_rating(None) is None
++
++
++def test_repeated_badge_prefix_is_stripped_from_title():
++    assert _clean_title("New & Notable New & Notable WOLFBOX MF60 Air Duster") == "WOLFBOX MF60 Air Duster"
