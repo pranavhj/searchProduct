@@ -17,7 +17,14 @@ Never quote a price as current unless it was fetched live this session from the 
 ## Workflow
 1. Read `wishlist.md`; for each item in `want`/`searching`, search both servers.
 2. Compare total landed cost (price + shipping + tax); flag scam signals on used listings.
-3. Update the item's row + notes with date, price, source, link.
+3. **Vet every listing you recommend — cheapest is not a recommendation.** For each pick check:
+   brand/maker track record, rating + review count + 1-star share, recent complaints;
+   knock-off signals (unknown/rebranded seller, specs implausible for weight or price, fake-review
+   patterns); and compare against the standard / most-recommended product (established-brand
+   best-seller, reviewer picks like Wirecutter / RTINGS / Stiftung Warentest) — what is lost vs it,
+   and the price gap. Verdict per listing: buy / acceptable trade-off / avoid; name the better-value
+   pick when a reputable option is close in price. Applies to price-watch alerts too.
+4. Update the item's row + notes with date, price, source, link.
 
 See `tools-research.md` for other tools considered.
 
