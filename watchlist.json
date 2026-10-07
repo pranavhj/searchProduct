@@ -29,6 +29,7 @@
       "price_max": 80,
       "target_price": 28,
       "drop_pct": null,
+      "max_miles": null,
       "must_include": [
         "duster|blower"
       ],
@@ -39,8 +40,7 @@
         "case for",
         "compressed gas"
       ],
-      "notes": "Wolfbox MF50/MF60 or Fanttik B10 Pro class; wishlist budget ~$35",
-      "max_miles": null
+      "notes": "Wolfbox MF50/MF60 or Fanttik B10 Pro class; wishlist budget ~$35"
     },
     {
       "id": "standing-desk",
@@ -52,6 +52,7 @@
       "price_max": 300,
       "target_price": 70,
       "drop_pct": null,
+      "max_miles": null,
       "must_include": [
         "desk",
         "electric|motor|height adjustable|sit stand|standing|stand up"
@@ -65,8 +66,7 @@
         "drawer",
         "chair"
       ],
-      "notes": "Budget/size not given by user; target is a guess",
-      "max_miles": null
+      "notes": "Budget/size not given by user; target is a guess"
     },
     {
       "id": "laser-1470nm-15w",
@@ -81,12 +81,12 @@
       "price_max": 3000,
       "target_price": 500,
       "drop_pct": null,
+      "max_miles": null,
       "must_include": [
         "1470"
       ],
       "exclude": [],
-      "notes": "Module vs complete system TBD; best seen $450 AS-IS / $700 Lumics 16W (2026-10-04)",
-      "max_miles": null
+      "notes": "Module vs complete system TBD; best seen $450 AS-IS / $700 Lumics 16W (2026-10-04)"
     },
     {
       "id": "bts7960-motor-driver",
@@ -101,12 +101,12 @@
       "price_max": 30,
       "target_price": 9,
       "drop_pct": null,
+      "max_miles": null,
       "must_include": [
         "bts7960|ibt-2|43a"
       ],
       "exclude": [],
-      "notes": "Replace fried HW-039/IBT-2 on desk controller",
-      "max_miles": null
+      "notes": "Replace fried HW-039/IBT-2 on desk controller"
     },
     {
       "id": "electric-precision-screwdriver",
@@ -118,6 +118,7 @@
       "price_max": 50,
       "target_price": 15,
       "drop_pct": null,
+      "max_miles": null,
       "must_include": [
         "screwdriver",
         "electric|cordless|rechargeable|power"
@@ -127,8 +128,7 @@
         "replacement bit",
         "bit set only"
       ],
-      "notes": "Slim pen, fwd/rev buttons, bit set",
-      "max_miles": null
+      "notes": "Slim pen, fwd/rev buttons, bit set"
     },
     {
       "id": "power-bank-10k",
@@ -140,6 +140,7 @@
       "price_max": 45,
       "target_price": 10.0,
       "drop_pct": null,
+      "max_miles": 10.0,
       "must_include": [
         "power bank|portable charger|powerbank|battery pack",
         "10000|10,000|10k|20000|20,000|20k"
@@ -148,8 +149,7 @@
         "case",
         "cable only"
       ],
-      "notes": "Specs assumed (10k mAh, USB-C PD). Target $10 sticker (user 2026-10-06); pickup within 10 mi.",
-      "max_miles": 10.0
+      "notes": "Specs assumed (10k mAh, USB-C PD). Target $10 sticker (user 2026-10-06); pickup within 10 mi."
     },
     {
       "id": "smart-plug-alexa",
@@ -161,6 +161,7 @@
       "price_max": 40,
       "target_price": 7,
       "drop_pct": null,
+      "max_miles": null,
       "must_include": [
         "plug",
         "smart|alexa|wifi|wi-fi"
@@ -168,8 +169,7 @@
       "exclude": [
         "adapter only"
       ],
-      "notes": "Single-plug price; multi-packs are cheaper per plug (compare manually)",
-      "max_miles": null
+      "notes": "Single-plug price; multi-packs are cheaper per plug (compare manually)"
     },
     {
       "id": "desktop-pc-64gb-ram",
@@ -181,6 +181,7 @@
       "price_max": 250.0,
       "target_price": 30.0,
       "drop_pct": null,
+      "max_miles": 40.0,
       "must_include": [
         "pc|desktop|computer|workstation|tower|server|optiplex|thinkcentre|elitedesk|precision|z440|z640|z840|mac pro|mac studio",
         "64gb ram|64gb ddr|64 gb ram|64 gb ddr|96gb ram|96gb ddr|96 gb ram|96 gb ddr|128gb ram|128gb ddr|128 gb ram|128 gb ddr|192gb ram|192gb ddr|192 gb ram|192 gb ddr|256gb ram|256gb ddr|256 gb ram|256 gb ddr"
@@ -213,8 +214,30 @@
         "support 128gb",
         "supports up to"
       ],
-      "notes": "User: <$30, >=64GB RAM, >=512GB storage (knowingly unrealistic). price_max 250 so report shows nearest misses; alerts only <= $30. Storage not reliably in titles - verify per listing. Parts sales list one per-part price for a whole build - excluded (user 2026-10-06).",
-      "max_miles": 40.0
+      "notes": "User: <$30, >=64GB RAM, >=512GB storage (knowingly unrealistic). price_max 250 so report shows nearest misses; alerts only <= $30. Storage not reliably in titles - verify per listing. Parts sales list one per-part price for a whole build - excluded (user 2026-10-06)."
+    },
+    {
+      "id": "pull-up-bar",
+      "query": "pull up bar",
+      "enabled": true,
+      "sources": null,
+      "condition": "any",
+      "price_min": 3.0,
+      "price_max": 60.0,
+      "target_price": 8.0,
+      "drop_pct": null,
+      "max_miles": null,
+      "must_include": [
+        "pull up|pull-up|pullup|chin up|chin-up",
+        "bar"
+      ],
+      "exclude": [
+        "assist",
+        "replacement",
+        "handle only",
+        "band only"
+      ],
+      "notes": "Target $8 sticker (user 2026-10-06); no spec given, doorway/wall/any bar; default 25 mi pickup."
     }
   ]
 }
