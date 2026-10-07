@@ -65,9 +65,10 @@ def _deliver(wl: config.Watchlist, summaries: list, alerts: list, path: Path, no
 async def run_items(store: Any, service: Any, wl: config.Watchlist, items: list[WatchItem], notify: bool,
                     notifier: Any, reports_dir: Path, run_at: datetime | None = None,
                     geocoder: Any = None, amazon_cheapest: Any = None,
-                    local_cheapest: Any = None) -> tuple[str, Path | None]:
+                    local_cheapest: Any = None, amazon_counts: Any = None,
+                    page_fetcher: Any = None) -> tuple[str, Path | None]:
     """One full run. Returns (status, report path). Testable with fake service/notifier/store."""
-    from price_watch import analyze, report
+    from price_watch import analyze, report, vet
     from price_watch.fetch import FetchResult, fetch_item, resolve_sources
 
     run_at = run_at or datetime.now().astimezone()
@@ -84,7 +85,7 @@ async def run_items(store: Any, service: Any, wl: config.Watchlist, items: list[
                 sources = resolve_sources(item.sources or wl.defaults.sources, available)
                 distance = geocoder.distance_miles if geocoder is not None else None
                 fetched = await fetch_item(service, item, wl.defaults, sources, distance, amazon_cheapest,
-                                           local_cheapest)
+                                           local_cheapest, amazon_counts)
                 if geocoder is not None and geocoder.error:
                     fetched.source_errors["geocode"] = geocoder.error  # pickup listings dropped as distance_unknown
             except Exception as exc:  # one broken item must not kill the daily run
@@ -103,6 +104,12 @@ async def run_items(store: Any, service: Any, wl: config.Watchlist, items: list[
                 failures += 1
                 continue
             summaries.append(summary)
+
+        for summary in summaries:
+            try:
+                await vet.vet_summary(summary, wl.defaults.top_n_report, page_fetcher)
+            except Exception:  # evidence is extra; never lose the report/alerts over it
+                log.exception("item=%s vetting failed", summary.item.id)
 
         path = report.write(report.render(summaries, run_at, wl.defaults.top_n_report), reports_dir, run_at)
         alerts = [a for s in summaries for a in s.alerts]
@@ -140,7 +147,8 @@ async def _run(item_ids: list[str] | None, notify: bool) -> int:
     if not items:
         log.warning("nothing to watch (no enabled items)")
         return 0
-    from price_watch.amazon_cheap import fetch_cheapest
+    from price_watch.amazon_cheap import fetch_cheapest, fetch_review_counts
+    from price_watch.amazon_page import fetch_product_page
     from price_watch.geo import Geocoder
     from price_watch.local_cheap import fetch_cheapest_local
 
@@ -148,7 +156,8 @@ async def _run(item_ids: list[str] | None, notify: bool) -> int:
         geo = Geocoder(store.conn)
         status, path = await run_items(store, ShoppingDealsService(), wl, items, notify, notifier, config.REPORTS_DIR,
                                        geocoder=geo, amazon_cheapest=fetch_cheapest,
-                                       local_cheapest=fetch_cheapest_local)
+                                       local_cheapest=fetch_cheapest_local, amazon_counts=fetch_review_counts,
+                                       page_fetcher=fetch_product_page)
     print(path)
     return 1 if status == "failed" else 0
 

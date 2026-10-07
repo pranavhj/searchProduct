@@ -29,6 +29,8 @@ class Observation:
     deal_score: float | None = None
     distance_mi: float | None = None  # straight-line miles from home; None for shipped/online
     rating: float | None = None  # stars out of 5 where the source shows them (Amazon)
+    review_count: int | None = None  # number of ratings (Amazon)
+    vet: Any = None  # price_watch.vet.Vet, filled in by vet.vet_summary after analysis
 
     @property
     def key(self) -> str:
@@ -69,7 +71,8 @@ LOCAL_SOURCES = {"facebook_marketplace", "craigslist", "offerup"}
 
 DistanceFn = Callable[[str | None], float | None]
 CheapestFn = Callable[[str, float | None, float | None, int], Awaitable[list[dict]]]
-LocalCheapestFn = Callable[[str, str, float | None, float | None, int], Awaitable[list[dict]]]  # (source, query, ...)
+CountsFn = Callable[[str, float | None, float | None], Awaitable[dict[str, int]]]  # ASIN -> number of ratings
+LocalCheapestFn =Callable[[str, str, float | None, float | None, int], Awaitable[list[dict]]]  # (source, query, ...)
 
 
 def _sticker(listing: dict) -> float | None:
@@ -109,7 +112,8 @@ def resolve_sources(requested: list[str], available: set[str] | None) -> list[st
 async def fetch_item(service: DealsService, item: WatchItem, defaults: Defaults,
                      sources: list[str] | None = None, distance: DistanceFn | None = None,
                      amazon_cheapest: CheapestFn | None = None,
-                     local_cheapest: LocalCheapestFn | None = None) -> FetchResult:
+                     local_cheapest: LocalCheapestFn | None = None,
+                     amazon_counts: CountsFn | None = None) -> FetchResult:
     sources = sources or item.sources or defaults.sources
     max_miles = item.max_miles if item.max_miles is not None else defaults.max_miles
     # Local sources are distance-filtered below, so cap generously: 15 results can all be too far away.
@@ -142,6 +146,13 @@ async def fetch_item(service: DealsService, item: WatchItem, defaults: Defaults,
         except Exception as exc:  # the featured-sort results above still count
             log.warning("item=%s amazon cheapest-first failed: %s", item.id, exc)
             errors = {**errors, "amazon_cheapest": f"{type(exc).__name__}: {exc}"}
+    counts: dict[str, int] = {}
+    if amazon_counts is not None and "amazon" in sources:
+        try:
+            counts = await amazon_counts(item.query, item.price_min, item.price_max)
+        except Exception as exc:  # review counts are context, not required
+            log.warning("item=%s amazon review counts failed: %s", item.id, exc)
+            errors = {**errors, "amazon_counts": f"{type(exc).__name__}: {exc}"}
     if local_cheapest is not None:
         for src in (s for s in sources if s in LOCAL_SOURCES):
             try:
@@ -178,6 +189,8 @@ async def fetch_item(service: DealsService, item: WatchItem, defaults: Defaults,
             distance_mi=dist,
             # Amazon gives stars; eBay's seller_rating is a feedback % - not comparable.
             rating=listing.get("seller_rating") if listing.get("source") == "amazon" else None,
+            review_count=(deal.get("review_count") or counts.get(str(listing.get("id")))
+                          if listing.get("source") == "amazon" else None),
         )
         if obs.key in seen:
             continue

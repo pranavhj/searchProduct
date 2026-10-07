@@ -8,6 +8,7 @@ source's Playwright fetch and returning deals in the same shape as find_best_dea
 from __future__ import annotations
 
 import logging
+import re
 from urllib.parse import quote_plus
 
 from bs4 import BeautifulSoup
@@ -64,5 +65,30 @@ async def fetch_cheapest(query: str, price_min: float | None, price_max: float |
     if not BeautifulSoup(html, "html.parser").select(RESULT_CARD):
         raise RuntimeError("no result cards on cheapest-first page (bot challenge?)")
     listings = parse_cards(html, limit)
+    counts = parse_review_counts(html)
     log.info("amazon cheapest-first query=%r got=%d", query, len(listings))
-    return [{"listing": listing.model_dump(), "deal_score": None} for listing in listings]
+    return [{"listing": listing.model_dump(), "deal_score": None, "review_count": counts.get(listing.id)}
+            for listing in listings]
+
+
+def parse_review_counts(html: str) -> dict[str, int]:
+    """ASIN -> number of ratings, from each result card's '785 ratings' aria-label."""
+    from shopping_deals_mcp.sources.amazon import RESULT_CARD
+
+    out: dict[str, int] = {}
+    for card in BeautifulSoup(html, "html.parser").select(RESULT_CARD):
+        asin = card.get("data-asin")
+        for el in card.select("[aria-label]"):
+            m = re.fullmatch(r"([\d,]+) ratings?", el.get("aria-label", "").strip())
+            if asin and m:
+                out[asin] = int(m.group(1).replace(",", ""))
+                break
+    return out
+
+
+async def fetch_review_counts(query: str, price_min: float | None, price_max: float | None) -> dict[str, int]:
+    """Review counts for the featured-sort page, which the shopping-deals Amazon source discards."""
+    from shopping_deals_mcp.sources.amazon import _fetch_with_browser
+
+    url = cheapest_url(query, price_min, price_max).replace("&s=price-asc-rank", "")
+    return parse_review_counts(await _fetch_with_browser(url))
