@@ -52,6 +52,20 @@ CREATE TABLE IF NOT EXISTS pending_alerts (
     created_at TEXT NOT NULL,
     PRIMARY KEY (item_id, listing_key)
 );
+CREATE TABLE IF NOT EXISTS vettings (
+    item_id TEXT NOT NULL,
+    listing_key TEXT NOT NULL,
+    price REAL NOT NULL,
+    verdict TEXT NOT NULL,
+    result_json TEXT NOT NULL,
+    vetted_at TEXT NOT NULL,
+    PRIMARY KEY (item_id, listing_key)
+);
+CREATE TABLE IF NOT EXISTS web_cache (
+    query TEXT PRIMARY KEY,
+    result_json TEXT NOT NULL,
+    fetched_at TEXT NOT NULL
+);
 """
 
 
@@ -185,4 +199,31 @@ class Store:
 
     def clear_pending(self, item_id: str, listing_key: str) -> None:
         self.conn.execute("DELETE FROM pending_alerts WHERE item_id=? AND listing_key=?", (item_id, listing_key))
+        self.conn.commit()
+
+    # --- quality vetting cache ---------------------------------------------
+    def get_vetting(self, item_id: str, listing_key: str, price: float, max_age_days: int) -> str | None:
+        """Cached vetting JSON for this listing at this price, if fresher than max_age_days."""
+        row = self.conn.execute(
+            "SELECT price, result_json, vetted_at FROM vettings WHERE item_id=? AND listing_key=?",
+            (item_id, listing_key)).fetchone()
+        if not row or abs(row[0] - price) > 0.005:
+            return None
+        age = _now() - datetime.fromisoformat(row[2])
+        return row[1] if age.days < max_age_days else None
+
+    def put_vetting(self, item_id: str, listing_key: str, price: float, verdict: str, result_json: str) -> None:
+        self.conn.execute(
+            "INSERT OR REPLACE INTO vettings VALUES (?,?,?,?,?,?)",
+            (item_id, listing_key, price, verdict, result_json, _now().isoformat()))
+        self.conn.commit()
+
+    def get_web(self, query: str, max_age_days: int) -> str | None:
+        row = self.conn.execute("SELECT result_json, fetched_at FROM web_cache WHERE query=?", (query,)).fetchone()
+        if not row or (_now() - datetime.fromisoformat(row[1])).days >= max_age_days:
+            return None
+        return row[0]
+
+    def put_web(self, query: str, result_json: str) -> None:
+        self.conn.execute("INSERT OR REPLACE INTO web_cache VALUES (?,?,?)", (query, result_json, _now().isoformat()))
         self.conn.commit()

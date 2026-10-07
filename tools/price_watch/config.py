@@ -37,6 +37,11 @@ class WatchItem:
     must_include: list[str] = field(default_factory=list)  # each entry: "a|b" = a OR b; all entries required
     exclude: list[str] = field(default_factory=list)
     notes: str = ""
+    # What the user actually wants (features, must-haves, deal-breakers) - from the new-item interview.
+    # Fed to the per-listing quality vetting so "cheap" is judged against real needs.
+    requirements: str = ""
+    # Live Amazon searches for the standard / name-brand product(s) the vetting compares against.
+    reference_queries: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -47,6 +52,9 @@ class Defaults:
     max_results_per_source: int = 15
     top_n_report: int = 5
     max_miles: float = 25.0
+    vet: bool = True  # quality-vet every reported listing + alert (one LLM Gateway call per listing)
+    vet_gateway_project: str = "searchproduct_vet"  # LLM Gateway project (Haiku); see vet.py
+    vet_cache_days: int = 7  # reuse a verdict (and web-search results) for the same listing+price this long
 
 
 @dataclass
