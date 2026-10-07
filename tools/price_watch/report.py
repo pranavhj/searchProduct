@@ -6,6 +6,7 @@ from datetime import datetime
 from pathlib import Path
 
 from price_watch.analyze import Alert, ItemSummary
+from price_watch.fetch import Observation
 
 log = logging.getLogger("price_watch.report")
 
@@ -23,9 +24,32 @@ def _cell(text: str | None) -> str:
 def alert_line(a: Alert, md_links: bool = True) -> str:
     link = f"[link]({a.obs.url})" if md_links else f"<{a.obs.url}>"
     where = f", {a.obs.distance_mi:.0f} mi" if a.obs.distance_mi is not None else ""
-    stars = f", {a.obs.rating:.1f}★" if a.obs.rating is not None else ""
+    stars = f", {a.obs.rating:.1f}★{_reviews(a.obs)}" if a.obs.rating is not None else ""
     return (f"{KIND_LABEL.get(a.kind, a.kind)} — **{a.item_id}**: {a.message} — {_cell(a.obs.title)[:80]} "
             f"({a.obs.source}{where}{stars}) {link}")
+
+
+def _reviews(o: Observation) -> str:
+    return f" ({o.review_count:,})" if o.review_count is not None else ""
+
+
+def vet_lines(o: Observation) -> list[str]:
+    """Plain-text evidence lines for one listing: verdict, flags, complaint themes."""
+    v = o.vet
+    if v is None:
+        return []
+    icon = {"worth it": "✅", "risky": "⚠️", "probably a trap": "🚩"}.get(v.verdict, "")
+    out = [f"{icon} **{v.verdict}** (confidence: {v.confidence}) — based on: {v.basis}"]
+    if v.flags:
+        out.append("Flags: " + "; ".join(v.flag_texts()))
+    if v.themes:
+        out.append("Complaints: " + " | ".join(_cell(t)[:200] for t in v.themes))
+    if v.customers_say:
+        out.append("Customers say: " + _cell(v.customers_say)[:350])
+    if v.page is not None and v.page.seller:
+        out.append(f"Sold by {_cell(v.page.seller)}" + (f", ships from {_cell(v.page.ships_from)}" if v.page.ships_from else ""))
+    out.append("Would change my mind: " + v.would_change)
+    return out
 
 
 def render(summaries: list[ItemSummary], run_at: datetime, top_n: int) -> str:
@@ -39,7 +63,11 @@ def render(summaries: list[ItemSummary], run_at: datetime, top_n: int) -> str:
                "for the whole item, not one part — before buying.")
     out.append("")
     if alerts:
-        out += ["## Alerts", ""] + [f"- {alert_line(a)}" for a in alerts] + [""]
+        out += ["## Alerts", ""]
+        for a in alerts:
+            out.append(f"- {alert_line(a)}")
+            out += [f"  - {line}" for line in vet_lines(a.obs)]
+        out.append("")
 
     out += ["## Summary", "", "| Item | Best today | Prev day | Change | Median (days) | Target | Listings | New |",
             "|---|---|---|---|---|---|---|---|"]
@@ -65,13 +93,16 @@ def render(summaries: list[ItemSummary], run_at: datetime, top_n: int) -> str:
             out += ["_No relevant listings this run._", ""]
             continue
         new_keys = {o.key for o in s.new_listings}
-        out += ["| Price | Source | Condition | Location | Dist | ★ | Title | |", "|---|---|---|---|---|---|---|---|"]
+        out += ["| Price | Source | Condition | Location | Dist | ★ (n) | Verdict | Flags | Title | |",
+                "|---|---|---|---|---|---|---|---|---|---|"]
         for o in obs:
             tag = " 🆕" if o.key in new_keys else ""
             dist = f"{o.distance_mi:.0f} mi" if o.distance_mi is not None else "—"
-            stars = f"{o.rating:.1f}" if o.rating is not None else "—"
+            stars = f"{o.rating:.1f}{_reviews(o)}" if o.rating is not None else "—"
+            verdict = o.vet.verdict if o.vet else "—"
+            flags = _cell("; ".join(o.vet.flag_texts()))[:160] if o.vet else ""
             out.append(f"| {_money(o.price)} | {o.source} | {_cell(o.condition)} | {_cell(o.location)} | {dist} | {stars} | "
-                       f"{_cell(o.title)[:90]}{tag} | [open]({o.url}) |")
+                       f"{verdict} | {flags} | {_cell(o.title)[:90]}{tag} | [open]({o.url}) |")
         out.append("")
     return "\n".join(out)
 
@@ -89,7 +120,9 @@ def digest(summaries: list[ItemSummary], report_path: Path) -> str:
     """Short plain-text digest for Discord (one line per item + alerts)."""
     alerts = [a for s in summaries for a in s.alerts]
     lines = [f"**Price watch** — {len(alerts)} alert(s)"]
-    lines += [alert_line(a, md_links=False) for a in alerts]
+    for a in alerts:
+        lines.append(alert_line(a, md_links=False))
+        lines += [f"    {line}" for line in vet_lines(a.obs)]
     lines.append("")
     for s in summaries:
         if s.best:
