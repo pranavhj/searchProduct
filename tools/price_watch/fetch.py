@@ -69,6 +69,7 @@ LOCAL_SOURCES = {"facebook_marketplace", "craigslist", "offerup"}
 
 DistanceFn = Callable[[str | None], float | None]
 CheapestFn = Callable[[str, float | None, float | None, int], Awaitable[list[dict]]]
+LocalCheapestFn = Callable[[str, str, float | None, float | None, int], Awaitable[list[dict]]]  # (source, query, ...)
 
 
 def _sticker(listing: dict) -> float | None:
@@ -107,16 +108,21 @@ def resolve_sources(requested: list[str], available: set[str] | None) -> list[st
 
 async def fetch_item(service: DealsService, item: WatchItem, defaults: Defaults,
                      sources: list[str] | None = None, distance: DistanceFn | None = None,
-                     amazon_cheapest: CheapestFn | None = None) -> FetchResult:
+                     amazon_cheapest: CheapestFn | None = None,
+                     local_cheapest: LocalCheapestFn | None = None) -> FetchResult:
     sources = sources or item.sources or defaults.sources
     max_miles = item.max_miles if item.max_miles is not None else defaults.max_miles
-    log.info("fetch item=%s query=%r sources=%s", item.id, item.query, sources)
+    # Local sources are distance-filtered below, so cap generously: 15 results can all be too far away.
+    cap = defaults.max_results_per_source
+    if any(s in LOCAL_SOURCES for s in sources):
+        cap = max(cap, defaults.max_results_local)
+    log.info("fetch item=%s query=%r sources=%s cap=%d", item.id, item.query, sources, cap)
     result = await service.find_best_deals(
         item.query,
         sources=sources,
         # Ask for everything scored; relevance filtering below decides what to keep.
-        max_results=defaults.max_results_per_source * len(sources),
-        max_results_per_source=defaults.max_results_per_source,
+        max_results=cap * len(sources),
+        max_results_per_source=cap,
         price_min=item.price_min,
         price_max=item.price_max,
         condition=item.condition,
@@ -136,6 +142,13 @@ async def fetch_item(service: DealsService, item: WatchItem, defaults: Defaults,
         except Exception as exc:  # the featured-sort results above still count
             log.warning("item=%s amazon cheapest-first failed: %s", item.id, exc)
             errors = {**errors, "amazon_cheapest": f"{type(exc).__name__}: {exc}"}
+    if local_cheapest is not None:
+        for src in (s for s in sources if s in LOCAL_SOURCES):
+            try:
+                deals += await local_cheapest(src, item.query, item.price_min, item.price_max, cap)
+            except Exception as exc:  # the default-order results above still count
+                log.warning("item=%s %s cheapest-first failed: %s", item.id, src, exc)
+                errors = {**errors, f"{src}_cheapest": f"{type(exc).__name__}: {exc}"}
     for deal in deals:
         listing = deal["listing"]
         price = _sticker(listing)

@@ -45,6 +45,7 @@ class Defaults:
     drop_pct: float = 20.0
     baseline_days: int = 30
     max_results_per_source: int = 15
+    max_results_local: int = 40  # cap when pickup sources are searched; the distance filter runs after it
     top_n_report: int = 5
     max_miles: float = 25.0
 
