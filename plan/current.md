@@ -40,6 +40,68 @@ or hits a target.
 - [x] 12. Adversarial review, fix findings
 - [x] 13. Docs: CLAUDE.md automation section, PROGRESS.md
 
+## Phase 2: quality vetting + new-item interview (user 2026-10-07)
+
+### Goal
+1. Never recommend a listing just because it is cheap. Every listing the daily run reports (top-N per
+   item + every alert) gets a Claude verdict — buy / ok / avoid — with reasons, red flags, the
+   standard/most-recommended product it is compared to, and a better-value pick if one is close.
+2. When an item is added (to watchlist or wishlist), Claude first asks product-specific questions
+   (e.g. power bank: wattage, wireless/MagSafe, built-in cable, capacity, size) and shows what each
+   feature typically adds to the price, from live searches. Answers are stored on the item and drive
+   both the search filters and the vetting.
+
+### Constraints (from user)
+- Cheaper model (Haiku). No direct Claude API usage: go through the LLM Gateway
+  (`http://100.122.101.27:18789`, `POST /ask`, Bearer token from `~/.openclaw/openclaw.json`).
+- Prices quoted must stay live (CLAUDE.md rule). Web "typical" prices are labelled as such.
+
+### Gateway facts that shape the design (verified 2026-10-07 in gateway-delegate.py)
+- Gateway's Claude runs Haiku with the instruction "Do NOT use any tools" -> **no web search**.
+  So all evidence must be gathered by price_watch first and put in the prompt.
+- Calls `claude --continue` in the project dir -> every call resumes the same conversation
+  (context grows run over run; earlier listings can leak into later verdicts).
+- One session per project at a time (409 if busy), 3 projects max, 120 s timeout; plain-text reply.
+
+### Design
+- Gateway project `searchproduct_vet` (instructions.md = vetting rubric; `context: "none"`).
+  Reply format: one JSON object, parsed leniently (first {...} block); failure -> verdict `unvetted`.
+- Evidence gathered by price_watch (no LLM tools needed):
+  a. Amazon product page: brand, review count, star histogram, bought/month, bullets (amazon_detail.py, done).
+  b. Today's other listings for the item (live) -> lets Claude name a better pick from real prices.
+  c. Per-item reference products (`reference_queries`, e.g. "Anker power bank 10000mAh"): live Amazon
+     search each run -> name-brand baseline price for the "vs standard" comparison.
+  d. (optional, Q2) brand-reputation snippets via Playwright web search.
+- Cache verdict per listing+price for 7 days (store.vettings, done) -> only new/changed listings cost a call.
+- Calls are serial (gateway per-project lock), ~10–20 s each; 2 items x 5 listings ~ 3 min worst case.
+- Report: verdict column + per-item "Vetting" section. Digest: verdict on each alert line; best line
+  shows the best non-avoid listing. Alerts on `avoid` listings are not sent; listed as "skipped".
+- Interview: done by me (interactive Claude) when the user asks to add an item — rule in CLAUDE.md.
+  I run live Amazon searches per feature tier, present "feature -> typical price add", ask, then write
+  `requirements` (+ include/exclude/target/reference_queries) on the item.
+
+### Subtasks
+- [x] 14. config: item `requirements`; defaults vet / vet_model / vet_cache_days / vet_budget_usd
+- [x] 15. amazon_detail.py: product-page facts parser + fetch
+- [~] 16. vet.py + store.vettings cache (written for direct `claude -p`; runner must move to gateway)
+- [ ] 17. Gateway runner: create `searchproduct_vet` project + instructions.md; `gateway.py` client
+         (token, 409 retry, timeout, lenient JSON parse); drop claude-direct runner and vet_budget_usd
+- [ ] 18. `reference_queries` per item: live Amazon search, passed to vetting + shown in report
+- [ ] 19. Wire into run_items; report/digest changes; avoid-verdict alerts skipped
+- [ ] 20. Tests (fake gateway runner, parser, cache, report) + live run + adversarial review
+- [ ] 21. CLAUDE.md: new-item interview rule; run the interview for power-bank + desktop-pc now
+- [ ] 22. Docs: CLAUDE.md automation section, PROGRESS.md
+
+### Open questions (need user)
+- Q1 (`--continue` context bleed): gateway resumes one conversation for every call. Options:
+  (a) add a per-request `fresh: true` flag to the gateway (small change in openclaw-config — another
+  project); (b) accept it and rely on each prompt being self-contained. Recommend (a).
+- Q2 (no web search through gateway): is product-page + reference-product evidence enough, or add
+  a Playwright web search for brand reputation (slower, may hit captchas)? Recommend start without.
+- Q3 (cost premise): the gateway also runs the `claude` CLI on the same login as `claude -p`. If that
+  login is a subscription, neither path bills per call. Keep the gateway anyway (central logging,
+  one place to change model)? Default: yes, as asked.
+
 ## Open assumptions
 - Discord channel for alerts: unknown → set `notify.discord_target` in watchlist.json.
 - Daily 08:00 run time chosen as default.
