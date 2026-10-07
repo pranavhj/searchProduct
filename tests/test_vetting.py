@@ -16,7 +16,8 @@ from test_price_watch import D, FakeNotifier, FakeService, _wl, obs
 AVOID = ('{"verdict": "avoid", "summary": "no-name, capacity overstated", "red_flags": ["light for 10k"], '
          '"standard_product": "Anker 10k", "standard_price": "$18.99", "vs_standard": "worse cells", '
          '"better_pick": ""}')
-BUY = AVOID.replace('"avoid"', '"buy"')
+BUY = AVOID.replace('"avoid"', '"buy"').replace(
+    '"red_flags"', '"meets_requirements": "yes", "knockoff_risk": "low", "whole_item": "yes", "red_flags"')
 
 
 @pytest.fixture
