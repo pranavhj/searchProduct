@@ -14,14 +14,20 @@ User lives in **Milpitas, CA 95035**. Prefer local pickup / closest listings (So
 ## Rule: only live, verified prices
 Never quote a price as current unless it was fetched live this session from the seller/listing itself (MCP tool result, SerpApi, or browser automation). If a source can't be read (blocked, not configured), get it another way — Playwright (`python tools/amazon_prices.py "<query>"` for Amazon) or the Playwriter extension — before reporting. Deal-site posts / review articles are history, not prices: label them "past deal, date X" or leave them out. If no live price could be obtained, say so explicitly.
 
-## New item: interview first
-Before searching for or watching a new item, ask product-specific questions (power bank: capacity,
-wattage, wireless/MagSafe, built-in cable, size/weight; PC: CPU class, RAM, storage, GPU, form factor;
-etc.) — use AskUserQuestion. For each feature, show what it typically adds to the price, taken from
-live searches of name-brand models at each tier (e.g. "20W $10 → 45W $21 → Qi2 wireless $47", with
-dates). Record the answers in the item's `requirements` (watchlist.json) and wishlist notes, and set
-`reference_queries` to the standard / most-recommended product(s) for those answers. The daily vetting
-judges listings against `requirements`.
+## New item: interview first (every product category)
+Before searching for or watching any new item, find out what the user actually needs:
+1. Work out the features that drive price and quality differences in that product category (from
+   live listings + reviewer guides for the category, not from a fixed list) — typically 3-5 questions
+   such as performance tier, key capability on/off, size/capacity, condition (new/used), brand preference.
+2. For each option, show what it typically adds to the price, from **live** searches of established-brand
+   models at each tier (date them). Mark the cheapest tier that still meets common needs.
+3. Ask. Interactive session: AskUserQuestion. **Discord / headless session** (no question tool): send the
+   numbered questions with the per-option prices as your reply, and add the item to `wishlist.md` as
+   `want` with "awaiting answers" — do not add or enable it in `watchlist.json` until the user answers.
+4. Record answers as the item's `requirements` (plain sentences: must-haves, deal-breakers, acceptable
+   trade-offs, brand premium the user accepts) and set `reference_queries` to the standard /
+   most-recommended product(s) for those answers. Daily vetting judges every listing against these;
+   items without `requirements` are flagged in the report and Discord digest until this is done.
 
 ## Workflow
 1. Read `wishlist.md`; for each item in `want`/`searching`, search both servers.
@@ -61,6 +67,9 @@ set) + Windows toast; each listing alerted once per price level.
   LLM Gateway (`127.0.0.1:18789`, project `searchproduct_vet` at `~/projects/searchproduct_vet_llm_gateway`,
   Haiku, `fresh: true`). Verdicts cached 7 days per listing+price (`vettings` table); alerts on `avoid`
   listings are withheld. Turn off with `defaults.vet: false`. Gateway down → listings show `unvetted`.
+  The model answers product-agnostic checks (meets_requirements, knockoff_risk, whole_item); code applies
+  hard rules (`vet.apply_rules`): unmet requirement / high knock-off risk / part-only price → avoid;
+  "buy" needs confirmed requirements. Rules only make a verdict stricter.
 - `tests\run_tests.cmd` — price_watch unit tests (shopping-deals venv)
 - `scripts\install_schedule.ps1 [-Time 08:00] [-Uninstall]` — (re)register the daily task
 - Logs: `data/logs/price_watch.log`. eBay public scrape returns 403 → eBay coverage needs the official API keys.
