@@ -149,7 +149,11 @@
         "cable only"
       ],
       "notes": "Specs assumed (10k mAh, USB-C PD). Target $10 sticker (user 2026-10-06); pickup within 10 mi.",
-      "max_miles": 10.0
+      "max_miles": 10.0,
+      "reference_queries": [
+        "Anker power bank 10000mAh",
+        "INIU power bank 10000mAh"
+      ]
     },
     {
       "id": "smart-plug-alexa",
@@ -214,7 +218,10 @@
         "supports up to"
       ],
       "notes": "User: <$30, >=64GB RAM, >=512GB storage (knowingly unrealistic). price_max 250 so report shows nearest misses; alerts only <= $30. Storage not reliably in titles - verify per listing. Parts sales list one per-part price for a whole build - excluded (user 2026-10-06).",
-      "max_miles": 40.0
+      "max_miles": 40.0,
+      "reference_queries": [
+        "refurbished workstation 64GB RAM"
+      ]
     }
   ]
 }

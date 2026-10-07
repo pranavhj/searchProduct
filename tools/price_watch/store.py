@@ -61,6 +61,11 @@ CREATE TABLE IF NOT EXISTS vettings (
     vetted_at TEXT NOT NULL,
     PRIMARY KEY (item_id, listing_key)
 );
+CREATE TABLE IF NOT EXISTS web_cache (
+    query TEXT PRIMARY KEY,
+    result_json TEXT NOT NULL,
+    fetched_at TEXT NOT NULL
+);
 """
 
 
@@ -211,4 +216,14 @@ class Store:
         self.conn.execute(
             "INSERT OR REPLACE INTO vettings VALUES (?,?,?,?,?,?)",
             (item_id, listing_key, price, verdict, result_json, _now().isoformat()))
+        self.conn.commit()
+
+    def get_web(self, query: str, max_age_days: int) -> str | None:
+        row = self.conn.execute("SELECT result_json, fetched_at FROM web_cache WHERE query=?", (query,)).fetchone()
+        if not row or (_now() - datetime.fromisoformat(row[1])).days >= max_age_days:
+            return None
+        return row[0]
+
+    def put_web(self, query: str, result_json: str) -> None:
+        self.conn.execute("INSERT OR REPLACE INTO web_cache VALUES (?,?,?)", (query, result_json, _now().isoformat()))
         self.conn.commit()

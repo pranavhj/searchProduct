@@ -71,7 +71,8 @@ or hits a target.
   b. Today's other listings for the item (live) -> lets Claude name a better pick from real prices.
   c. Per-item reference products (`reference_queries`, e.g. "Anker power bank 10000mAh"): live Amazon
      search each run -> name-brand baseline price for the "vs standard" comparison.
-  d. (optional, Q2) brand-reputation snippets via Playwright web search.
+  d. Web search snippets (D2): "<brand> <product> review" + "best <item> reddit/wirecutter", fetched by
+     price_watch (websearch.py), cached per brand/query for 7 days.
 - Cache verdict per listing+price for 7 days (store.vettings, done) -> only new/changed listings cost a call.
 - Calls are serial (gateway per-project lock), ~10–20 s each; 2 items x 5 listings ~ 3 min worst case.
 - Report: verdict column + per-item "Vetting" section. Digest: verdict on each alert line; best line
@@ -86,21 +87,19 @@ or hits a target.
 - [~] 16. vet.py + store.vettings cache (written for direct `claude -p`; runner must move to gateway)
 - [ ] 17. Gateway runner: create `searchproduct_vet` project + instructions.md; `gateway.py` client
          (token, 409 retry, timeout, lenient JSON parse); drop claude-direct runner and vet_budget_usd
+- [ ] 17b. Gateway `fresh` flag (D1) in openclaw-config llm-gateway.py + gateway-delegate.py
+- [ ] 17c. websearch.py: web search snippets for evidence (D2), cached
 - [ ] 18. `reference_queries` per item: live Amazon search, passed to vetting + shown in report
 - [ ] 19. Wire into run_items; report/digest changes; avoid-verdict alerts skipped
 - [ ] 20. Tests (fake gateway runner, parser, cache, report) + live run + adversarial review
 - [ ] 21. CLAUDE.md: new-item interview rule; run the interview for power-bank + desktop-pc now
 - [ ] 22. Docs: CLAUDE.md automation section, PROGRESS.md
 
-### Open questions (need user)
-- Q1 (`--continue` context bleed): gateway resumes one conversation for every call. Options:
-  (a) add a per-request `fresh: true` flag to the gateway (small change in openclaw-config — another
-  project); (b) accept it and rely on each prompt being self-contained. Recommend (a).
-- Q2 (no web search through gateway): is product-page + reference-product evidence enough, or add
-  a Playwright web search for brand reputation (slower, may hit captchas)? Recommend start without.
-- Q3 (cost premise): the gateway also runs the `claude` CLI on the same login as `claude -p`. If that
-  login is a subscription, neither path bills per call. Keep the gateway anyway (central logging,
-  one place to change model)? Default: yes, as asked.
+### Decisions (user 2026-10-07)
+- D1: add a per-request `fresh: true` option to the LLM Gateway (openclaw-config) -> no `--continue`.
+- D2: price_watch gathers ALL evidence itself, including web searches (brand reputation, reviewer
+  picks); the gateway is used only to turn evidence into a recommendation.
+- D3: route through the gateway (not direct `claude -p`).
 
 ## Open assumptions
 - Discord channel for alerts: unknown → set `notify.discord_target` in watchlist.json.
