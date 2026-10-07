@@ -106,6 +106,12 @@ One row per item. Status: `want` → `searching` → `found` → `bought` / `dro
   - Unbranded 10k "new, sealed" $12 FB Mountain View https://www.facebook.com/marketplace/item/1341379991452346
   - Anker 20k 30W $30 FB San Jose https://www.facebook.com/marketplace/item/1325905393047704
   - Aukey MixFlex 30W 10k new $30 Craigslist SF
+- **Quality vetting 2026-10-07** (price-watch alerts, Amazon live pages):
+  - WeeFancy mini 20W $9.49 4.3★ (213 reviews, 7% 1★) https://www.amazon.com/dp/B0F8HZCNTX — unknown brand; claims 10k mAh at 165 g, light for real 10k cells (genuine 10k banks ~180–220 g) → capacity may be overstated. **Avoid.**
+  - VEEKTOMX slim 22.5W $9.90 4.1★ (87 reviews, 12% 1★) https://www.amazon.com/dp/B0GXJV5YVQ — unknown brand, few reviews, high 1★ share. **Avoid.**
+  - Aaoyun 22.5W metal $9.49 4.5★ (786 reviews, 7% 1★) https://www.amazon.com/dp/B0H5W2VZ8B — best of the three no-names (193 g plausible, metal case), still no brand track record / warranty. Acceptable only if saving $0.76 matters.
+  - **Better value: INIU Slimmest 10000mAh 20W PD $10.25 4.3★ (968 reviews, 1K+/mo) https://www.amazon.com/dp/B0C1MXWPF8** — established brand, 3-yr warranty, 2× USB-C; only $0.76 over the no-names.
+  - Reference standards (live): INIU 45W $20.89 https://www.amazon.com/dp/B0CB1FW5FC ; Baseus 22.5W built-in cable $17.09 4.6★ https://www.amazon.com/dp/B0DFYPVPRT ; Anker PowerIQ 10k $18.99 https://www.amazon.com/dp/B0D5CLSMFB ; Anker 30W $24.69. Reviewer picks (EcoFlow Rapid, Anker MagGo, Belkin, Cuktech 10) are $45+ (wireless/high-watt — overkill for this ask).
 
 ### Smart plug (works with Alexa) — 2026-10-05
 - Amazon live (Playwright; coupons not captured):
