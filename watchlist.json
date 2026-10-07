@@ -151,9 +151,10 @@
       "notes": "Specs assumed (10k mAh, USB-C PD). Target $10 sticker (user 2026-10-06); pickup within 10 mi.",
       "max_miles": 10.0,
       "reference_queries": [
-        "Anker power bank 10000mAh",
-        "INIU power bank 10000mAh"
-      ]
+        "INIU power bank 10000mAh",
+        "Anker power bank 10000mAh"
+      ],
+      "requirements": "10,000mAh, USB-C. ~20W PD output is enough (no need for 30/45/100W). No wireless/MagSafe. Built-in cable optional (fine either way). Prefer an established brand (Anker, INIU, Baseus, Cuktech, etc.) whenever it costs less than $1 more than a no-name listing. (User interview 2026-10-07.)"
     },
     {
       "id": "smart-plug-alexa",

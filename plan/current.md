@@ -84,22 +84,31 @@ or hits a target.
 ### Subtasks
 - [x] 14. config: item `requirements`; defaults vet / vet_model / vet_cache_days / vet_budget_usd
 - [x] 15. amazon_detail.py: product-page facts parser + fetch
-- [~] 16. vet.py + store.vettings cache (written for direct `claude -p`; runner must move to gateway)
-- [ ] 17. Gateway runner: create `searchproduct_vet` project + instructions.md; `gateway.py` client
+- [x] 16. vet.py + store.vettings cache (written for direct `claude -p`; runner must move to gateway)
+- [x] 17. Gateway runner: create `searchproduct_vet` project + instructions.md; `gateway.py` client
          (token, 409 retry, timeout, lenient JSON parse); drop claude-direct runner and vet_budget_usd
-- [ ] 17b. Gateway `fresh` flag (D1) in openclaw-config llm-gateway.py + gateway-delegate.py
-- [ ] 17c. websearch.py: web search snippets for evidence (D2), cached
-- [ ] 18. `reference_queries` per item: live Amazon search, passed to vetting + shown in report
-- [ ] 19. Wire into run_items; report/digest changes; avoid-verdict alerts skipped
-- [ ] 20. Tests (fake gateway runner, parser, cache, report) + live run + adversarial review
-- [ ] 21. CLAUDE.md: new-item interview rule; run the interview for power-bank + desktop-pc now
-- [ ] 22. Docs: CLAUDE.md automation section, PROGRESS.md
+- [x] 17b. Gateway `fresh` flag (D1) in openclaw-config llm-gateway.py + gateway-delegate.py
+- [x] 17c. websearch.py: web search snippets for evidence (D2), cached
+- [x] 18. `reference_queries` per item: live Amazon search, passed to vetting + shown in report
+- [x] 19. Wire into run_items; report/digest changes; avoid-verdict alerts skipped
+- [x] 20. Tests (fake gateway runner, parser, cache, report) + live run + adversarial review
+- [x] 21. CLAUDE.md: new-item interview rule; run the interview for power-bank + desktop-pc now
+- [x] 22. Docs: CLAUDE.md automation section, PROGRESS.md
 
 ### Decisions (user 2026-10-07)
 - D1: add a per-request `fresh: true` option to the LLM Gateway (openclaw-config) -> no `--continue`.
 - D2: price_watch gathers ALL evidence itself, including web searches (brand reputation, reviewer
   picks); the gateway is used only to turn evidence into a recommendation.
 - D3: route through the gateway (not direct `claude -p`).
+
+### Result (2026-10-07)
+- Live run: power bank 10 listings vetted in ~6 min (3 alerts sent ok, 5 withheld avoid: 12W USB-A-only,
+  15W, brand mismatch, used w/o condition). 79 tests; adversarial review: 6 findings fixed (run budget +
+  2-failure breaker, cap after withholding, tests that fail on mutation, guarded per-listing pipeline,
+  prompt cap 20k / peers 20, gateway fresh parses JSON true only, cache keyed on requirements hash).
+- Known limits: Haiku is lenient ("ok") on no-name packs with decent reviews; verdicts can flip between
+  runs (non-deterministic). Gateway `fresh` needs openclaw-config branch searchproduct-fresh-ask merged +
+  gateway restart; until then calls resume one conversation.
 
 ## Open assumptions
 - Discord channel for alerts: unknown → set `notify.discord_target` in watchlist.json.

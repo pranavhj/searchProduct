@@ -56,9 +56,23 @@ def _pct_below(new: float, old: float) -> float:
     return (old - new) / old * 100 if old else 0.0
 
 
+def cap_target_alerts(alerts: list[Alert]) -> list[Alert]:
+    """Keep at most MAX_TARGET_ALERTS_PER_ITEM target hits (cheapest first, as ordered); other kinds kept."""
+    out, hits = [], 0
+    for a in alerts:
+        if a.kind == "target_hit":
+            hits += 1
+            if hits > MAX_TARGET_ALERTS_PER_ITEM:
+                continue
+        out.append(a)
+    return out
+
+
 def analyze_item(
-    store: Store, run_id: int, item: WatchItem, fetch: FetchResult, defaults: Defaults, today: date | None = None
+    store: Store, run_id: int, item: WatchItem, fetch: FetchResult, defaults: Defaults, today: date | None = None,
+    cap_targets: bool = True,
 ) -> ItemSummary:
+    """cap_targets=False leaves the target-hit cap to the caller (vetting withholds 'avoid' alerts first)."""
     today = today or date.today()
     drop_pct = item.drop_pct if item.drop_pct is not None else defaults.drop_pct
     obs = sorted(fetch.observations, key=lambda o: o.price)
@@ -101,7 +115,6 @@ def analyze_item(
 
     # One alert per listing (first = highest priority), skip already-sent, then cap target hits.
     seen: set[str] = set()
-    target_hits = 0
     for a in alerts:
         if a.obs.key in seen:
             continue
@@ -109,11 +122,9 @@ def analyze_item(
         if store.alert_sent(item.id, a.obs.key, a.obs.price):
             log.debug("item=%s alert suppressed (already sent) key=%s price=%.2f", item.id, a.obs.key, a.obs.price)
             continue
-        if a.kind == "target_hit":
-            target_hits += 1
-            if target_hits > MAX_TARGET_ALERTS_PER_ITEM:
-                continue
         summary.alerts.append(a)
+    if cap_targets:
+        summary.alerts = cap_target_alerts(summary.alerts)
 
     log.info(
         "item=%s best=%s baseline=%s days=%d prev=%s new=%d alerts=%d",

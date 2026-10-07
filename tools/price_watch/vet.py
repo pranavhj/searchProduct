@@ -15,9 +15,11 @@ Verdicts are cached per listing+price (store.vettings), so only new or re-priced
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import json
 import logging
 import re
+import time
 from dataclasses import asdict, dataclass, field
 from typing import Any, Awaitable, Callable
 
@@ -28,6 +30,10 @@ from price_watch.fetch import Observation
 log = logging.getLogger("price_watch.vet")
 
 VERDICTS = ("buy", "ok", "avoid")
+RUN_BUDGET_MIN = 20  # all vetting in one run; the scheduled task is killed at 1 h
+MAX_CONSECUTIVE_FAILURES = 2  # then stop calling the gateway for the rest of the run (down / hung)
+PEER_LIMIT = 20  # cheapest other listings shown to the model
+MAX_PROMPT_CHARS = 20000  # gateway passes the message as a Windows command-line argument (32k limit)
 
 RUBRIC = """You are a skeptical shopping analyst vetting ONE listing for a buyer in Milpitas, CA.
 Cheapest is not a recommendation. Decide:
@@ -82,6 +88,31 @@ class ItemEvidence:
     reviewer_picks: list[dict] = field(default_factory=list)  # web snippets: best-of / reddit
 
 
+class Budget:
+    """Run-wide limits so a slow or dead gateway cannot eat the scheduled run."""
+
+    def __init__(self, minutes: float = RUN_BUDGET_MIN, max_failures: int = MAX_CONSECUTIVE_FAILURES):
+        self.deadline = time.monotonic() + minutes * 60
+        self.max_failures = max_failures
+        self.failures = 0
+
+    def exhausted(self) -> str | None:
+        if self.failures >= self.max_failures:
+            return f"{self.failures} consecutive gateway failures"
+        if time.monotonic() >= self.deadline:
+            return "run vetting time budget used up"
+        return None
+
+    def record(self, ok: bool) -> None:
+        self.failures = 0 if ok else self.failures + 1
+
+
+def context_hash(item: WatchItem) -> str:
+    """Changes when what a verdict depends on changes (requirements, references, rubric) -> re-vet."""
+    basis = json.dumps([item.query, item.requirements, item.reference_queries, item.target_price, RUBRIC])
+    return hashlib.sha1(basis.encode("utf-8")).hexdigest()[:12]
+
+
 Runner = Callable[[str], str]  # prompt -> reply text
 DetailFn = Callable[[str], Awaitable[dict[str, str]]]
 ReferenceFn = Callable[[str], Awaitable[list[dict]]]
@@ -128,12 +159,16 @@ def build_prompt(item: WatchItem, obs: Observation, facts: dict[str, str], brand
         parts += ["", "WEB SEARCH - reviewer / community picks for this item:"] + _web_lines(evidence.reviewer_picks)
     if evidence.references:
         parts += ["", "REFERENCE PRODUCTS (standard / name-brand, live Amazon today):"]
-        parts += [f"- ${r['price']:.2f} | {r.get('seller_rating') or '-'}★ | {r['title'][:120]} | {r['url']}"
-                  for r in evidence.references if r.get("price")]
-    others = [p for p in peers if p.key != obs.key]
+        parts += [f"- ${float(r['price']):.2f} | {r.get('seller_rating') or '-'}★ | {str(r.get('title', ''))[:120]} | "
+                  f"{r.get('url', '')}" for r in evidence.references if r.get("price")]
+    others = sorted((p for p in peers if p.key != obs.key), key=lambda p: p.price)[:PEER_LIMIT]
     if others:
-        parts += ["", "TODAY'S LISTINGS for the same search (live):"] + [f"- {_line(p)}" for p in others]
-    return "\n".join(parts)
+        parts += ["", "TODAY'S LISTINGS for the same search (live, cheapest first):"] + [f"- {_line(p)}" for p in others]
+    prompt = "\n".join(parts)
+    if len(prompt) > MAX_PROMPT_CHARS:
+        log.warning("item=%s prompt %d chars truncated to %d", item.id, len(prompt), MAX_PROMPT_CHARS)
+        prompt = prompt[:MAX_PROMPT_CHARS]
+    return prompt
 
 
 async def gather_item_evidence(item: WatchItem, store: Any, defaults: Defaults, reference: ReferenceFn | None,
@@ -155,43 +190,63 @@ async def gather_item_evidence(item: WatchItem, store: Any, defaults: Defaults, 
 
 async def vet_listings(store: Any, item: WatchItem, to_vet: list[Observation], peers: list[Observation],
                        defaults: Defaults, runner: Runner, detail: DetailFn | None = None,
-                       reference: ReferenceFn | None = None, web: WebFn = websearch.search) -> dict[str, Vetting]:
+                       reference: ReferenceFn | None = None, web: WebFn = websearch.search,
+                       budget: Budget | None = None) -> dict[str, Vetting]:
     """Vet each listing (cached verdicts reused). Failures become verdict 'unvetted', never raise."""
+    budget = budget or Budget()
+    ctx = context_hash(item)
     results: dict[str, Vetting] = {}
     todo: list[Observation] = []
     for o in to_vet:
-        cached = store.get_vetting(item.id, o.key, o.price, defaults.vet_cache_days)
-        if cached:
-            v = Vetting.from_json(json.loads(cached))
-            v.cached = True
-            results[o.key] = v
-        elif o.key not in {t.key for t in todo}:
+        try:
+            cached = store.get_vetting(item.id, o.key, o.price, defaults.vet_cache_days)
+            data = json.loads(cached) if cached else None
+            if data and data.get("ctx") == ctx:
+                v = Vetting.from_json(data)
+                v.cached = True
+                results[o.key] = v
+                continue
+        except (ValueError, TypeError) as exc:  # bad cache row: just re-vet
+            log.warning("item=%s bad cached vetting key=%s: %s", item.id, o.key, exc)
+        if o.key not in {t.key for t in todo}:
             todo.append(o)
     log.info("item=%s vetting %d listing(s), %d cached", item.id, len(todo), len(results))
     if not todo:
         return results
 
-    evidence = await gather_item_evidence(item, store, defaults, reference, web)
+    try:
+        evidence = await gather_item_evidence(item, store, defaults, reference, web)
+    except Exception as exc:  # evidence is best-effort
+        log.warning("item=%s evidence gathering failed: %s", item.id, exc)
+        evidence = ItemEvidence()
     # Serial on purpose: one shared headless browser, and the gateway runs one call per project at a time.
     for o in todo:
-        facts: dict[str, str] = {}
-        if detail is not None and o.source == "amazon":
-            try:
-                facts = await detail(o.url)
-            except Exception as exc:  # vetting still runs on search-card data
-                log.warning("item=%s detail fetch failed %s: %s", item.id, o.url, exc)
-        brand = brand_of(o, facts)
-        brand_web = web(f"{brand} {item.query} review", 4, store, defaults.vet_cache_days) if brand else []
-        prompt = build_prompt(item, o, facts, brand_web, peers, evidence)
+        stop = budget.exhausted()
+        if stop:
+            log.warning("item=%s skip vetting key=%s: %s", item.id, o.key, stop)
+            results[o.key] = Vetting("unvetted", f"vetting skipped: {stop}")
+            continue
         try:
+            facts: dict[str, str] = {}
+            if detail is not None and o.source == "amazon":
+                try:
+                    facts = await detail(o.url)
+                except Exception as exc:  # vetting still runs on search-card data
+                    log.warning("item=%s detail fetch failed %s: %s", item.id, o.url, exc)
+            brand = brand_of(o, facts)
+            brand_web = web(f"{brand} {item.query} review", 4, store, defaults.vet_cache_days) if brand else []
+            prompt = build_prompt(item, o, facts, brand_web, peers, evidence)
             reply = await asyncio.to_thread(runner, prompt)
             v = Vetting.from_json(gateway.parse_json_reply(reply))
-        except Exception as exc:  # one failed call must not sink the run
+        except Exception as exc:  # one failed listing must not sink the run
+            budget.record(ok=False)
             log.warning("item=%s vet failed key=%s: %s: %s", item.id, o.key, type(exc).__name__, exc)
             results[o.key] = Vetting("unvetted", f"vetting failed: {type(exc).__name__}")
             continue
+        budget.record(ok=True)
         results[o.key] = v
         data = {k: val for k, val in asdict(v).items() if k != "cached"}
+        data["ctx"] = ctx
         store.put_vetting(item.id, o.key, o.price, v.verdict, json.dumps(data))
         log.info("item=%s vetted key=%s price=%.2f brand=%r verdict=%s flags=%s",
                  item.id, o.key, o.price, brand, v.verdict, v.red_flags)
