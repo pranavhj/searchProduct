@@ -37,6 +37,9 @@ class WatchItem:
     must_include: list[str] = field(default_factory=list)  # each entry: "a|b" = a OR b; all entries required
     exclude: list[str] = field(default_factory=list)
     notes: str = ""
+    # What the user actually wants (features, must-haves, deal-breakers) - from the new-item interview.
+    # Fed to the per-listing quality vetting so "cheap" is judged against real needs.
+    requirements: str = ""
 
 
 @dataclass
@@ -47,6 +50,10 @@ class Defaults:
     max_results_per_source: int = 15
     top_n_report: int = 5
     max_miles: float = 25.0
+    vet: bool = True  # Claude quality-vets every reported listing + alert (one headless call per listing)
+    vet_model: str = "haiku"
+    vet_cache_days: int = 7  # reuse a verdict for the same listing at the same price this long
+    vet_budget_usd: float = 0.10  # per-call cap passed to claude --max-budget-usd
 
 
 @dataclass
