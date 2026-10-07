@@ -56,3 +56,17 @@ def test_urls_variables_and_band() -> None:
     assert facebook_sort_variables(v)["params"]["browse_request_params"]["commerce_search_sort_by"] == "PRICE_ASCEND"
     assert "commerce_search_sort_by" not in v["params"]["browse_request_params"]  # input not mutated
     assert (in_band(None, 1, 5), in_band(0, 3, None), in_band(4, 3, 5)) == (False, False, True)
+
+
+def test_duplicate_listing_keeps_review_count_from_the_later_copy() -> None:
+    row = {"id": "B1", "source": "amazon", "title": "Power Bank", "url": "u", "price": 9.99, "seller_rating": 4.5}
+
+    class Amz:
+        async def find_best_deals(self, query: str, **kw: object) -> dict:
+            return {"best_deals": [{"listing": row}]}
+
+    async def cheapest(*a: object) -> list[dict]:
+        return [{"listing": row, "review_count": 321}]
+
+    res = asyncio.run(fetch_item(Amz(), WatchItem("p", "power bank", sources=["amazon"]), D, amazon_cheapest=cheapest))
+    assert res.observations[0].review_count == 321

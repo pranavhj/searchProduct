@@ -65,8 +65,29 @@ def test_unknown_brand_with_few_reviews_and_low_rating_is_risky() -> None:
     assert v.verdict == "risky"
 
 
-def test_known_brand_with_many_good_reviews_is_worth_it() -> None:
-    assert build_vet(amz(19, 5000, 4.6), MARKET).verdict == "worth it"
+def test_card_only_listing_with_no_flags_is_not_called_worth_it() -> None:
+    assert build_vet(amz(19, 5000, 4.6), MARKET).verdict == "no red flags found"
+
+
+def test_page_checked_listing_with_many_good_reviews_is_worth_it() -> None:
+    page = PageInfo("A", rating=4.6, review_count=5000, seller="Amazon", brand="Anker")
+    assert build_vet(amz(19, 5000, 4.6), MARKET, page).verdict == "worth it"
+
+
+def test_multiword_known_brand_in_title_is_recognised() -> None:
+    assert build_vet(amz(19, 5000, 4.6, "Sunny Health pull up bar"), MARKET).flag_texts() == []
+
+
+def test_leading_pack_count_does_not_become_the_brand() -> None:
+    assert build_vet(amz(19, 5000, 4.6, "2 Pack Anker power bank"), MARKET).flag_texts() == []
+
+
+def test_pm_me_wording_is_only_a_risk_not_a_trap() -> None:
+    assert build_vet(local(24, "pm me, power bank anker 20000"), MARKET).verdict == "no red flags found"
+
+
+def test_full_pc_mentioning_motherboard_is_not_called_a_trap() -> None:
+    assert build_vet(local(24, "Gaming PC ASUS motherboard 64GB RAM"), MARKET).verdict == "no red flags found"
 
 
 def test_card_only_vet_is_lower_confidence() -> None:
@@ -86,7 +107,7 @@ def test_sealed_at_half_price_is_a_trap() -> None:
     assert build_vet(local(10, "Brand new sealed Anker power bank"), MARKET).verdict == "probably a trap"
 
 
-def test_motherboard_listing_is_flagged_as_partial() -> None:
+def test_supports_64gb_listing_is_flagged_as_partial() -> None:
     v = build_vet(local(20, "ASUS motherboard supports 64GB ram"), MARKET)
     assert "possible per-part/partial listing - confirm what the price covers" in v.flag_texts()
 

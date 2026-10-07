@@ -6,6 +6,7 @@ page for alerted Amazon items). It cannot judge real product quality, so confide
 """
 from __future__ import annotations
 
+import asyncio
 import logging
 import re
 import statistics
@@ -20,6 +21,7 @@ log = logging.getLogger("price_watch.vet")
 MIN_PEERS = 5  # comparable listings needed before 'far below median' means anything
 FAR_BELOW = 0.5  # price < 50% of the median of this run's relevant listings
 MAX_PAGE_VETS_PER_ITEM = 3
+PAGE_TIMEOUT_S = 90
 
 # Mainstream brands only; anything else is "unrecognised", not "bad" - hence a risk flag, not a trap flag.
 KNOWN_BRANDS = {
@@ -32,12 +34,12 @@ KNOWN_BRANDS = {
     "garren", "sportsroyals", "jfit", "kootek", "vivitar", "logitech", "tp-link", "govee", "kasa", "wyze",
 }
 
-SCAM_RE = re.compile(r"\b(zelle|venmo|cash ?app|gift ?card|deposit|western union|wire transfer|courier|"
-                     r"shipping only|text me|pm me|whatsapp)\b", re.I)
+SCAM_RE = re.compile(r"\b(zelle|venmo|cash ?app|gift ?card|western union|wire transfer)\b", re.I)
+CONTACT_RE = re.compile(r"\b(deposit|courier|shipping only|text me|pm me|whatsapp)\b", re.I)  # common; worth a look
 SEALED_RE = re.compile(r"\b(sealed|brand new|new in box|nib|unopened|never opened|bnib)\b", re.I)
-PARTS_RE = re.compile(r"\b(for parts|parts only|no ram|no ssd|no hdd|no storage|no os|barebones?|bare|case only|"
-                      r"motherboard|board only|cpu only|supports? \d+ ?gb|handle only|bracket only|"
-                      r"read description)\b", re.I)
+PARTS_RE = re.compile(r"\b(for parts|parts only|no ram|no ssd|no hdd|no storage|barebones?|case only|"
+                      r"board only|cpu only|supports? \d+ ?gb|handle only|bracket only)\b", re.I)
+PARTS_SOFT_RE = re.compile(r"\b(motherboard|bare|read description)\b", re.I)  # may be a whole item mentioning them
 USED_RE = re.compile(r"\b(refurbished|renewed|open box|used|pre-?owned|like new)\b", re.I)
 
 STRONG, RISK, INFO = "strong", "risk", "info"
@@ -69,8 +71,20 @@ def peer_median(observations: list[Observation], exclude_key: str) -> float | No
     return statistics.median(prices) if len(prices) >= MIN_PEERS else None
 
 
-def _brand_word(title: str) -> str:
-    return re.sub(r"[^a-z0-9. -]", "", title.lower().split(" ")[0]) if title.strip() else ""
+def known_brand(title: str, page_brand: str | None) -> str | None:
+    """A KNOWN_BRANDS entry that the page brand starts with or that appears in the first words of the title."""
+    head = " ".join(re.findall(r"[a-z0-9.]+", title.lower())[:6])
+    pb = " ".join(re.findall(r"[a-z0-9.]+", (page_brand or "").lower()))
+    for b in KNOWN_BRANDS:
+        if (pb and (pb == b or pb.startswith(b + " "))) or re.search(rf"(?:^| ){re.escape(b)}(?: |$)", head):
+            return b
+    return None
+
+
+def _brand_label(title: str, page_brand: str | None) -> str:
+    words = (page_brand or "").split() or [w for w in re.findall(r"[A-Za-z0-9.]+", title)
+                                          if not w.isdigit() and w.lower() not in ("pack", "new", "the")][:1]
+    return words[0].lower() if words else ""
 
 
 def flags_for(obs: Observation, median: float | None, page: PageInfo | None = None) -> list[Flag]:
@@ -93,8 +107,9 @@ def flags_for(obs: Observation, median: float | None, page: PageInfo | None = No
             flags.append(Flag(RISK, f"few ratings ({reviews})"))
         if rating is not None and rating < 4.0:
             flags.append(Flag(RISK, f"rating {rating:.1f}★ < 4.0"))
-        brand = (page.brand.split()[0] if page and page.brand else _brand_word(title)).lower()
-        if brand and not any(brand == b or brand.startswith(b + " ") for b in KNOWN_BRANDS):
+        page_brand = page.brand if page else None
+        brand = _brand_label(title, page_brand)
+        if brand and not known_brand(title, page_brand):
             flags.append(Flag(RISK if (reviews or 0) < 500 else INFO, f"unrecognised brand '{brand}'"))
         if page is not None:
             if page.third_party:
@@ -108,10 +123,14 @@ def flags_for(obs: Observation, median: float | None, page: PageInfo | None = No
     elif obs.source in LOCAL_SOURCES:
         if SCAM_RE.search(title):
             flags.append(Flag(STRONG, "scam-style payment/contact wording in title"))
+        if CONTACT_RE.search(title):
+            flags.append(Flag(RISK, "off-platform contact/deposit/courier wording"))
         if SEALED_RE.search(title) and median is not None and obs.price < 0.6 * median:
             flags.append(Flag(STRONG, "claims new/sealed at <60% of market"))
         if PARTS_RE.search(title):
             flags.append(Flag(STRONG, "possible per-part/partial listing - confirm what the price covers"))
+        elif PARTS_SOFT_RE.search(title):
+            flags.append(Flag(RISK, "title mentions a part (motherboard/bare) - confirm it's the whole item"))
         if obs.price == 0:
             flags.append(Flag(STRONG, "$0 price - likely placeholder or 'free'"))
         if len(re.findall(r"[A-Za-z0-9]+", title)) <= 3:
@@ -127,15 +146,17 @@ def judge(flags: list[Flag], page: PageInfo | None, obs: Observation) -> tuple[s
         verdict = "probably a trap"
     elif len(risks) >= 2:
         verdict = "risky"
-    else:
+    elif page is not None and (page.review_count or 0) >= 50:
         verdict = "worth it"
+    else:
+        verdict = "no red flags found"  # nothing flagged, but no product-page evidence to say "worth it"
     reviews = page.review_count if page and page.review_count is not None else obs.review_count
     checked = page is not None and (reviews or 0) >= 50
     confidence = "medium" if checked else "lower"
     if obs.source == "amazon":
         basis = (f"product page read, {reviews} ratings" if checked else
                  "card data only (rating/review count/title); product page not read" if page is None else
-                 f"product page read but only {reviews or 0} ratings")
+                 f"product page read but ratings count {'unreadable' if reviews is None else f'only {reviews}'}")
         would = "real-world quality is unverified; ratings can be incentivised or from a different variant"
     else:
         basis = "listing title/price vs this run's other listings; photos and seller not seen"
@@ -153,7 +174,7 @@ def build_vet(obs: Observation, peers: list[Observation], page: PageInfo | None 
         # Amazon's per-aspect blurb is usually the positive majority view; only quote it when the aspect is mixed.
         vet.themes = [f"{a.name}: {a.negative}/{a.mentions} negative" +
                       (f" - {a.summary}" if a.summary and a.negative / a.mentions >= 0.3 else "")
-                      for a in page.complaints()[:3]]
+                      for a in page.complaints()[:3] if a.mentions]
         if page.low_star_pct is not None and page.low_star_pct >= 10:
             vet.themes.insert(0, f"{page.low_star_pct}% of ratings are 1-2★")
     return vet
@@ -178,10 +199,13 @@ async def vet_summary(summary: Any, top_n: int, fetch_page: PageFetcher | None) 
         if o.source == "amazon" and fetch_page is not None and page_budget > 0 and o.key not in pages:
             page_budget -= 1
             try:
-                pages[o.key] = await fetch_page(o.listing_id)
+                pages[o.key] = await asyncio.wait_for(fetch_page(o.listing_id), PAGE_TIMEOUT_S)
             except Exception as exc:  # vetting is context; the alert still goes out
                 log.warning("item=%s page vet failed for %s: %s", summary.item.id, o.listing_id, exc)
     for key, o in targets.items():
-        o.vet = build_vet(o, observations, pages.get(key))
+        try:
+            o.vet = build_vet(o, observations, pages.get(key))
+        except Exception:  # one odd listing must not leave the rest un-vetted
+            log.exception("item=%s vet failed for %s", summary.item.id, key)
     log.info("item=%s vetted=%d pages=%d verdicts=%s", summary.item.id, len(targets), len(pages),
              sorted({o.vet.verdict for o in targets.values()}))
