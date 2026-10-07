@@ -1,6 +1,7 @@
 """Run one watch item through ShoppingDealsService and keep only relevant, priced listings."""
 from __future__ import annotations
 
+import asyncio
 import logging
 import re
 from dataclasses import dataclass
@@ -149,7 +150,7 @@ async def fetch_item(service: DealsService, item: WatchItem, defaults: Defaults,
     counts: dict[str, int] = {}
     if amazon_counts is not None and "amazon" in sources:
         try:
-            counts = await amazon_counts(item.query, item.price_min, item.price_max)
+            counts = await asyncio.wait_for(amazon_counts(item.query, item.price_min, item.price_max), 90)
         except Exception as exc:  # review counts are context, not required
             log.warning("item=%s amazon review counts failed: %s", item.id, exc)
             errors = {**errors, "amazon_counts": f"{type(exc).__name__}: {exc}"}
@@ -192,7 +193,10 @@ async def fetch_item(service: DealsService, item: WatchItem, defaults: Defaults,
             review_count=(deal.get("review_count") or counts.get(str(listing.get("id")))
                           if listing.get("source") == "amazon" else None),
         )
-        if obs.key in seen:
+        if obs.key in seen:  # a later duplicate may carry data the first copy lacks
+            first = next(o for o in observations if o.key == obs.key)
+            first.review_count = first.review_count or obs.review_count
+            first.rating = first.rating if first.rating is not None else obs.rating
             continue
         seen.add(obs.key)
         observations.append(obs)

@@ -33,15 +33,19 @@ def _reviews(o: Observation) -> str:
     return f" ({o.review_count:,})" if o.review_count is not None else ""
 
 
-def vet_lines(o: Observation) -> list[str]:
+def vet_lines(o: Observation, brief: bool = False) -> list[str]:
     """Plain-text evidence lines for one listing: verdict, flags, complaint themes."""
     v = o.vet
     if v is None:
         return []
-    icon = {"worth it": "✅", "risky": "⚠️", "probably a trap": "🚩"}.get(v.verdict, "")
+    icon = {"worth it": "✅", "no red flags found": "➖", "risky": "⚠️", "probably a trap": "🚩"}.get(v.verdict, "")
     out = [f"{icon} **{v.verdict}** (confidence: {v.confidence}) — based on: {v.basis}"]
     if v.flags:
         out.append("Flags: " + "; ".join(v.flag_texts()))
+    if brief:  # Discord: verdict + flags + top complaint only
+        if v.themes:
+            out.append("Top complaint: " + _cell(v.themes[0])[:120])
+        return out
     if v.themes:
         out.append("Complaints: " + " | ".join(_cell(t)[:200] for t in v.themes))
     if v.customers_say:
@@ -122,7 +126,7 @@ def digest(summaries: list[ItemSummary], report_path: Path) -> str:
     lines = [f"**Price watch** — {len(alerts)} alert(s)"]
     for a in alerts:
         lines.append(alert_line(a, md_links=False))
-        lines += [f"    {line}" for line in vet_lines(a.obs)]
+        lines += [f"    {line}" for line in vet_lines(a.obs, brief=True)]
     lines.append("")
     for s in summaries:
         if s.best:
