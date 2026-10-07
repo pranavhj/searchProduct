@@ -36,6 +36,14 @@ class ItemSummary:
     new_listings: list[Observation] = field(default_factory=list)
     alerts: list[Alert] = field(default_factory=list)
     first_run: bool = False
+    vettings: dict = field(default_factory=dict)  # listing key -> vet.Vetting
+    skipped_alerts: list[Alert] = field(default_factory=list)  # alerts withheld: vetting said "avoid"
+
+    def best_vetted(self) -> Observation | None:
+        """Cheapest listing not vetted 'avoid' (unvetted counts as not-avoid)."""
+        ok = [o for o in self.fetch.observations
+              if getattr(self.vettings.get(o.key), "verdict", None) != "avoid"]
+        return min(ok, key=lambda o: o.price) if ok else None
 
     @property
     def change_pct(self) -> float | None:
