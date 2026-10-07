@@ -63,21 +63,24 @@ def _deliver(wl: config.Watchlist, summaries: list, alerts: list, path: Path, no
 
 
 async def _vet_summary(vetter: Any, item: WatchItem, summary: Any, top_n: int) -> None:
-    """Vet reported listings + alert listings; withhold alerts on listings vetted 'avoid'."""
+    """Vet reported listings + alert listings; withhold alerts on listings vetted 'avoid', then cap."""
+    from price_watch import analyze
+
     obs = sorted(summary.fetch.observations, key=lambda o: o.price)
     to_vet = obs[:top_n] + [a.obs for a in summary.alerts if a.obs not in obs[:top_n]]
     try:
         summary.vettings = await vetter(item, to_vet, obs)
     except Exception:  # vetting is advisory: never lose the price report over it
         log.exception("item=%s vetting failed", item.id)
-        return
-    kept = []
-    for a in summary.alerts:
-        verdict = getattr(summary.vettings.get(a.obs.key), "verdict", None)
-        (summary.skipped_alerts if verdict == "avoid" else kept).append(a)
-    if summary.skipped_alerts:
-        log.info("item=%s withheld %d alert(s) vetted 'avoid'", item.id, len(summary.skipped_alerts))
-    summary.alerts = kept
+    finally:
+        # Withhold 'avoid' first, then cap: knock-offs must not use up the target-hit slots.
+        kept = []
+        for a in summary.alerts:
+            verdict = getattr(summary.vettings.get(a.obs.key), "verdict", None)
+            (summary.skipped_alerts if verdict == "avoid" else kept).append(a)
+        if summary.skipped_alerts:
+            log.info("item=%s withheld %d alert(s) vetted 'avoid'", item.id, len(summary.skipped_alerts))
+        summary.alerts = analyze.cap_target_alerts(kept)
 
 
 async def run_items(store: Any, service: Any, wl: config.Watchlist, items: list[WatchItem], notify: bool,
@@ -113,7 +116,8 @@ async def run_items(store: Any, service: Any, wl: config.Watchlist, items: list[
                 failures += 1
                 log.error("item=%s every source failed: %s", item.id, fetched.source_errors)
             try:
-                summary = analyze.analyze_item(store, run_id, item, fetched, wl.defaults, today=run_at.date())
+                summary = analyze.analyze_item(store, run_id, item, fetched, wl.defaults, today=run_at.date(),
+                                               cap_targets=vetter is None)
                 store.add_observations(run_id, fetched.observations, run_at)
             except Exception:
                 log.exception("item=%s analyze/store failed", item.id)
@@ -169,11 +173,12 @@ async def _run(item_ids: list[str] | None, notify: bool) -> int:
             from price_watch import amazon_detail, vet
 
             runner = vet.gateway_runner(wl.defaults.vet_gateway_project)
+            budget = vet.Budget(minutes=vet.RUN_BUDGET_MIN)  # whole run; the scheduled task dies at 1 h
 
             async def vetter(item: WatchItem, to_vet: list, peers: list) -> dict:
                 return await vet.vet_listings(store, item, to_vet, peers, wl.defaults, runner,
                                               detail=amazon_detail.fetch_detail,
-                                              reference=amazon_detail.search_reference)
+                                              reference=amazon_detail.search_reference, budget=budget)
         status, path = await run_items(store, ShoppingDealsService(), wl, items, notify, notifier, config.REPORTS_DIR,
                                        geocoder=geo, amazon_cheapest=fetch_cheapest, vetter=vetter)
     print(path)

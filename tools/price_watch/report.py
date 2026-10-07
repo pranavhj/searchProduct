@@ -127,7 +127,7 @@ def digest(summaries: list[ItemSummary], report_path: Path) -> str:
     lines += [alert_line(a, md_links=False, vetting=s.vettings.get(a.obs.key)) for s in summaries for a in s.alerts]
     withheld = sum(len(s.skipped_alerts) for s in summaries)
     if withheld:
-        lines.append(f"({withheld} cheaper alert(s) withheld: vetted ⛔ avoid — see report)")
+        lines.append(f"({withheld} alert(s) withheld: listing vetted ⛔ avoid — see report)")
     lines.append("")
     for s in summaries:
         if s.best:

@@ -14,6 +14,15 @@ User lives in **Milpitas, CA 00000**. Prefer local pickup / closest listings (So
 ## Rule: only live, verified prices
 Never quote a price as current unless it was fetched live this session from the seller/listing itself (MCP tool result, SerpApi, or browser automation). If a source can't be read (blocked, not configured), get it another way — Playwright (`python tools/amazon_prices.py "<query>"` for Amazon) or the Playwriter extension — before reporting. Deal-site posts / review articles are history, not prices: label them "past deal, date X" or leave them out. If no live price could be obtained, say so explicitly.
 
+## New item: interview first
+Before searching for or watching a new item, ask product-specific questions (power bank: capacity,
+wattage, wireless/MagSafe, built-in cable, size/weight; PC: CPU class, RAM, storage, GPU, form factor;
+etc.) — use AskUserQuestion. For each feature, show what it typically adds to the price, taken from
+live searches of name-brand models at each tier (e.g. "20W $10 → 45W $21 → Qi2 wireless $47", with
+dates). Record the answers in the item's `requirements` (watchlist.json) and wishlist notes, and set
+`reference_queries` to the standard / most-recommended product(s) for those answers. The daily vetting
+judges listings against `requirements`.
+
 ## Workflow
 1. Read `wishlist.md`; for each item in `want`/`searching`, search both servers.
 2. Compare total landed cost (price + shipping + tax); flag scam signals on used listings.
@@ -47,6 +56,11 @@ set) + Windows toast; each listing alerted once per price level.
 ## Available Automation
 - `pricewatch list | add "query" --target 30 --include "a|b" --exclude x | remove/enable/disable ID | history ID`
 - `pricewatch run [--item ID] [--no-notify]` — manual run (`--no-notify` = report only)
+- Quality vetting (in every run): each reported listing + alert gets a buy/ok/avoid verdict. price_watch
+  gathers evidence (Amazon product page, live `reference_queries` results, DuckDuckGo snippets) and asks the
+  LLM Gateway (`127.0.0.1:18789`, project `searchproduct_vet` at `~/projects/searchproduct_vet_llm_gateway`,
+  Haiku, `fresh: true`). Verdicts cached 7 days per listing+price (`vettings` table); alerts on `avoid`
+  listings are withheld. Turn off with `defaults.vet: false`. Gateway down → listings show `unvetted`.
 - `tests\run_tests.cmd` — price_watch unit tests (shopping-deals venv)
 - `scripts\install_schedule.ps1 [-Time 08:00] [-Uninstall]` — (re)register the daily task
 - Logs: `data/logs/price_watch.log`. eBay public scrape returns 403 → eBay coverage needs the official API keys.
