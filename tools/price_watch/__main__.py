@@ -208,6 +208,8 @@ def _cmd_add(args: argparse.Namespace) -> int:
     ))
     config.save_watchlist(wl)
     print(f"added {item_id}")
+    print("note: no requirements yet - run the new-item interview (see CLAUDE.md) and set `requirements` "
+          "+ `reference_queries` in watchlist.json, or vetting judges against a generic buyer")
     return 0
 
 

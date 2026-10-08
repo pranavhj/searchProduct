@@ -10,6 +10,7 @@ from price_watch.analyze import Alert, ItemSummary
 log = logging.getLogger("price_watch.report")
 
 KIND_LABEL = {"target_hit": "🎯 Target hit", "big_drop": "📉 Big drop", "listing_drop": "✂️ Price cut"}
+MISSING_REQUIREMENTS = "needs the new-item questions (no requirements yet): ask Claude to run the item interview so listings are judged against what you actually want"
 VERDICT_LABEL = {"buy": "✅ buy", "ok": "🟡 ok", "avoid": "⛔ avoid", "unvetted": "❔ unvetted"}
 
 
@@ -21,6 +22,9 @@ def verdict_tag(s: ItemSummary, key: str) -> str:
 def vetting_note(v: object, short: bool = False) -> str:
     """One line: summary (+ comparison with the standard product and better pick unless short)."""
     text = v.summary
+    rules = getattr(v, "rules_applied", None)
+    if rules:
+        text = f"[{'; '.join(rules)}] {text}"
     if short:
         return text[:160] + ("…" if len(text) > 160 else "")
     if v.red_flags:
@@ -82,6 +86,8 @@ def render(summaries: list[ItemSummary], run_at: datetime, top_n: int) -> str:
 
     for s in summaries:
         out += [f"## {s.item.id}", "", f"Query: `{s.item.query}`"]
+        if not s.item.requirements:
+            out.append(f"⚠️ {MISSING_REQUIREMENTS}")
         if s.fetch.source_errors:
             errs = "; ".join(f"{k}: {_cell(v)[:120]}" for k, v in s.fetch.source_errors.items())
             out.append(f"Source errors: {errs}")
@@ -142,5 +148,8 @@ def digest(summaries: list[ItemSummary], report_path: Path) -> str:
                              + (f" {verdict_tag(s, good.key)}: {vetting_note(v, short=True)}" if v else ""))
         else:
             lines.append(f"• {s.item.id}: no relevant listings")
+    missing = [s.item.id for s in summaries if not s.item.requirements]
+    if missing:
+        lines.append(f"⚠️ {', '.join(missing)}: {MISSING_REQUIREMENTS}")
     lines.append(f"Report: {report_path}")
     return "\n".join(lines)

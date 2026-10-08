@@ -38,8 +38,8 @@ MAX_PROMPT_CHARS = 20000  # gateway passes the message as a Windows command-line
 RUBRIC = """You are a skeptical shopping analyst vetting ONE listing for a buyer in Milpitas, CA.
 Cheapest is not a recommendation. Decide:
 - Is the product actually good? (brand track record, review count, 1-star share, complaints in the evidence)
-- Is the price suspiciously low? (no-name/rebrand, specs implausible for the weight or price, overstated
-  capacity, counterfeit, fake-review patterns)
+- Is the price suspiciously low? (no-name/rebrand, specs implausible for the size, weight or price,
+  overstated specs, counterfeit, fake-review patterns)
 - How does it compare with the standard / most-recommended product for the buyer's requirements?
   What does the buyer lose or gain, and what is the price gap?
 - Used/local listings: does the price cover the whole item (not one part)? Any scam signals?
@@ -50,8 +50,19 @@ avoid = likely knock-off, poor quality, misleading, or clearly worse value than 
 An established brand (track record, warranty, many reviews) costing only a little more (roughly <=15%
 or a couple of dollars) is usually the better pick over a no-name listing - name it in better_pick.
 
+Also answer three narrow factual checks (the program turns them into hard rules, so be literal):
+- meets_requirements: "yes" if the evidence shows every stated requirement is met, "no" if the evidence
+  shows at least one is NOT met, "unclear" if it cannot be confirmed either way.
+- knockoff_risk: "high" only for concrete signs (brand/spec contradictions, specs physically implausible,
+  copied listing under another name, review pattern clearly fake); "medium" for an unknown brand with
+  little evidence; "low" for an established brand or solid independent evidence.
+- whole_item: "no" if the price looks like it covers only a part/accessory/one of several components;
+  "yes" if it clearly covers the whole item; "unclear" otherwise.
+
 Reply with ONLY one JSON object, no prose, no code fence:
 {"verdict": "buy|ok|avoid", "summary": "1-2 sentences why", "red_flags": ["..."],
+ "meets_requirements": "yes|no|unclear", "unmet_requirements": ["requirements the evidence shows are not met"],
+ "knockoff_risk": "low|medium|high", "whole_item": "yes|no|unclear",
  "standard_product": "the standard / most-recommended product for this need",
  "standard_price": "its price: live reference price if listed below, else 'typical $X (web)' or 'unknown'",
  "vs_standard": "what is lost or gained vs it",
@@ -67,6 +78,12 @@ class Vetting:
     standard_price: str = ""
     vs_standard: str = ""
     better_pick: str = ""
+    meets_requirements: str = "unclear"  # yes | no | unclear
+    unmet_requirements: list[str] = field(default_factory=list)
+    knockoff_risk: str = "medium"  # low | medium | high
+    whole_item: str = "unclear"  # yes | no | unclear
+    model_verdict: str = ""  # the model's own verdict before hard rules
+    rules_applied: list[str] = field(default_factory=list)
     cached: bool = False
 
     @classmethod
@@ -76,9 +93,36 @@ class Vetting:
         v.verdict = str(v.verdict).strip().lower()
         if v.verdict not in VERDICTS:
             raise ValueError(f"bad verdict {v.verdict!r}")
-        if not isinstance(v.red_flags, list):
-            v.red_flags = [str(v.red_flags)]
+        for name in ("red_flags", "unmet_requirements", "rules_applied"):
+            if not isinstance(getattr(v, name), list):
+                setattr(v, name, [str(getattr(v, name))])
+        for name in ("meets_requirements", "knockoff_risk", "whole_item"):
+            setattr(v, name, str(getattr(v, name)).strip().lower())
         return v
+
+
+def apply_rules(v: Vetting) -> Vetting:
+    """Product-agnostic hard rules on the model's factual checks. Rules only make a verdict stricter.
+
+    Narrow yes/no checks are more stable run-to-run than an overall judgement, so the clear-cut cases
+    (requirement not met, concrete knock-off signs, part-only price) never depend on the model's mood.
+    """
+    v.model_verdict = v.model_verdict or v.verdict
+    rules: list[str] = []
+    if v.meets_requirements == "no":
+        unmet = "; ".join(v.unmet_requirements) or "see red flags"
+        rules.append(f"fails requirements ({unmet})")
+    if v.knockoff_risk == "high":
+        rules.append("high knock-off risk")
+    if v.whole_item == "no":
+        rules.append("price is not for the whole item")
+    if rules:
+        v.verdict = "avoid"
+    elif v.verdict == "buy" and v.meets_requirements != "yes":
+        rules.append("requirements not confirmed -> at most ok")
+        v.verdict = "ok"
+    v.rules_applied = rules
+    return v
 
 
 @dataclass
@@ -237,7 +281,7 @@ async def vet_listings(store: Any, item: WatchItem, to_vet: list[Observation], p
             brand_web = web(f"{brand} {item.query} review", 4, store, defaults.vet_cache_days) if brand else []
             prompt = build_prompt(item, o, facts, brand_web, peers, evidence)
             reply = await asyncio.to_thread(runner, prompt)
-            v = Vetting.from_json(gateway.parse_json_reply(reply))
+            v = apply_rules(Vetting.from_json(gateway.parse_json_reply(reply)))
         except Exception as exc:  # one failed listing must not sink the run
             budget.record(ok=False)
             log.warning("item=%s vet failed key=%s: %s: %s", item.id, o.key, type(exc).__name__, exc)
@@ -248,6 +292,6 @@ async def vet_listings(store: Any, item: WatchItem, to_vet: list[Observation], p
         data = {k: val for k, val in asdict(v).items() if k != "cached"}
         data["ctx"] = ctx
         store.put_vetting(item.id, o.key, o.price, v.verdict, json.dumps(data))
-        log.info("item=%s vetted key=%s price=%.2f brand=%r verdict=%s flags=%s",
-                 item.id, o.key, o.price, brand, v.verdict, v.red_flags)
+        log.info("item=%s vetted key=%s price=%.2f brand=%r verdict=%s model=%s rules=%s flags=%s",
+                 item.id, o.key, o.price, brand, v.verdict, v.model_verdict, v.rules_applied, v.red_flags)
     return results
