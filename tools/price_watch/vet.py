@@ -52,7 +52,9 @@ or a couple of dollars) is usually the better pick over a no-name listing - name
 
 Also answer three narrow factual checks (the program turns them into hard rules, so be literal):
 - meets_requirements: "yes" if the evidence shows every stated requirement is met, "no" if the evidence
-  shows at least one is NOT met, "unclear" if it cannot be confirmed either way.
+  shows at least one is NOT met, "unclear" if it cannot be confirmed either way. Requirements are about the
+  product, never the price: being above the target price is NOT an unmet requirement. A requirement with
+  an alternative ("X or Y", "or a cheap add") is met when any alternative is met.
 - knockoff_risk: "high" only for concrete signs (brand/spec contradictions, specs physically implausible,
   copied listing under another name, review pattern clearly fake); "medium" for an unknown brand with
   little evidence; "low" for an established brand or solid independent evidence.
