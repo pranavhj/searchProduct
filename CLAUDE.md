@@ -60,7 +60,7 @@ set) + Windows toast; each listing alerted once per price level.
 - Pickup sources (Craigslist/OfferUp/Facebook) get a second price-sorted pass (`tools/price_watch/local_cheap.py`:
   CL `sort=priceasc`, OfferUp `SORT=price`, FB GraphQL `commerce_search_sort_by=PRICE_ASCEND`; probed 2026-10-06) and
   `defaults.max_results_local` (40) caps results *before* the distance filter. FB returns <=24 per call, no pagination.
-- Vetting (`vet.py`, `amazon_page.py`): every top-N and alerted listing gets flags + verdict (worth it / risky / probably a
+- Cheap-listing flags (`cheap_flags.py`, `amazon_page.py`; separate from the gateway `vet.py`): every top-N and alerted listing gets flags + verdict (worth it / risky / probably a
   trap) with confidence (never 'high'). Amazon cards give rating + review count; for alerted Amazon listings only (max 3/item)
   the product page is opened for seller, 1-2-star %, "Customers say" and negative aspects (individual reviews need a login).
   Local listings: price vs median, vague title, sealed-at-half-price, per-part wording, scam payment wording.
