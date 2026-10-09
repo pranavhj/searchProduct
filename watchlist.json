@@ -178,7 +178,7 @@
     },
     {
       "id": "desktop-pc-64gb-ram",
-      "query": "desktop pc 64gb ram",
+      "query": "desktop pc 256gb ram",
       "enabled": true,
       "sources": null,
       "condition": "any",
@@ -216,19 +216,25 @@
         "supports 128gb",
         "support 64gb",
         "support 128gb",
-        "supports up to"
+        "supports up to",
+        "up to 256gb",
+        "max 256gb",
+        "supports 256gb",
+        "support 256gb",
+        "up to 512gb",
+        "supports 512gb"
       ],
-      "notes": "Originally <$30; raised to $100 2026-10-08 (interview), >=64GB RAM, >=512GB storage (knowingly unrealistic). price_max 250 so report shows nearest misses; alerts only <= $30. Storage not reliably in titles - verify per listing. Parts sales list one per-part price for a whole build - excluded (user 2026-10-06). Target $100 set 2026-10-08 (knowingly low: 64GB RAM alone ~$250 used / ~$400 new); base PC + RAM only if cheaper overall.",
+      "notes": "Originally <$30; raised to $100 2026-10-08 (interview), >=64GB RAM, >=512GB storage (knowingly unrealistic). price_max 250 so report shows nearest misses; alerts only <= $30. Storage not reliably in titles - verify per listing. Parts sales list one per-part price for a whole build - excluded (user 2026-10-06). Target $100 set 2026-10-08 (knowingly low: 64GB RAM alone ~$250 used / ~$400 new); base PC + RAM only if cheaper overall. Memory target raised to 256GB on 2026-10-08 (query/requirements updated; item ids keep '64gb'). Expect no hits near $100: 256GB of used server RAM alone is typically several hundred dollars.",
       "max_miles": 40.0,
       "reference_queries": [
         "Dell Precision T5810 64GB renewed",
         "HP Z440 64GB renewed"
       ],
-      "requirements": "Home server / VMs (Docker, VMs, NAS, self-hosting). Must have >=64GB RAM installed and included in the price, >=512GB storage (or a cheap add), and be a complete working machine (not parts). An old multi-core Xeon workstation is fine, including DDR3-era ones (HP Z420/Z620, Dell T3600/T5600) where used 64GB DDR3 is very cheap; RAM capacity matters more than CPU speed. A dedicated GPU is nice to have only if included - don't pay extra for it. Used is fine; noise and power draw are not critical."
+      "requirements": "Home server / VMs (Docker, VMs, NAS, self-hosting). Must have >=256GB RAM installed (raised from 64GB on 2026-10-08) and included in the price, >=512GB storage (or a cheap add), and be a complete working machine (not parts). An old multi-core Xeon workstation is fine, including DDR3/DDR4 multi-socket ones with many DIMM slots (HP Z620/Z820/Z840, Dell T5810/T7810/T7910, rack servers such as R720/R730) where used server RAM is the cheap route; RAM capacity matters more than CPU speed. A dedicated GPU is nice to have only if included - don't pay extra for it. Used is fine; noise and power draw are not critical."
     },
     {
       "id": "workstation-64gb-ram",
-      "query": "workstation 64gb ram",
+      "query": "workstation 256gb ram",
       "enabled": true,
       "sources": null,
       "condition": "any",
@@ -266,15 +272,21 @@
         "supports 128gb",
         "support 64gb",
         "support 128gb",
-        "supports up to"
+        "supports up to",
+        "up to 256gb",
+        "max 256gb",
+        "supports 256gb",
+        "support 256gb",
+        "up to 512gb",
+        "supports 512gb"
       ],
-      "notes": "Same need as desktop-pc-64gb-ram; workstation listings (Z440/T5810/Precision) rarely say 'desktop pc'. Added 2026-10-08 after the interview. Target $100 set 2026-10-08 (knowingly low: 64GB RAM alone ~$250 used / ~$400 new); base PC + RAM only if cheaper overall.",
+      "notes": "Same need as desktop-pc-64gb-ram; workstation listings (Z440/T5810/Precision) rarely say 'desktop pc'. Added 2026-10-08 after the interview. Target $100 set 2026-10-08 (knowingly low: 64GB RAM alone ~$250 used / ~$400 new); base PC + RAM only if cheaper overall. Memory target raised to 256GB on 2026-10-08 (query/requirements updated; item ids keep '64gb'). Expect no hits near $100: 256GB of used server RAM alone is typically several hundred dollars.",
       "max_miles": 40.0,
       "reference_queries": [
         "Dell Precision T5810 64GB renewed",
         "HP Z440 64GB renewed"
       ],
-      "requirements": "Home server / VMs (Docker, VMs, NAS, self-hosting). Must have >=64GB RAM installed and included in the price, >=512GB storage (or a cheap add), and be a complete working machine (not parts). An old multi-core Xeon workstation is fine, including DDR3-era ones (HP Z420/Z620, Dell T3600/T5600) where used 64GB DDR3 is very cheap; RAM capacity matters more than CPU speed. A dedicated GPU is nice to have only if included - don't pay extra for it. Used is fine; noise and power draw are not critical."
+      "requirements": "Home server / VMs (Docker, VMs, NAS, self-hosting). Must have >=256GB RAM installed (raised from 64GB on 2026-10-08) and included in the price, >=512GB storage (or a cheap add), and be a complete working machine (not parts). An old multi-core Xeon workstation is fine, including DDR3/DDR4 multi-socket ones with many DIMM slots (HP Z620/Z820/Z840, Dell T5810/T7810/T7910, rack servers such as R720/R730) where used server RAM is the cheap route; RAM capacity matters more than CPU speed. A dedicated GPU is nice to have only if included - don't pay extra for it. Used is fine; noise and power draw are not critical."
     },
     {
       "id": "pull-up-bar",

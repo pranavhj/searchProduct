@@ -11,7 +11,7 @@ One row per item. Status: `want` → `searching` → `found` → `bought` / `dro
 | Electric precision screwdriver (slim pen, fwd/rev buttons, bit set) | cheap | either | thin, 2 buttons, decent torque, many bits | dropped | HOTO 25-in-1 $32.99 Amazon https://www.amazon.com/dp/B09MR5HFPB ; cheapest SHARDEN $19.99 https://www.amazon.com/dp/B0CY2LCWBZ (2026-10-04) |
 | Power bank | cheap | either | capacity/wattage not specified (assumed 10k mAh, USB-C PD) | found | INIU 10000mAh 45W $21.99 Amazon https://www.amazon.com/dp/B0CB1FW5FC ; used: Tzumi 10k USB-C PD $15 FB Fairview https://www.facebook.com/marketplace/item/1604190321416603 (2026-10-05) |
 | Smart plug (works with Alexa) | cheap | either | Alexa-compatible, no hub; qty not given | dropped | Kasa HS103P2 2-pack $14.99 Amazon https://www.amazon.com/dp/B07B8W2KHZ ; used: Amazon Smart Plug NEW $8 Craigslist Santa Clara (2026-10-05) |
-| Desktop PC (home server / VMs) | $100 (raised from $30, 2026-10-08) | either | ≥64 GB RAM installed, ≥512 GB storage, complete machine; GPU only if included | searching | none ≤ $100; complete 64 GB Dell T5810 renewed $358.99 Amazon (2026-10-08) |
+| Desktop PC (home server / VMs) | $100 (raised from $30, 2026-10-08) | either | ≥256 GB RAM installed (raised from 64 GB, 2026-10-08), ≥512 GB storage, complete machine; GPU only if included | searching | none ≤ $100; complete 64 GB Dell T5810 renewed $358.99 Amazon (2026-10-08) |
 
 ## Notes per item
 <!-- ### <Item name>
@@ -127,7 +127,7 @@ One row per item. Status: `want` → `searching` → `found` → `bought` / `dro
   - Amazon Smart Plug $10 FB Mountain View https://www.facebook.com/marketplace/item/856371850367085
   - Bundle (TP-Link bulb + Gosund plugs + Amazon plug) $10 FB Danville https://www.facebook.com/marketplace/item/2144310656205987
 
-### Desktop PC (≥64 GB RAM, ≥512 GB storage, < $30) — added 2026-10-06
+### Desktop PC (≥256 GB RAM since 2026-10-08, was 64 GB; ≥512 GB storage) — added 2026-10-06
 - **Interview 2026-10-08:** use = home server / VMs; target raised to $100; GPU nice-to-have only if
   included; DIY (base PC + RAM) OK if cheaper overall. Watched as `desktop-pc-64gb-ram` + `workstation-64gb-ram`.
 - Live price tiers 2026-10-08:
