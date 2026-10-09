@@ -218,13 +218,13 @@
         "support 128gb",
         "supports up to"
       ],
-      "notes": "Originally <$30; raised to $100 2026-10-08 (interview), >=64GB RAM, >=512GB storage (knowingly unrealistic). price_max 250 so report shows nearest misses; alerts only <= $30. Storage not reliably in titles - verify per listing. Parts sales list one per-part price for a whole build - excluded (user 2026-10-06). Target $100 set 2026-10-08 (knowingly low: 64GB RAM alone ~$250 used / ~$400 new); base PC + RAM only if cheaper overall.",
+      "notes": "Originally <$30; raised to $100 2026-10-08 (interview), >=64GB RAM, >=256GB storage (was 512GB until 2026-10-08) (knowingly unrealistic). price_max 250 so report shows nearest misses; alerts only <= $30. Storage not reliably in titles - verify per listing. Parts sales list one per-part price for a whole build - excluded (user 2026-10-06). Target $100 set 2026-10-08 (knowingly low: 64GB RAM alone ~$250 used / ~$400 new); base PC + RAM only if cheaper overall.",
       "max_miles": 40.0,
       "reference_queries": [
         "Dell Precision T5810 64GB renewed",
         "HP Z440 64GB renewed"
       ],
-      "requirements": "Home server / VMs (Docker, VMs, NAS, self-hosting). Must have >=64GB RAM installed and included in the price, >=512GB storage (or a cheap add), and be a complete working machine (not parts). An old multi-core Xeon workstation is fine, including DDR3-era ones (HP Z420/Z620, Dell T3600/T5600) where used 64GB DDR3 is very cheap; RAM capacity matters more than CPU speed. A dedicated GPU is nice to have only if included - don't pay extra for it. Used is fine; noise and power draw are not critical."
+      "requirements": "Home server / VMs (Docker, VMs, NAS, self-hosting). Must have >=64GB RAM installed and included in the price, >=256GB storage (or a cheap add; lowered from 512GB on 2026-10-08), and be a complete working machine (not parts). An old multi-core Xeon workstation is fine, including DDR3-era ones (HP Z420/Z620, Dell T3600/T5600) where used 64GB DDR3 is very cheap; RAM capacity matters more than CPU speed. A dedicated GPU is nice to have only if included - don't pay extra for it. Used is fine; noise and power draw are not critical."
     },
     {
       "id": "workstation-64gb-ram",
@@ -268,13 +268,13 @@
         "support 128gb",
         "supports up to"
       ],
-      "notes": "Same need as desktop-pc-64gb-ram; workstation listings (Z440/T5810/Precision) rarely say 'desktop pc'. Added 2026-10-08 after the interview. Target $100 set 2026-10-08 (knowingly low: 64GB RAM alone ~$250 used / ~$400 new); base PC + RAM only if cheaper overall.",
+      "notes": "Same need as desktop-pc-64gb-ram; workstation listings (Z440/T5810/Precision) rarely say 'desktop pc'. Added 2026-10-08 after the interview. Target $100 set 2026-10-08 (knowingly low: 64GB RAM alone ~$250 used / ~$400 new); base PC + RAM only if cheaper overall. Storage requirement lowered to 256GB on 2026-10-08.",
       "max_miles": 40.0,
       "reference_queries": [
         "Dell Precision T5810 64GB renewed",
         "HP Z440 64GB renewed"
       ],
-      "requirements": "Home server / VMs (Docker, VMs, NAS, self-hosting). Must have >=64GB RAM installed and included in the price, >=512GB storage (or a cheap add), and be a complete working machine (not parts). An old multi-core Xeon workstation is fine, including DDR3-era ones (HP Z420/Z620, Dell T3600/T5600) where used 64GB DDR3 is very cheap; RAM capacity matters more than CPU speed. A dedicated GPU is nice to have only if included - don't pay extra for it. Used is fine; noise and power draw are not critical."
+      "requirements": "Home server / VMs (Docker, VMs, NAS, self-hosting). Must have >=64GB RAM installed and included in the price, >=256GB storage (or a cheap add; lowered from 512GB on 2026-10-08), and be a complete working machine (not parts). An old multi-core Xeon workstation is fine, including DDR3-era ones (HP Z420/Z620, Dell T3600/T5600) where used 64GB DDR3 is very cheap; RAM capacity matters more than CPU speed. A dedicated GPU is nice to have only if included - don't pay extra for it. Used is fine; noise and power draw are not critical."
     },
     {
       "id": "pull-up-bar",
