@@ -1,6 +1,7 @@
 """Run one watch item through ShoppingDealsService and keep only relevant, priced listings."""
 from __future__ import annotations
 
+import asyncio
 import logging
 import re
 from dataclasses import dataclass
@@ -29,6 +30,8 @@ class Observation:
     deal_score: float | None = None
     distance_mi: float | None = None  # straight-line miles from home; None for shipped/online
     rating: float | None = None  # stars out of 5 where the source shows them (Amazon)
+    review_count: int | None = None  # number of ratings (Amazon)
+    cheap: Any = None  # cheap_flags.Vet, filled in by cheap_flags.vet_summary after analysis
 
     @property
     def key(self) -> str:
@@ -69,6 +72,8 @@ LOCAL_SOURCES = {"facebook_marketplace", "craigslist", "offerup"}
 
 DistanceFn = Callable[[str | None], float | None]
 CheapestFn = Callable[[str, float | None, float | None, int], Awaitable[list[dict]]]
+CountsFn = Callable[[str, float | None, float | None], Awaitable[dict[str, int]]]  # ASIN -> number of ratings
+LocalCheapestFn =Callable[[str, str, float | None, float | None, int], Awaitable[list[dict]]]  # (source, query, ...)
 
 
 def _sticker(listing: dict) -> float | None:
@@ -107,16 +112,22 @@ def resolve_sources(requested: list[str], available: set[str] | None) -> list[st
 
 async def fetch_item(service: DealsService, item: WatchItem, defaults: Defaults,
                      sources: list[str] | None = None, distance: DistanceFn | None = None,
-                     amazon_cheapest: CheapestFn | None = None) -> FetchResult:
+                     amazon_cheapest: CheapestFn | None = None,
+                     local_cheapest: LocalCheapestFn | None = None,
+                     amazon_counts: CountsFn | None = None) -> FetchResult:
     sources = sources or item.sources or defaults.sources
     max_miles = item.max_miles if item.max_miles is not None else defaults.max_miles
-    log.info("fetch item=%s query=%r sources=%s", item.id, item.query, sources)
+    # Local sources are distance-filtered below, so cap generously: 15 results can all be too far away.
+    cap = defaults.max_results_per_source
+    if any(s in LOCAL_SOURCES for s in sources):
+        cap = max(cap, defaults.max_results_local)
+    log.info("fetch item=%s query=%r sources=%s cap=%d", item.id, item.query, sources, cap)
     result = await service.find_best_deals(
         item.query,
         sources=sources,
         # Ask for everything scored; relevance filtering below decides what to keep.
-        max_results=defaults.max_results_per_source * len(sources),
-        max_results_per_source=defaults.max_results_per_source,
+        max_results=cap * len(sources),
+        max_results_per_source=cap,
         price_min=item.price_min,
         price_max=item.price_max,
         condition=item.condition,
@@ -136,6 +147,20 @@ async def fetch_item(service: DealsService, item: WatchItem, defaults: Defaults,
         except Exception as exc:  # the featured-sort results above still count
             log.warning("item=%s amazon cheapest-first failed: %s", item.id, exc)
             errors = {**errors, "amazon_cheapest": f"{type(exc).__name__}: {exc}"}
+    counts: dict[str, int] = {}
+    if amazon_counts is not None and "amazon" in sources:
+        try:
+            counts = await asyncio.wait_for(amazon_counts(item.query, item.price_min, item.price_max), 90)
+        except Exception as exc:  # review counts are context, not required
+            log.warning("item=%s amazon review counts failed: %s", item.id, exc)
+            errors = {**errors, "amazon_counts": f"{type(exc).__name__}: {exc}"}
+    if local_cheapest is not None:
+        for src in (s for s in sources if s in LOCAL_SOURCES):
+            try:
+                deals += await local_cheapest(src, item.query, item.price_min, item.price_max, cap)
+            except Exception as exc:  # the default-order results above still count
+                log.warning("item=%s %s cheapest-first failed: %s", item.id, src, exc)
+                errors = {**errors, f"{src}_cheapest": f"{type(exc).__name__}: {exc}"}
     for deal in deals:
         listing = deal["listing"]
         price = _sticker(listing)
@@ -165,8 +190,13 @@ async def fetch_item(service: DealsService, item: WatchItem, defaults: Defaults,
             distance_mi=dist,
             # Amazon gives stars; eBay's seller_rating is a feedback % - not comparable.
             rating=listing.get("seller_rating") if listing.get("source") == "amazon" else None,
+            review_count=(deal.get("review_count") or counts.get(str(listing.get("id")))
+                          if listing.get("source") == "amazon" else None),
         )
-        if obs.key in seen:
+        if obs.key in seen:  # a later duplicate may carry data the first copy lacks
+            first = next(o for o in observations if o.key == obs.key)
+            first.review_count = first.review_count or obs.review_count
+            first.rating = first.rating if first.rating is not None else obs.rating
             continue
         seen.add(obs.key)
         observations.append(obs)

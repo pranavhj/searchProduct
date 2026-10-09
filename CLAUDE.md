@@ -57,6 +57,13 @@ set) + Windows toast; each listing alerted once per price level.
   shippable listings are exempt. Default 25 mi; power bank 10, PC 40.
 - Amazon is searched twice: default featured sort + cheapest-first within the item's price band
   (`tools/price_watch/amazon_cheap.py`) — page 1 of the featured sort misses cheap listings.
+- Pickup sources (Craigslist/OfferUp/Facebook) get a second price-sorted pass (`tools/price_watch/local_cheap.py`:
+  CL `sort=priceasc`, OfferUp `SORT=price`, FB GraphQL `commerce_search_sort_by=PRICE_ASCEND`; probed 2026-10-06) and
+  `defaults.max_results_local` (40) caps results *before* the distance filter. FB returns <=24 per call, no pagination.
+- Vetting (`vet.py`, `amazon_page.py`): every top-N and alerted listing gets flags + verdict (worth it / risky / probably a
+  trap) with confidence (never 'high'). Amazon cards give rating + review count; for alerted Amazon listings only (max 3/item)
+  the product page is opened for seller, 1-2-star %, "Customers say" and negative aspects (individual reviews need a login).
+  Local listings: price vs median, vague title, sealed-at-half-price, per-part wording, scam payment wording.
 - Watch for per-part pricing (parts sales, motherboards "supporting 64GB"): keep excludes on spec items.
 
 ## Available Automation

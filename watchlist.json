@@ -275,6 +275,29 @@
         "HP Z440 64GB renewed"
       ],
       "requirements": "Home server / VMs (Docker, VMs, NAS, self-hosting). Must have >=64GB RAM installed and included in the price, >=512GB storage (or a cheap add), and be a complete working machine (not parts). An old multi-core Xeon workstation is fine, including DDR3-era ones (HP Z420/Z620, Dell T3600/T5600) where used 64GB DDR3 is very cheap; RAM capacity matters more than CPU speed. A dedicated GPU is nice to have only if included - don't pay extra for it. Used is fine; noise and power draw are not critical."
+    },
+    {
+      "id": "pull-up-bar",
+      "query": "pull up bar",
+      "enabled": true,
+      "sources": null,
+      "condition": "any",
+      "price_min": 3.0,
+      "price_max": 60.0,
+      "target_price": 8.0,
+      "drop_pct": null,
+      "max_miles": null,
+      "must_include": [
+        "pull up|pull-up|pullup|chin up|chin-up",
+        "bar"
+      ],
+      "exclude": [
+        "assist",
+        "replacement",
+        "handle only",
+        "band only"
+      ],
+      "notes": "Target $8 sticker (user 2026-10-06); no spec given, doorway/wall/any bar; default 25 mi pickup."
     }
   ]
 }
