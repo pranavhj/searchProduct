@@ -8,7 +8,7 @@ from price_watch.amazon_cheap import parse_review_counts
 from price_watch.amazon_page import PageInfo, parse_product_page
 from price_watch.analyze import Alert
 from price_watch.fetch import FetchResult, Observation
-from price_watch.vet import build_vet, vet_summary
+from price_watch.cheap_flags import build_vet, vet_summary
 
 PAGE_HTML = """
 <span id="productTitle">Aaoyun 10000mAh Power Bank</span>
@@ -147,4 +147,4 @@ def test_vet_summary_survives_a_failing_page_fetch() -> None:
     summary = SimpleNamespace(item=SimpleNamespace(id="pb"), fetch=FetchResult("pb", MARKET + [cheap], {}, 6, {}),
                               alerts=[Alert("pb", "target_hit", cheap, 20, "m")])
     asyncio.run(vet_summary(summary, 3, boom))
-    assert cheap.vet.confidence == "lower"
+    assert cheap.cheap.confidence == "lower"

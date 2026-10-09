@@ -23,3 +23,6 @@ Last session: 2026-10-05 (built tools/price_watch; plan/current.md)
 - 2026-10-04: tried SHOPPING_ENABLE_AMAZON_SCRAPE — Amazon returns JS bot challenge (0 results); reverted. Use SerpApi amazon engine instead.
 - 2026-10-04: Playwright headless Chromium gets Amazon search results (bypasses bot challenge) — scratchpad prototype works
 - 2026-10-04: Amazon added to shopping-deals (Playwright fallback in sources/amazon.py, flag on in .mcp.json); 40 tests pass; needs Claude Code restart
+- 2026-10-07 14:47: phase 2 started — per-listing Haiku vetting + new-item feature interview
+- 2026-10-07 14:49: phase 2 plan written (gateway-based vetting, new-item interview); 3 open questions
+- 2026-10-07 15:28: phase 2 done — gateway vetting live-tested, review fixed, power-bank interview recorded

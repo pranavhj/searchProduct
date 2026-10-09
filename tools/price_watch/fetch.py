@@ -31,7 +31,7 @@ class Observation:
     distance_mi: float | None = None  # straight-line miles from home; None for shipped/online
     rating: float | None = None  # stars out of 5 where the source shows them (Amazon)
     review_count: int | None = None  # number of ratings (Amazon)
-    vet: Any = None  # price_watch.vet.Vet, filled in by vet.vet_summary after analysis
+    cheap: Any = None  # cheap_flags.Vet, filled in by cheap_flags.vet_summary after analysis
 
     @property
     def key(self) -> str:
