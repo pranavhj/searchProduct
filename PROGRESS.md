@@ -8,10 +8,10 @@ Last session: 2026-10-05 (built tools/price_watch; plan/current.md)
 - 2026-10-05: price watch built (fetch/store/analyze/report/notify, 24 tests, adversarial review fixed 11 findings, first live run 7 items OK)
 - Created wishlist.md (tracking table) and tools-research.md (MCP servers / skills found)
 - Installed shopping-deals (tools/, venv) + secondhand (npx); both smoke-tested (list tools OK)
-- Location set to Milpitas CA 00000
+- Location set to Milpitas CA (ZIP/coords in user env vars)
 
 ## Next
-- Price watch: Discord set (channel 000000000000000000, tested 2026-10-06); eBay needs user to create Production keyset + setx EBAY_APP_ID/EBAY_CERT_ID; tune targets
+- Price watch: Discord set (channel id in env PRICEWATCH_DISCORD_TARGET, tested 2026-10-06); eBay needs user to create Production keyset + setx EBAY_APP_ID/EBAY_CERT_ID; tune targets
 - Repo: github.com/pranavhj/searchProduct (private), branch price-watch
 - SerpApi key set (user env var SERPAPI_API_KEY) 2026-10-04 — Google Shopping verified available
 - **ASK USER (on/after 2026-10-05):** is eBay dev registration approved? Then setx EBAY_APP_ID, EBAY_CERT_ID, EBAY_CLIENT_ID, EBAY_CLIENT_SECRET

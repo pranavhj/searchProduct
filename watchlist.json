@@ -14,7 +14,7 @@
     "max_miles": 25.0
   },
   "notify": {
-    "discord_target": "000000000000000000",
+    "discord_target": null,
     "discord_digest_always": true,
     "toast": true
   },

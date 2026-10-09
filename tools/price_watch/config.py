@@ -13,6 +13,7 @@ log = logging.getLogger("price_watch.config")
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 WATCHLIST_PATH = PROJECT_ROOT / "watchlist.json"
 MCP_CONFIG_PATH = PROJECT_ROOT / ".mcp.json"
+DISCORD_TARGET_ENV = "PRICEWATCH_DISCORD_TARGET"  # Discord channel id (user env var, not in the repo)
 DATA_DIR = PROJECT_ROOT / "data"
 DB_PATH = DATA_DIR / "price_watch.db"
 REPORTS_DIR = PROJECT_ROOT / "reports" / "price-watch"
@@ -105,16 +106,51 @@ def load_watchlist(path: Path = WATCHLIST_PATH) -> Watchlist:
         defaults=Defaults(**_known(Defaults, raw.get("defaults", {}), "defaults")),
         notify=NotifyConfig(**_known(NotifyConfig, raw.get("notify", {}), "notify")),
     )
+    target = env_value(DISCORD_TARGET_ENV)  # kept out of the repo; the file value is only a fallback
+    if target:
+        wl.notify.discord_target = target
     log.debug("loaded %d items from %s", len(items), path)
     return wl
 
 
 def save_watchlist(wl: Watchlist, path: Path = WATCHLIST_PATH) -> None:
     data = {"defaults": asdict(wl.defaults), "notify": asdict(wl.notify), "items": [asdict(i) for i in wl.items]}
+    if env_value(DISCORD_TARGET_ENV):  # never write the env-supplied channel id into the tracked file
+        data["notify"]["discord_target"] = None
     tmp = path.with_suffix(".json.tmp")
     tmp.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
     tmp.replace(path)
     log.info("saved %d items to %s", len(wl.items), path)
+
+
+def env_value(name: str) -> str | None:
+    """A user setting from the process env, else the Windows user env (HKCU\Environment).
+
+    The registry fallback matters for the scheduled task: it can start with an environment built before a
+    `setx`, so a freshly set variable would otherwise be invisible until the next logon.
+    """
+    value = os.environ.get(name)
+    if value:
+        return value
+    try:
+        import winreg
+        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, "Environment") as key:
+            return str(winreg.QueryValueEx(key, name)[0]) or None
+    except (ImportError, OSError):
+        return None
+
+
+_VAR_RE = re.compile(r"\$\{(\w+)\}")
+
+
+def expand_vars(value: str) -> str:
+    """Replace ${NAME} with env_value(NAME); an unset variable becomes '' (and is logged)."""
+    def one(m: re.Match) -> str:
+        found = env_value(m.group(1))
+        if found is None:
+            log.warning("environment variable %s is not set", m.group(1))
+        return found or ""
+    return _VAR_RE.sub(one, value)
 
 
 def apply_mcp_env(path: Path = MCP_CONFIG_PATH) -> None:
@@ -129,5 +165,5 @@ def apply_mcp_env(path: Path = MCP_CONFIG_PATH) -> None:
         log.warning("could not read shopping-deals env from %s: %s", path, exc)
         return
     for key, value in env.items():
-        os.environ.setdefault(key, str(value))
+        os.environ.setdefault(key, expand_vars(str(value)))
     log.debug("applied %d env vars from %s", len(env), path)

@@ -17,7 +17,6 @@ NOMINATIM = "https://nominatim.openstreetmap.org/search"
 USER_AGENT = "searchProduct-pricewatch/1.0 (personal use)"
 # Bay Area box tried first so neighborhood names ("glen park", "downtown") resolve locally.
 BAY_VIEWBOX = "-123.2,38.4,-121.2,36.8"
-MILPITAS = (37.4000, -121.9000)
 MISS_TTL = timedelta(days=30)  # re-try places Nominatim didn't know after this long
 BREAKER_AFTER = 3  # consecutive HTTP failures before geocoding is skipped for the rest of the run
 # Not places, or too generic to place (would resolve to an arbitrary "downtown" in the Bay box).
@@ -35,12 +34,13 @@ CREATE TABLE IF NOT EXISTS geocache (
 
 
 def home() -> tuple[float, float]:
-    """Home coordinates from the shopping-deals env (set from .mcp.json), else Milpitas."""
+    """Home coordinates from the shopping-deals env (filled from PRICEWATCH_HOME_LAT/LON via .mcp.json)."""
     try:
         return (float(os.environ["SHOPPING_FACEBOOK_MARKETPLACE_LATITUDE"]),
                 float(os.environ["SHOPPING_FACEBOOK_MARKETPLACE_LONGITUDE"]))
-    except (KeyError, ValueError):
-        return MILPITAS
+    except (KeyError, ValueError) as exc:
+        raise RuntimeError("home coordinates not set: define user env vars PRICEWATCH_HOME_LAT and "
+                           "PRICEWATCH_HOME_LON") from exc
 
 
 def haversine_miles(a: tuple[float, float], b: tuple[float, float]) -> float:

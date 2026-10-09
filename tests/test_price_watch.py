@@ -319,9 +319,27 @@ def test_normalize_place_handles_each_source_format() -> None:
         "san jose, california", "santa clara, ca", "sunset, ca", None, "shelton, washington", None]
 
 
-def test_haversine_milpitas_to_pleasanton_is_about_16_miles() -> None:
+@pytest.fixture(autouse=True)
+def _home(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("SHOPPING_FACEBOOK_MARKETPLACE_LATITUDE", "37.40")
+    monkeypatch.setenv("SHOPPING_FACEBOOK_MARKETPLACE_LONGITUDE", "-121.90")
+
+
+def test_haversine_known_distance() -> None:
     from price_watch.geo import haversine_miles
-    assert round(haversine_miles((37.4000, -121.9000), (37.6624, -121.8747))) == 16
+    assert round(haversine_miles((37.40, -121.90), (37.6624, -121.8747))) == 18
+
+
+def test_expand_vars_and_discord_env(monkeypatch, tmp_path) -> None:
+    monkeypatch.setenv("PRICEWATCH_X", "42")
+    assert config.expand_vars("a-${PRICEWATCH_X}-b") == "a-42-b"
+    monkeypatch.setenv(config.DISCORD_TARGET_ENV, "999")
+    wl_path = tmp_path / "w.json"
+    wl_path.write_text('{"notify": {"discord_target": null}, "items": []}', encoding="utf-8")
+    wl = config.load_watchlist(wl_path)
+    assert wl.notify.discord_target == "999"
+    config.save_watchlist(wl, wl_path)
+    assert '"discord_target": null' in wl_path.read_text(encoding="utf-8")
 
 
 class FakeHttp:
@@ -345,7 +363,7 @@ def test_geocoder_caches_hits(tmp_path: Path) -> None:
     http = FakeHttp([{"lat": "37.6624", "lon": "-121.8747"}])
     geo = Geocoder(sqlite3.connect(tmp_path / "g.db"), client=http)
     first, second = geo.distance_miles("Pleasanton, CA"), geo.distance_miles("Pleasanton, CA")
-    assert (first, second, http.calls) == (16.0, 16.0, 1)
+    assert (first, second, http.calls) == (18.2, 18.2, 1)
 
 
 def test_geocoder_caches_misses_after_unbounded_retry(tmp_path: Path) -> None:
