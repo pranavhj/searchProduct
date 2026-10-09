@@ -1,211 +1,299 @@
-"""'Why is it so cheap?' - evidence flags and a verdict for the cheapest listings.
+"""Per-listing quality vetting: price_watch gathers the evidence, the LLM Gateway (Haiku) judges it.
 
-Everything here is rule-based and derived from what was fetched this run (card/title data, plus the product
-page for alerted Amazon items). It cannot judge real product quality, so confidence is never 'high':
-'medium' = product page read and plenty of ratings; 'lower' = judged from card/title only.
+"Cheapest" is not a recommendation. Each reported listing gets a verdict (buy / ok / avoid) on brand
+track record, review signals, knock-off / implausible-spec signs, and how it compares with the
+standard or most-recommended product for the item's requirements.
+
+The gateway's Claude has no tools (user decision 2026-10-07: gather all data ourselves), so the
+evidence is assembled here:
+  - live listing data + Amazon product-page facts (brand, review count, star histogram, bullets)
+  - today's other listings for the item (live) -> better-value pick
+  - live Amazon results for the item's `reference_queries` (standard / name-brand products)
+  - web-search snippets: brand reputation per listing, reviewer picks per item (cached 7 days)
+Verdicts are cached per listing+price (store.vettings), so only new or re-priced listings cost a call.
 """
 from __future__ import annotations
 
 import asyncio
+import hashlib
+import json
 import logging
 import re
-import statistics
-from dataclasses import dataclass, field
+import time
+from dataclasses import asdict, dataclass, field
 from typing import Any, Awaitable, Callable
 
-from price_watch.amazon_page import PageInfo
-from price_watch.fetch import LOCAL_SOURCES, Observation
+from price_watch import gateway, websearch
+from price_watch.config import Defaults, WatchItem
+from price_watch.fetch import Observation
 
 log = logging.getLogger("price_watch.vet")
 
-MIN_PEERS = 5  # comparable listings needed before 'far below median' means anything
-FAR_BELOW = 0.5  # price < 50% of the median of this run's relevant listings
-MAX_PAGE_VETS_PER_ITEM = 3
-PAGE_TIMEOUT_S = 90
+VERDICTS = ("buy", "ok", "avoid")
+RUN_BUDGET_MIN = 20  # all vetting in one run; the scheduled task is killed at 1 h
+MAX_CONSECUTIVE_FAILURES = 2  # then stop calling the gateway for the rest of the run (down / hung)
+PEER_LIMIT = 20  # cheapest other listings shown to the model
+MAX_PROMPT_CHARS = 20000  # gateway passes the message as a Windows command-line argument (32k limit)
 
-# Mainstream brands only; anything else is "unrecognised", not "bad" - hence a risk flag, not a trap flag.
-KNOWN_BRANDS = {
-    "anker", "baseus", "ugreen", "belkin", "samsung", "apple", "mophie", "iniu", "aohi", "charmast", "eneloop",
-    "amazon", "amazonbasics", "insignia", "zendure", "xiaomi", "romoss", "poweradd", "tokk", "hyper", "nimble",
-    "cuktech", "sharge", "satechi", "jackery", "ravpower", "voltme", "kuulaa", "miady", "talk works", "onn",
-    "onn.", "intel", "amd", "dell", "hp", "lenovo", "acer", "asus", "gigabyte", "msi", "nzxt", "corsair",
-    "crucial", "kingston", "gopro", "yes4all", "gofit", "perfect fitness", "iron gym", "ironage", "bowflex",
-    "nordictrack", "decathlon", "tonal", "stamina", "sunny health", "cap barbell", "fitness reality", "rep",
-    "garren", "sportsroyals", "jfit", "kootek", "vivitar", "logitech", "tp-link", "govee", "kasa", "wyze",
-}
+RUBRIC = """You are a skeptical shopping analyst vetting ONE listing for a buyer in Milpitas, CA.
+Cheapest is not a recommendation. Decide:
+- Is the product actually good? (brand track record, review count, 1-star share, complaints in the evidence)
+- Is the price suspiciously low? (no-name/rebrand, specs implausible for the size, weight or price,
+  overstated specs, counterfeit, fake-review patterns)
+- How does it compare with the standard / most-recommended product for the buyer's requirements?
+  What does the buyer lose or gain, and what is the price gap?
+- Used/local listings: does the price cover the whole item (not one part)? Any scam signals?
+Use ONLY the evidence below. Listing and reference prices are live (fetched today); web snippets are
+not prices - call any price from them "typical (web)". If something could not be checked, say so.
+Verdicts: buy = good product at a good price for these requirements; ok = acceptable trade-off;
+avoid = likely knock-off, poor quality, misleading, or clearly worse value than an alternative.
+An established brand (track record, warranty, many reviews) costing only a little more (roughly <=15%
+or a couple of dollars) is usually the better pick over a no-name listing - name it in better_pick.
 
-SCAM_RE = re.compile(r"\b(zelle|venmo|cash ?app|gift ?card|western union|wire transfer)\b", re.I)
-CONTACT_RE = re.compile(r"\b(deposit|courier|shipping only|text me|pm me|whatsapp)\b", re.I)  # common; worth a look
-SEALED_RE = re.compile(r"\b(sealed|brand new|new in box|nib|unopened|never opened|bnib)\b", re.I)
-PARTS_RE = re.compile(r"\b(for parts|parts only|no ram|no ssd|no hdd|no storage|barebones?|case only|"
-                      r"board only|cpu only|supports? \d+ ?gb|handle only|bracket only)\b", re.I)
-PARTS_SOFT_RE = re.compile(r"\b(motherboard|bare|read description)\b", re.I)  # may be a whole item mentioning them
-USED_RE = re.compile(r"\b(refurbished|renewed|open box|used|pre-?owned|like new)\b", re.I)
+Also answer three narrow factual checks (the program turns them into hard rules, so be literal):
+- meets_requirements: "yes" if the evidence shows every stated requirement is met, "no" if the evidence
+  shows at least one is NOT met, "unclear" if it cannot be confirmed either way. Requirements are about the
+  product, never the price: being above the target price is NOT an unmet requirement. A requirement with
+  an alternative ("X or Y", "or a cheap add") is met when any alternative is met.
+- knockoff_risk: "high" only for concrete signs (brand/spec contradictions, specs physically implausible,
+  copied listing under another name, review pattern clearly fake); "medium" for an unknown brand with
+  little evidence; "low" for an established brand or solid independent evidence.
+- whole_item: "no" if the price looks like it covers only a part/accessory/one of several components;
+  "yes" if it clearly covers the whole item; "unclear" otherwise.
 
-STRONG, RISK, INFO = "strong", "risk", "info"
+Reply with ONLY one JSON object, no prose, no code fence:
+{"verdict": "buy|ok|avoid", "summary": "1-2 sentences why", "red_flags": ["..."],
+ "meets_requirements": "yes|no|unclear", "unmet_requirements": ["requirements the evidence shows are not met"],
+ "knockoff_risk": "low|medium|high", "whole_item": "yes|no|unclear",
+ "standard_product": "the standard / most-recommended product for this need",
+ "standard_price": "its price: live reference price if listed below, else 'typical $X (web)' or 'unknown'",
+ "vs_standard": "what is lost or gained vs it",
+ "better_pick": "title + price + url of a clearly better-value listing from TODAY'S LISTINGS or REFERENCE PRODUCTS, or ''"}"""
 
 
 @dataclass
-class Flag:
-    level: str  # strong | risk | info
-    text: str
+class Vetting:
+    verdict: str  # buy | ok | avoid | unvetted
+    summary: str
+    red_flags: list[str] = field(default_factory=list)
+    standard_product: str = ""
+    standard_price: str = ""
+    vs_standard: str = ""
+    better_pick: str = ""
+    meets_requirements: str = "unclear"  # yes | no | unclear
+    unmet_requirements: list[str] = field(default_factory=list)
+    knockoff_risk: str = "medium"  # low | medium | high
+    whole_item: str = "unclear"  # yes | no | unclear
+    model_verdict: str = ""  # the model's own verdict before hard rules
+    rules_applied: list[str] = field(default_factory=list)
+    cached: bool = False
+
+    @classmethod
+    def from_json(cls, data: dict[str, Any]) -> Vetting:
+        known = {k: v for k, v in data.items() if k in cls.__dataclass_fields__ and k != "cached"}
+        v = cls(**known)
+        v.verdict = str(v.verdict).strip().lower()
+        if v.verdict not in VERDICTS:
+            raise ValueError(f"bad verdict {v.verdict!r}")
+        for name in ("red_flags", "unmet_requirements", "rules_applied"):
+            if not isinstance(getattr(v, name), list):
+                setattr(v, name, [str(getattr(v, name))])
+        for name in ("meets_requirements", "knockoff_risk", "whole_item"):
+            setattr(v, name, str(getattr(v, name)).strip().lower())
+        return v
 
 
-@dataclass
-class Vet:
-    flags: list[Flag] = field(default_factory=list)
-    verdict: str = "worth it"  # worth it | risky | probably a trap
-    confidence: str = "lower"  # medium | lower  (never 'high': product quality isn't verifiable here)
-    basis: str = ""  # what the verdict rests on
-    would_change: str = ""  # what, if false, breaks it
-    themes: list[str] = field(default_factory=list)  # complaint themes (page-checked Amazon only)
-    customers_say: str | None = None
-    page: PageInfo | None = None
+def apply_rules(v: Vetting) -> Vetting:
+    """Product-agnostic hard rules on the model's factual checks. Rules only make a verdict stricter.
 
-    def flag_texts(self) -> list[str]:
-        return [f.text for f in self.flags]
-
-
-def peer_median(observations: list[Observation], exclude_key: str) -> float | None:
-    prices = [o.price for o in observations if o.key != exclude_key and o.price > 0]
-    return statistics.median(prices) if len(prices) >= MIN_PEERS else None
-
-
-def known_brand(title: str, page_brand: str | None) -> str | None:
-    """A KNOWN_BRANDS entry that the page brand starts with or that appears in the first words of the title."""
-    head = " ".join(re.findall(r"[a-z0-9.]+", title.lower())[:6])
-    pb = " ".join(re.findall(r"[a-z0-9.]+", (page_brand or "").lower()))
-    for b in KNOWN_BRANDS:
-        if (pb and (pb == b or pb.startswith(b + " "))) or re.search(rf"(?:^| ){re.escape(b)}(?: |$)", head):
-            return b
-    return None
-
-
-def _brand_label(title: str, page_brand: str | None) -> str:
-    words = (page_brand or "").split() or [w for w in re.findall(r"[A-Za-z0-9.]+", title)
-                                          if not w.isdigit() and w.lower() not in ("pack", "new", "the")][:1]
-    return words[0].lower() if words else ""
-
-
-def flags_for(obs: Observation, median: float | None, page: PageInfo | None = None) -> list[Flag]:
-    flags: list[Flag] = []
-    title = obs.title
-    far_below = median is not None and obs.price > 0 and obs.price < FAR_BELOW * median
-    if far_below:
-        flags.append(Flag(RISK, f"price {100 - obs.price / median * 100:.0f}% below median ${median:.2f}"))
-
-    if obs.source == "amazon":
-        if USED_RE.search(title) or obs.condition in ("used", "refurbished"):
-            flags.append(Flag(RISK, "refurbished/used"))
-        reviews = page.review_count if page and page.review_count is not None else obs.review_count
-        rating = page.rating if page and page.rating is not None else obs.rating
-        if reviews is None:
-            flags.append(Flag(INFO, "review count unknown"))
-        elif reviews < 10 and far_below:
-            flags.append(Flag(STRONG, f"only {reviews} ratings AND far below market"))
-        elif reviews < 50:
-            flags.append(Flag(RISK, f"few ratings ({reviews})"))
-        if rating is not None and rating < 4.0:
-            flags.append(Flag(RISK, f"rating {rating:.1f}★ < 4.0"))
-        page_brand = page.brand if page else None
-        brand = _brand_label(title, page_brand)
-        if brand and not known_brand(title, page_brand):
-            flags.append(Flag(RISK if (reviews or 0) < 500 else INFO, f"unrecognised brand '{brand}'"))
-        if page is not None:
-            if page.third_party:
-                flags.append(Flag(RISK if (reviews or 0) < 100 else INFO, f"third-party seller: {page.seller}"))
-            low = page.low_star_pct
-            if low is not None and low >= 20:
-                flags.append(Flag(RISK, f"{low}% of ratings are 1-2★"))
-            for a in page.complaints():
-                if a.mentions >= 10 and a.negative / a.mentions >= 0.3:
-                    flags.append(Flag(RISK, f"{a.name}: {a.negative} of {a.mentions} mentions negative"))
-    elif obs.source in LOCAL_SOURCES:
-        if SCAM_RE.search(title):
-            flags.append(Flag(STRONG, "scam-style payment/contact wording in title"))
-        if CONTACT_RE.search(title):
-            flags.append(Flag(RISK, "off-platform contact/deposit/courier wording"))
-        if SEALED_RE.search(title) and median is not None and obs.price < 0.6 * median:
-            flags.append(Flag(STRONG, "claims new/sealed at <60% of market"))
-        if PARTS_RE.search(title):
-            flags.append(Flag(STRONG, "possible per-part/partial listing - confirm what the price covers"))
-        elif PARTS_SOFT_RE.search(title):
-            flags.append(Flag(RISK, "title mentions a part (motherboard/bare) - confirm it's the whole item"))
-        if obs.price == 0:
-            flags.append(Flag(STRONG, "$0 price - likely placeholder or 'free'"))
-        if len(re.findall(r"[A-Za-z0-9]+", title)) <= 3:
-            flags.append(Flag(RISK, "vague title - ask for photos/specs"))
-    return flags
-
-
-def judge(flags: list[Flag], page: PageInfo | None, obs: Observation) -> tuple[str, str, str, str]:
-    """Return (verdict, confidence, basis, would_change)."""
-    strong = [f for f in flags if f.level == STRONG]
-    risks = [f for f in flags if f.level == RISK]
-    if strong:
-        verdict = "probably a trap"
-    elif len(risks) >= 2:
-        verdict = "risky"
-    elif page is not None and (page.review_count or 0) >= 50:
-        verdict = "worth it"
-    else:
-        verdict = "no red flags found"  # nothing flagged, but no product-page evidence to say "worth it"
-    reviews = page.review_count if page and page.review_count is not None else obs.review_count
-    checked = page is not None and (reviews or 0) >= 50
-    confidence = "medium" if checked else "lower"
-    if obs.source == "amazon":
-        basis = (f"product page read, {reviews} ratings" if checked else
-                 "card data only (rating/review count/title); product page not read" if page is None else
-                 f"product page read but ratings count {'unreadable' if reviews is None else f'only {reviews}'}")
-        would = "real-world quality is unverified; ratings can be incentivised or from a different variant"
-    else:
-        basis = "listing title/price vs this run's other listings; photos and seller not seen"
-        would = "seller's answers/photos: confirm exactly what's included and test before paying"
-    return verdict, confidence, basis, would
-
-
-def build_vet(obs: Observation, peers: list[Observation], page: PageInfo | None = None) -> Vet:
-    median = peer_median(peers, obs.key)
-    flags = flags_for(obs, median, page)
-    verdict, confidence, basis, would = judge(flags, page, obs)
-    vet = Vet(flags, verdict, confidence, basis, would, page=page)
-    if page is not None:
-        vet.customers_say = page.customers_say
-        # Amazon's per-aspect blurb is usually the positive majority view; only quote it when the aspect is mixed.
-        vet.themes = [f"{a.name}: {a.negative}/{a.mentions} negative" +
-                      (f" - {a.summary}" if a.summary and a.negative / a.mentions >= 0.3 else "")
-                      for a in page.complaints()[:3] if a.mentions]
-        if page.low_star_pct is not None and page.low_star_pct >= 10:
-            vet.themes.insert(0, f"{page.low_star_pct}% of ratings are 1-2★")
-    return vet
-
-
-PageFetcher = Callable[[str], Awaitable[PageInfo]]
-
-
-async def vet_summary(summary: Any, top_n: int, fetch_page: PageFetcher | None) -> None:
-    """Attach a Vet to the report's top listings and every alerted listing.
-
-    The product page is opened only for alerted Amazon listings (a few per item), never for the whole list.
+    Narrow yes/no checks are more stable run-to-run than an overall judgement, so the clear-cut cases
+    (requirement not met, concrete knock-off signs, part-only price) never depend on the model's mood.
     """
-    observations: list[Observation] = summary.fetch.observations
-    top = sorted(observations, key=lambda o: o.price)[:top_n]
-    targets = {o.key: o for o in top}
-    pages: dict[str, PageInfo] = {}
-    page_budget = MAX_PAGE_VETS_PER_ITEM
-    for alert in summary.alerts:
-        o = alert.obs
-        targets[o.key] = o
-        if o.source == "amazon" and fetch_page is not None and page_budget > 0 and o.key not in pages:
-            page_budget -= 1
-            try:
-                pages[o.key] = await asyncio.wait_for(fetch_page(o.listing_id), PAGE_TIMEOUT_S)
-            except Exception as exc:  # vetting is context; the alert still goes out
-                log.warning("item=%s page vet failed for %s: %s", summary.item.id, o.listing_id, exc)
-    for key, o in targets.items():
+    v.model_verdict = v.model_verdict or v.verdict
+    rules: list[str] = []
+    if v.meets_requirements == "no":
+        unmet = "; ".join(v.unmet_requirements) or "see red flags"
+        rules.append(f"fails requirements ({unmet})")
+    if v.knockoff_risk == "high":
+        rules.append("high knock-off risk")
+    if v.whole_item == "no":
+        rules.append("price is not for the whole item")
+    if rules:
+        v.verdict = "avoid"
+    elif v.verdict == "buy" and v.meets_requirements != "yes":
+        rules.append("requirements not confirmed -> at most ok")
+        v.verdict = "ok"
+    v.rules_applied = rules
+    return v
+
+
+@dataclass
+class ItemEvidence:
+    """Shared by every listing of one item in one run."""
+    references: list[dict] = field(default_factory=list)  # live Amazon listings for reference_queries
+    reviewer_picks: list[dict] = field(default_factory=list)  # web snippets: best-of / reddit
+
+
+class Budget:
+    """Run-wide limits so a slow or dead gateway cannot eat the scheduled run."""
+
+    def __init__(self, minutes: float = RUN_BUDGET_MIN, max_failures: int = MAX_CONSECUTIVE_FAILURES):
+        self.deadline = time.monotonic() + minutes * 60
+        self.max_failures = max_failures
+        self.failures = 0
+
+    def exhausted(self) -> str | None:
+        if self.failures >= self.max_failures:
+            return f"{self.failures} consecutive gateway failures"
+        if time.monotonic() >= self.deadline:
+            return "run vetting time budget used up"
+        return None
+
+    def record(self, ok: bool) -> None:
+        self.failures = 0 if ok else self.failures + 1
+
+
+def context_hash(item: WatchItem) -> str:
+    """Changes when what a verdict depends on changes (requirements, references, rubric) -> re-vet."""
+    basis = json.dumps([item.query, item.requirements, item.reference_queries, item.target_price, RUBRIC])
+    return hashlib.sha1(basis.encode("utf-8")).hexdigest()[:12]
+
+
+Runner = Callable[[str], str]  # prompt -> reply text
+DetailFn = Callable[[str], Awaitable[dict[str, str]]]
+ReferenceFn = Callable[[str], Awaitable[list[dict]]]
+WebFn = Callable[..., list[dict]]
+
+
+def gateway_runner(project: str) -> Runner:
+    return lambda prompt: gateway.ask(project, prompt)
+
+
+def brand_of(obs: Observation, facts: dict[str, str]) -> str:
+    """Brand from the product page; else the title's leading capitalised word (often the brand)."""
+    if facts.get("brand"):
+        return facts["brand"]
+    m = re.match(r"\s*([A-Z][A-Za-z0-9&+-]{1,20})\b", obs.title)
+    return m.group(1) if m else ""
+
+
+def _line(o: Observation) -> str:
+    stars = f", {o.rating:.1f}★" if o.rating is not None else ""
+    where = f", {o.location}" if o.location else ""
+    return f"${o.price:.2f} | {o.source} | {o.condition}{where}{stars} | {o.title} | {o.url}"
+
+
+def _web_lines(results: list[dict]) -> list[str]:
+    return [f"- {r['title']}: {r['snippet']} ({r['url']})" for r in results]
+
+
+def build_prompt(item: WatchItem, obs: Observation, facts: dict[str, str], brand_web: list[dict],
+                 peers: list[Observation], evidence: ItemEvidence) -> str:
+    parts = [RUBRIC, "", f"WHAT THE BUYER WANTS: {item.query}",
+             f"Requirements: {item.requirements or '(none given - judge for a typical buyer of this item)'}"]
+    if item.notes:
+        parts.append(f"Notes: {item.notes}")
+    if item.target_price is not None:
+        parts.append(f"Buyer's target price: ${item.target_price:.2f} (sticker + shipping, before tax)")
+    parts += ["", "LISTING TO VET (live today; sticker + shipping, before tax):", _line(obs)]
+    if facts:
+        parts.append("Product page facts (live today):")
+        parts += [f"- {k}: {v}" for k, v in facts.items()]
+    if brand_web:
+        parts += ["", "WEB SEARCH - brand/product reputation:"] + _web_lines(brand_web)
+    if evidence.reviewer_picks:
+        parts += ["", "WEB SEARCH - reviewer / community picks for this item:"] + _web_lines(evidence.reviewer_picks)
+    if evidence.references:
+        parts += ["", "REFERENCE PRODUCTS (standard / name-brand, live Amazon today):"]
+        parts += [f"- ${float(r['price']):.2f} | {r.get('seller_rating') or '-'}★ | {str(r.get('title', ''))[:120]} | "
+                  f"{r.get('url', '')}" for r in evidence.references if r.get("price")]
+    others = sorted((p for p in peers if p.key != obs.key), key=lambda p: p.price)[:PEER_LIMIT]
+    if others:
+        parts += ["", "TODAY'S LISTINGS for the same search (live, cheapest first):"] + [f"- {_line(p)}" for p in others]
+    prompt = "\n".join(parts)
+    if len(prompt) > MAX_PROMPT_CHARS:
+        log.warning("item=%s prompt %d chars truncated to %d", item.id, len(prompt), MAX_PROMPT_CHARS)
+        prompt = prompt[:MAX_PROMPT_CHARS]
+    return prompt
+
+
+async def gather_item_evidence(item: WatchItem, store: Any, defaults: Defaults, reference: ReferenceFn | None,
+                               web: WebFn = websearch.search) -> ItemEvidence:
+    ev = ItemEvidence()
+    for q in item.reference_queries:
+        if reference is None:
+            break
         try:
-            o.vet = build_vet(o, observations, pages.get(key))
-        except Exception:  # one odd listing must not leave the rest un-vetted
-            log.exception("item=%s vet failed for %s", summary.item.id, key)
-    log.info("item=%s vetted=%d pages=%d verdicts=%s", summary.item.id, len(targets), len(pages),
-             sorted({o.vet.verdict for o in targets.values()}))
+            ev.references += await reference(q)
+        except Exception as exc:  # vetting still runs without the live baseline
+            log.warning("item=%s reference search %r failed: %s", item.id, q, exc)
+    for q in (f"best {item.query} reddit", f"best {item.query} review wirecutter OR rtings"):
+        ev.reviewer_picks += web(q, 4, store, defaults.vet_cache_days)  # same thread: store is sqlite
+    log.info("item=%s evidence: %d reference listings, %d reviewer snippets",
+             item.id, len(ev.references), len(ev.reviewer_picks))
+    return ev
+
+
+async def vet_listings(store: Any, item: WatchItem, to_vet: list[Observation], peers: list[Observation],
+                       defaults: Defaults, runner: Runner, detail: DetailFn | None = None,
+                       reference: ReferenceFn | None = None, web: WebFn = websearch.search,
+                       budget: Budget | None = None) -> dict[str, Vetting]:
+    """Vet each listing (cached verdicts reused). Failures become verdict 'unvetted', never raise."""
+    budget = budget or Budget()
+    ctx = context_hash(item)
+    results: dict[str, Vetting] = {}
+    todo: list[Observation] = []
+    for o in to_vet:
+        try:
+            cached = store.get_vetting(item.id, o.key, o.price, defaults.vet_cache_days)
+            data = json.loads(cached) if cached else None
+            if data and data.get("ctx") == ctx:
+                v = Vetting.from_json(data)
+                v.cached = True
+                results[o.key] = v
+                continue
+        except (ValueError, TypeError) as exc:  # bad cache row: just re-vet
+            log.warning("item=%s bad cached vetting key=%s: %s", item.id, o.key, exc)
+        if o.key not in {t.key for t in todo}:
+            todo.append(o)
+    log.info("item=%s vetting %d listing(s), %d cached", item.id, len(todo), len(results))
+    if not todo:
+        return results
+
+    try:
+        evidence = await gather_item_evidence(item, store, defaults, reference, web)
+    except Exception as exc:  # evidence is best-effort
+        log.warning("item=%s evidence gathering failed: %s", item.id, exc)
+        evidence = ItemEvidence()
+    # Serial on purpose: one shared headless browser, and the gateway runs one call per project at a time.
+    for o in todo:
+        stop = budget.exhausted()
+        if stop:
+            log.warning("item=%s skip vetting key=%s: %s", item.id, o.key, stop)
+            results[o.key] = Vetting("unvetted", f"vetting skipped: {stop}")
+            continue
+        try:
+            facts: dict[str, str] = {}
+            if detail is not None and o.source == "amazon":
+                try:
+                    facts = await detail(o.url)
+                except Exception as exc:  # vetting still runs on search-card data
+                    log.warning("item=%s detail fetch failed %s: %s", item.id, o.url, exc)
+            brand = brand_of(o, facts)
+            brand_web = web(f"{brand} {item.query} review", 4, store, defaults.vet_cache_days) if brand else []
+            prompt = build_prompt(item, o, facts, brand_web, peers, evidence)
+            reply = await asyncio.to_thread(runner, prompt)
+            v = apply_rules(Vetting.from_json(gateway.parse_json_reply(reply)))
+        except Exception as exc:  # one failed listing must not sink the run
+            budget.record(ok=False)
+            log.warning("item=%s vet failed key=%s: %s: %s", item.id, o.key, type(exc).__name__, exc)
+            results[o.key] = Vetting("unvetted", f"vetting failed: {type(exc).__name__}")
+            continue
+        budget.record(ok=True)
+        results[o.key] = v
+        data = {k: val for k, val in asdict(v).items() if k != "cached"}
+        data["ctx"] = ctx
+        store.put_vetting(item.id, o.key, o.price, v.verdict, json.dumps(data))
+        log.info("item=%s vetted key=%s price=%.2f brand=%r verdict=%s model=%s rules=%s flags=%s",
+                 item.id, o.key, o.price, brand, v.verdict, v.model_verdict, v.rules_applied, v.red_flags)
+    return results

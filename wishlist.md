@@ -11,7 +11,7 @@ One row per item. Status: `want` → `searching` → `found` → `bought` / `dro
 | Electric precision screwdriver (slim pen, fwd/rev buttons, bit set) | cheap | either | thin, 2 buttons, decent torque, many bits | dropped | HOTO 25-in-1 $32.99 Amazon https://www.amazon.com/dp/B09MR5HFPB ; cheapest SHARDEN $19.99 https://www.amazon.com/dp/B0CY2LCWBZ (2026-10-04) |
 | Power bank | cheap | either | capacity/wattage not specified (assumed 10k mAh, USB-C PD) | found | INIU 10000mAh 45W $21.99 Amazon https://www.amazon.com/dp/B0CB1FW5FC ; used: Tzumi 10k USB-C PD $15 FB Fairview https://www.facebook.com/marketplace/item/1604190321416603 (2026-10-05) |
 | Smart plug (works with Alexa) | cheap | either | Alexa-compatible, no hub; qty not given | dropped | Kasa HS103P2 2-pack $14.99 Amazon https://www.amazon.com/dp/B07B8W2KHZ ; used: Amazon Smart Plug NEW $8 Craigslist Santa Clara (2026-10-05) |
-| Desktop PC | $30 (knowingly unrealistic) | either | ≥64 GB RAM, ≥512 GB storage | searching | none ≤ $30; closest 64 GB: HP Z620 $160 FB WA (far); parts lot $150 CL SF (2026-10-06) |
+| Desktop PC (home server / VMs) | $100 (raised from $30, 2026-10-08) | either | ≥64 GB RAM installed, ≥512 GB storage, complete machine; GPU only if included | searching | none ≤ $100; complete 64 GB Dell T5810 renewed $358.99 Amazon (2026-10-08) |
 
 ## Notes per item
 <!-- ### <Item name>
@@ -106,6 +106,12 @@ One row per item. Status: `want` → `searching` → `found` → `bought` / `dro
   - Unbranded 10k "new, sealed" $12 FB Mountain View https://www.facebook.com/marketplace/item/1341379991452346
   - Anker 20k 30W $30 FB San Jose https://www.facebook.com/marketplace/item/1325905393047704
   - Aukey MixFlex 30W 10k new $30 Craigslist SF
+- **Quality vetting 2026-10-07** (price-watch alerts, Amazon live pages):
+  - WeeFancy mini 20W $9.49 4.3★ (213 reviews, 7% 1★) https://www.amazon.com/dp/B0F8HZCNTX — unknown brand; claims 10k mAh at 165 g, light for real 10k cells (genuine 10k banks ~180–220 g) → capacity may be overstated. **Avoid.**
+  - VEEKTOMX slim 22.5W $9.90 4.1★ (87 reviews, 12% 1★) https://www.amazon.com/dp/B0GXJV5YVQ — unknown brand, few reviews, high 1★ share. **Avoid.**
+  - Aaoyun 22.5W metal $9.49 4.5★ (786 reviews, 7% 1★) https://www.amazon.com/dp/B0H5W2VZ8B — best of the three no-names (193 g plausible, metal case), still no brand track record / warranty. Acceptable only if saving $0.76 matters.
+  - **Better value: INIU Slimmest 10000mAh 20W PD $10.25 4.3★ (968 reviews, 1K+/mo) https://www.amazon.com/dp/B0C1MXWPF8** — established brand, 3-yr warranty, 2× USB-C; only $0.76 over the no-names.
+  - Reference standards (live): INIU 45W $20.89 https://www.amazon.com/dp/B0CB1FW5FC ; Baseus 22.5W built-in cable $17.09 4.6★ https://www.amazon.com/dp/B0DFYPVPRT ; Anker PowerIQ 10k $18.99 https://www.amazon.com/dp/B0D5CLSMFB ; Anker 30W $24.69. Reviewer picks (EcoFlow Rapid, Anker MagGo, Belkin, Cuktech 10) are $45+ (wireless/high-watt — overkill for this ask).
 
 ### Smart plug (works with Alexa) — 2026-10-05
 - Amazon live (Playwright; coupons not captured):
@@ -122,6 +128,17 @@ One row per item. Status: `want` → `searching` → `found` → `bought` / `dro
   - Bundle (TP-Link bulb + Gosund plugs + Amazon plug) $10 FB Danville https://www.facebook.com/marketplace/item/2144310656205987
 
 ### Desktop PC (≥64 GB RAM, ≥512 GB storage, < $30) — added 2026-10-06
+- **Interview 2026-10-08:** use = home server / VMs; target raised to $100; GPU nice-to-have only if
+  included; DIY (base PC + RAM) OK if cheaper overall. Watched as `desktop-pc-64gb-ram` + `workstation-64gb-ram`.
+- Live price tiers 2026-10-08:
+  - Renewed 64 GB Xeon workstations: Dell T5810 12-core 64 GB 480 GB SSD $358.99 https://www.amazon.com/dp/B07V5KL5MK ;
+    T7810 2x Xeon 64 GB no drive $467 https://www.amazon.com/dp/B0GXLDLV97 ; used HP Z640 64 GB + GTX 1080 $450 FB Carmichael (far)
+  - Renewed newer office PCs 64 GB: OptiPlex 5070 i7-9700 $593.48, EliteDesk 800 G4 i7-8700 $579.95 (Amazon)
+  - New 64 GB DDR5 mini PCs: Beelink SER9 MAX $1,149-1,179, msecore i9 $955 (Amazon)
+  - RAM alone: 64 GB DDR4 desktop kit ~$400 new (NEMIX $399.89 Amazon); used DDR4 ECC 64 GB ~$250 (FB, out of area);
+    16 GB DDR4 ECC sticks $70 each FB Sunnyvale -> DIY on DDR4 is NOT cheaper than a complete machine.
+  - Base workstations without the RAM: Dell T5810 $90 FB Sacramento, $139.99 FB Citrus Heights; HP Z620 $160 FB SF.
+  - Best <=$100 route: a DDR3-era workstation (Z420/Z620, T3600/T5600) + used DDR3 (64 GB DDR3 was $5 FB Sunnyvale, 2026-10-06 - past listing).
 - User knows this is unrealistic; watched daily as `desktop-pc-64gb-ram` in watchlist.json (alerts only ≤ $30; report shows matches up to $250).
 - Live search 2026-10-06 (FB/Craigslist/OfferUp/Amazon; eBay blocked): no complete 64 GB desktop anywhere near $30.
   - Closest real: Craigslist SF "Babied PC Parts: 64gb RAM | 2080 Super | SSD | 4TB NAS" $150 (parts sale, price likely per part) https://www.craigslist.org/view/d/san-francisco-babied-pc-parts-64gb-ram/rwkUzf6qk2NxxTmL9vyjfP
