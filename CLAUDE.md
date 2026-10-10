@@ -3,7 +3,7 @@
 Personal shopping tracker: `wishlist.md` lists what the user wants; Claude searches for the best deals and records them there.
 
 ## Location
-User lives in **Milpitas, CA** (ZIP, coordinates and the Discord channel id are user env vars, never committed: `PRICEWATCH_HOME_ZIP`, `PRICEWATCH_HOME_LAT`, `PRICEWATCH_HOME_LON`, `PRICEWATCH_DISCORD_TARGET`; `.mcp.json` references them as `${NAME}`). Prefer local pickup / closest listings (South Bay / SF Bay Area), then ship-to-home-ZIP offers. Estimate tax at 9.375% (Milpitas — verify if it matters).
+User lives in **Milpitas, CA** (never committed: ZIP + coordinates live in the gitignored `tools/shopping-deals-mcp-server/.env` as `SHOPPING_FACEBOOK_MARKETPLACE_LATITUDE/LONGITUDE`, `SHOPPING_OFFERUP_DEFAULT_ZIP/LATITUDE/LONGITUDE` - read by both the MCP server and the daily run; the Discord channel id is the user env var `PRICEWATCH_DISCORD_TARGET`). Prefer local pickup / closest listings (South Bay / SF Bay Area), then ship-to-home-ZIP offers. Estimate tax at 9.375% (Milpitas — verify if it matters).
 
 ## Search tools (MCP, configured in `.mcp.json`)
 - `shopping-deals` — new + used: Amazon, eBay, Google Shopping (needs `SERPAPI_API_KEY`), Craigslist (`sfbay`), OfferUp, FB Marketplace. Location env already set to Milpitas. Key tools: `find_best_deals`, `compare_prices`, `compare_area_prices`, `get_ebay_sold_comps`. Ignore its resale/vehicle-flip tools. Amazon is enabled (`SHOPPING_ENABLE_AMAZON_SCRAPE`): plain HTTP first, headless Playwright fallback when Amazon serves its bot challenge (prices exclude clip-on coupons).

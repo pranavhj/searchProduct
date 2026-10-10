@@ -34,13 +34,13 @@ CREATE TABLE IF NOT EXISTS geocache (
 
 
 def home() -> tuple[float, float]:
-    """Home coordinates from the shopping-deals env (filled from PRICEWATCH_HOME_LAT/LON via .mcp.json)."""
+    """Home coordinates from the shopping-deals env (its gitignored .env, loaded when the service is imported)."""
     try:
         return (float(os.environ["SHOPPING_FACEBOOK_MARKETPLACE_LATITUDE"]),
                 float(os.environ["SHOPPING_FACEBOOK_MARKETPLACE_LONGITUDE"]))
     except (KeyError, ValueError) as exc:
-        raise RuntimeError("home coordinates not set: define user env vars PRICEWATCH_HOME_LAT and "
-                           "PRICEWATCH_HOME_LON") from exc
+        raise RuntimeError("home coordinates not set: put SHOPPING_FACEBOOK_MARKETPLACE_LATITUDE/LONGITUDE in "
+                           "tools/shopping-deals-mcp-server/.env") from exc
 
 
 def haversine_miles(a: tuple[float, float], b: tuple[float, float]) -> float:
