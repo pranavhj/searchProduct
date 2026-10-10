@@ -281,7 +281,7 @@
       "query": "pull up bar",
       "enabled": true,
       "sources": null,
-      "condition": "any",
+      "condition": "used",
       "price_min": 3.0,
       "price_max": 60.0,
       "target_price": 8.0,
@@ -306,8 +306,8 @@
         "dip station",
         "squat rack"
       ],
-      "notes": "Target $8 sticker (user 2026-10-06, kept 2026-10-10 knowing the cheapest new doorway bar is ~$25: expect only used local hits). Interview 2026-10-10: doorway hook-on or tension rod, any grips, new or used, pickup within 5 mi.",
-      "requirements": "Doorway pull-up bar that needs no drilling: either the hook-on / leverage type that hangs on the door frame, or a tension rod that tightens between the door jambs. Not wall-, ceiling- or joist-mounted bars and not free-standing power towers. A plain straight bar is fine; multi-grip is not needed. New or used both OK; a used one must be complete (hooks/brackets, end pads, foam or rubber contact pads) and hold an adult. Local pickup only within 5 miles. (User interview 2026-10-10.)",
+      "notes": "Target $8 sticker (user 2026-10-06, kept 2026-10-10 knowing the cheapest new doorway bar is ~$25: expect only used local hits). Interview 2026-10-10: doorway hook-on or tension rod, any grips, pickup within 5 mi. Used only (user 2026-10-10, corrected from 'either').",
+      "requirements": "Doorway pull-up bar that needs no drilling: either the hook-on / leverage type that hangs on the door frame, or a tension rod that tightens between the door jambs. Not wall-, ceiling- or joist-mounted bars and not free-standing power towers. A plain straight bar is fine; multi-grip is not needed. Must be USED (second-hand) - do not recommend new retail listings; it must be complete (hooks/brackets, end pads, foam or rubber contact pads) and hold an adult. Local pickup only within 5 miles. (User interview 2026-10-10.)",
       "reference_queries": [
         "Iron Gym doorway pull up bar",
         "Sportneer doorway pull up bar no drill"

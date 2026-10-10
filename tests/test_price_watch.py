@@ -69,6 +69,18 @@ def test_fetch_filters_dedupes_and_uses_landed_price() -> None:
     assert res.source_errors == {"offerup": "boom"}
 
 
+def test_used_only_item_drops_new_listings() -> None:
+    class Fake:
+        async def find_best_deals(self, query: str, **kw: object) -> dict:
+            mk = lambda i, c: {"listing": {"id": i, "source": "amazon", "title": "Pull up bar", "url": f"u{i}",
+                                            "price": 20, "condition": c}}
+            return {"best_deals": [mk("new", "new"), mk("used", "used"), mk("unk", "unknown")]}
+
+    res = asyncio.run(fetch_item(Fake(), WatchItem("p", "pull up bar", condition="used"), D))
+    assert [o.listing_id for o in res.observations] == ["used", "unk"]
+    assert res.dropped == {"not_used": 1}
+
+
 # --- analyzer ----------------------------------------------------------------
 def test_first_run_has_no_drop_alerts(store: Store) -> None:
     s = run_day(store, WatchItem("duster", "q"), date(2026, 10, 1), [obs("a", 30), obs("b", 40)])
