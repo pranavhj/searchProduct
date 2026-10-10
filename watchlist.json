@@ -133,7 +133,7 @@
     {
       "id": "power-bank-10k",
       "query": "power bank 10000mAh usb-c",
-      "enabled": true,
+      "enabled": false,
       "sources": null,
       "condition": "any",
       "price_min": 8,
@@ -148,7 +148,7 @@
         "case",
         "cable only"
       ],
-      "notes": "Specs assumed (10k mAh, USB-C PD). Target $10 sticker (user 2026-10-06); pickup within 10 mi.",
+      "notes": "Specs assumed (10k mAh, USB-C PD). Target $10 sticker (user 2026-10-06); pickup within 10 mi. Bought by the user (told 2026-10-10); watch disabled, removed from wishlist.md.",
       "max_miles": 10.0,
       "reference_queries": [
         "INIU power bank 10000mAh",

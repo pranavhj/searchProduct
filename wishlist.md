@@ -9,7 +9,6 @@ One row per item. Status: `want` → `searching` → `found` → `bought` / `dro
 | 1470 nm 15 W laser | ? (ask) | either | 1470 nm, ~15 W; module vs complete system TBD | dropped | $700 used, eBay Lumics LU1470D160 16W module, https://www.ebay.com/itm/176730578273 (2026-10-04) |
 | Desk motor driver (replace fried BTS7960) + desk cable management | cheap | new | single DC motor, Arduino PWM; supply voltage TBD | dropped | BTS7960 2-pack $14.99 https://www.amazon.com/dp/B0D732VYGZ ; Cytron MD13S $15.30 https://www.amazon.com/dp/B07CW3GRL6 (2026-10-04) |
 | Electric precision screwdriver (slim pen, fwd/rev buttons, bit set) | cheap | either | thin, 2 buttons, decent torque, many bits | dropped | HOTO 25-in-1 $32.99 Amazon https://www.amazon.com/dp/B09MR5HFPB ; cheapest SHARDEN $19.99 https://www.amazon.com/dp/B0CY2LCWBZ (2026-10-04) |
-| Power bank | cheap | either | capacity/wattage not specified (assumed 10k mAh, USB-C PD) | found | INIU 10000mAh 45W $21.99 Amazon https://www.amazon.com/dp/B0CB1FW5FC ; used: Tzumi 10k USB-C PD $15 FB Fairview https://www.facebook.com/marketplace/item/1604190321416603 (2026-10-05) |
 | Smart plug (works with Alexa) | cheap | either | Alexa-compatible, no hub; qty not given | dropped | Kasa HS103P2 2-pack $14.99 Amazon https://www.amazon.com/dp/B07B8W2KHZ ; used: Amazon Smart Plug NEW $8 Craigslist Santa Clara (2026-10-05) |
 | Desktop PC (home server / VMs) | $100 (raised from $30, 2026-10-08) | either | ≥64 GB RAM installed, ≥256 GB storage (lowered from 512 GB, 2026-10-08), complete machine; GPU only if included | searching | none ≤ $100; complete 64 GB Dell T5810 renewed $358.99 Amazon (2026-10-08) |
 
@@ -91,27 +90,6 @@ One row per item. Status: `want` → `searching` → `found` → `bought` / `dro
 - Screwdriver set (Amazon live 2026-10-05): STREBITO 64-pc $9.99 4.6★ https://www.amazon.com/dp/B0F61RV7ZP ; iFixit Moray 32-bit $19.95 4.8★ https://www.amazon.com/dp/B08NWKMT8V ; Xiaomi 24-bit $23.99 4.7★ ; STREBITO 142-pc $27.99 4.8★ https://www.amazon.com/dp/B08SGM6F79 ; iFixit Mako 64 $39.95 4.9★ ; FB $5 25-in-1 Campbell https://www.facebook.com/marketplace/item/1408896504539680 , $5 31-in-1 Santa Clara https://www.facebook.com/marketplace/item/1433402835600163
 - Pocket multi-bit (non-precision) 2026-10-05 Amazon live: ValueMax 8-in-1 stubby ratcheting $9.99 4.7★ https://www.amazon.com/dp/B0DNRWZTJS ; WORKPRO 12-in-1 stubby ratcheting $15.99 4.7★ https://www.amazon.com/dp/B0DGXQVNJ3 ; Klein 32593 6-in-1 stubby ratcheting $17.97 4.8★ https://www.amazon.com/dp/B01I2KJ91K ; Stanley 66-344 pen 4-in-1 $8.25 https://www.amazon.com/dp/B0014KMDZ0 ; Wera Kraftform Kompakt 20 $38.52 https://www.amazon.com/dp/B000BK7AOS
   FB: Anvil 2pc multi-bit $5 San Jose https://www.facebook.com/marketplace/item/944672948644423 ; Kobalt multi-bit w/ pouch $6 San Jose https://www.facebook.com/marketplace/item/1402298888770211
-
-### Power bank — 2026-10-05
-- User gave no specs; assumed ~10,000 mAh, USB-C PD, cheap. Amazon live (Playwright; coupons not captured):
-  - INIU 10000mAh 45W, detachable USB-C cable $21.99 4.4★ https://www.amazon.com/dp/B0CB1FW5FC
-  - Anker 10000mAh 30W built-in USB-C cable $29.99 4.5★ https://www.amazon.com/dp/B0CZ9M6X8Q
-  - Anker 10000mAh PowerIQ (5V/3A, ~15W) $25.99 4.5★ https://www.amazon.com/dp/B0D5CLSMFB
-  - Miady 10000mAh 2-pack $19.97 4.5★ https://www.amazon.com/dp/B0GQH1QHDH (slow, USB-A oriented)
-  - 20k: INIU 22.5W $26.99 4.6★ https://www.amazon.com/dp/B0FX7T4H7D ; INIU 45W $29.99 4.3★ https://www.amazon.com/dp/B0DCZ56QNL ; Anker Zolo 30W $42.99
-- Used/local (live 2026-10-05, condition unverified):
-  - Tzumi PocketJuice 10k USB-C PD $15 FB Fairview https://www.facebook.com/marketplace/item/1604190321416603 (same item also OfferUp Castro Valley)
-  - CHCCUL 35W 10k $10 OfferUp SF https://offerup.com/item/detail/53ac71c7-f495-368d-ae39-0c0fc42ce09b
-  - Viceroy 10k $10 FB San Jose https://www.facebook.com/marketplace/item/1836643477524900
-  - Unbranded 10k "new, sealed" $12 FB Mountain View https://www.facebook.com/marketplace/item/1341379991452346
-  - Anker 20k 30W $30 FB San Jose https://www.facebook.com/marketplace/item/1325905393047704
-  - Aukey MixFlex 30W 10k new $30 Craigslist SF
-- **Quality vetting 2026-10-07** (price-watch alerts, Amazon live pages):
-  - WeeFancy mini 20W $9.49 4.3★ (213 reviews, 7% 1★) https://www.amazon.com/dp/B0F8HZCNTX — unknown brand; claims 10k mAh at 165 g, light for real 10k cells (genuine 10k banks ~180–220 g) → capacity may be overstated. **Avoid.**
-  - VEEKTOMX slim 22.5W $9.90 4.1★ (87 reviews, 12% 1★) https://www.amazon.com/dp/B0GXJV5YVQ — unknown brand, few reviews, high 1★ share. **Avoid.**
-  - Aaoyun 22.5W metal $9.49 4.5★ (786 reviews, 7% 1★) https://www.amazon.com/dp/B0H5W2VZ8B — best of the three no-names (193 g plausible, metal case), still no brand track record / warranty. Acceptable only if saving $0.76 matters.
-  - **Better value: INIU Slimmest 10000mAh 20W PD $10.25 4.3★ (968 reviews, 1K+/mo) https://www.amazon.com/dp/B0C1MXWPF8** — established brand, 3-yr warranty, 2× USB-C; only $0.76 over the no-names.
-  - Reference standards (live): INIU 45W $20.89 https://www.amazon.com/dp/B0CB1FW5FC ; Baseus 22.5W built-in cable $17.09 4.6★ https://www.amazon.com/dp/B0DFYPVPRT ; Anker PowerIQ 10k $18.99 https://www.amazon.com/dp/B0D5CLSMFB ; Anker 30W $24.69. Reviewer picks (EcoFlow Rapid, Anker MagGo, Belkin, Cuktech 10) are $45+ (wireless/high-watt — overkill for this ask).
 
 ### Smart plug (works with Alexa) — 2026-10-05
 - Amazon live (Playwright; coupons not captured):
