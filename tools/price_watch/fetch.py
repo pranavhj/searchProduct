@@ -168,6 +168,9 @@ async def fetch_item(service: DealsService, item: WatchItem, defaults: Defaults,
             dropped["no_price"] = dropped.get("no_price", 0) + 1
             continue
         reason = relevance_reason(item, listing.get("title", ""), price)
+        # The extra price-sorted passes ignore the condition filter (Amazon's is all new), so enforce it here.
+        if not reason and item.condition == "used" and str(listing.get("condition", "")).lower() == "new":
+            reason = "not_used"
         dist = None
         if not reason and is_pickup(listing) and distance is not None:
             dist = distance(listing.get("location"))

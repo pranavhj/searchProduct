@@ -281,12 +281,12 @@
       "query": "pull up bar",
       "enabled": true,
       "sources": null,
-      "condition": "any",
+      "condition": "used",
       "price_min": 3.0,
       "price_max": 60.0,
       "target_price": 8.0,
       "drop_pct": null,
-      "max_miles": null,
+      "max_miles": 5.0,
       "must_include": [
         "pull up|pull-up|pullup|chin up|chin-up",
         "bar"
@@ -295,9 +295,23 @@
         "assist",
         "replacement",
         "handle only",
-        "band only"
+        "band only",
+        "wall mount",
+        "wall-mount",
+        "ceiling",
+        "joist",
+        "power tower",
+        "free standing",
+        "freestanding",
+        "dip station",
+        "squat rack"
       ],
-      "notes": "Target $8 sticker (user 2026-10-06); no spec given, doorway/wall/any bar; default 25 mi pickup."
+      "notes": "Target $8 sticker (user 2026-10-06, kept 2026-10-10 knowing the cheapest new doorway bar is ~$25: expect only used local hits). Interview 2026-10-10: doorway hook-on or tension rod, any grips, pickup within 5 mi. Used only (user 2026-10-10, corrected from 'either').",
+      "requirements": "Doorway pull-up bar that needs no drilling: either the hook-on / leverage type that hangs on the door frame, or a tension rod that tightens between the door jambs. Not wall-, ceiling- or joist-mounted bars and not free-standing power towers. A plain straight bar is fine; multi-grip is not needed. Must be USED (second-hand) - do not recommend new retail listings; it must be complete (hooks/brackets, end pads, foam or rubber contact pads) and hold an adult. Local pickup only within 5 miles. (User interview 2026-10-10.)",
+      "reference_queries": [
+        "Iron Gym doorway pull up bar",
+        "Sportneer doorway pull up bar no drill"
+      ]
     }
   ]
 }

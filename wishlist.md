@@ -11,6 +11,7 @@ One row per item. Status: `want` → `searching` → `found` → `bought` / `dro
 | Electric precision screwdriver (slim pen, fwd/rev buttons, bit set) | cheap | either | thin, 2 buttons, decent torque, many bits | dropped | HOTO 25-in-1 $32.99 Amazon https://www.amazon.com/dp/B09MR5HFPB ; cheapest SHARDEN $19.99 https://www.amazon.com/dp/B0CY2LCWBZ (2026-10-04) |
 | Smart plug (works with Alexa) | cheap | either | Alexa-compatible, no hub; qty not given | dropped | Kasa HS103P2 2-pack $14.99 Amazon https://www.amazon.com/dp/B07B8W2KHZ ; used: Amazon Smart Plug NEW $8 Craigslist Santa Clara (2026-10-05) |
 | Desktop PC (home server / VMs) | $100 (raised from $30, 2026-10-08) | either | ≥64 GB RAM installed, ≥256 GB storage (lowered from 512 GB, 2026-10-08), complete machine; GPU only if included | searching | none ≤ $100; complete 64 GB Dell T5810 renewed $358.99 Amazon (2026-10-08) |
+| Pull-up bar (doorway) | $8 | used only | doorway hook-on or tension rod, no drilling; any grips; pickup ≤ 5 mi | searching | none ≤ $8; cheapest new doorway bars: MOMODA $24.89 https://www.amazon.com/dp/B0B3Y6R2KG , Ally Peaks $27.99 https://www.amazon.com/dp/B08MY13HYC (Amazon, 2026-10-10) |
 
 ## Notes per item
 <!-- ### <Item name>
@@ -123,3 +124,14 @@ One row per item. Status: `want` → `searching` → `found` → `bought` / `dro
   - FB Federal Way WA (too far) 16-core HP Z620 64 GB RAM 1.5 TB SSD $160 https://www.facebook.com/marketplace/item/2239136673537508
   - Cheap DIY angle: 16× 4 GB DDR3 (64 GB) $5 FB Sunnyvale https://www.facebook.com/marketplace/item/1419504083526781 — needs an old DDR3 workstation with 8–16 slots
   - Typical cheap desktops in area: $80–120 (8–16 GB RAM, 128–256 GB SSD), e.g. Dell OptiPlex 3040 16 GB/256 GB $80 FB Pleasanton https://www.facebook.com/marketplace/item/1121870666903564
+
+### Pull-up bar (doorway) — interview 2026-10-10
+- **Interview 2026-10-10:** doorway hook-on or tension rod (no drilling); plain bar fine; **used only** (user 2026-10-10); target kept at $8;
+  will not travel more than 5 miles. Watched as `pull-up-bar`.
+- Live Amazon prices 2026-10-10 (new, before tax, coupons not captured) - reference only, new is not wanted:
+  - Hook-on doorway: MOMODA $24.89 4.1★ https://www.amazon.com/dp/B0B3Y6R2KG ; Ally Peaks $27.99 4.4★ https://www.amazon.com/dp/B08MY13HYC ;
+    Ally Peaks adjustable-width $32.29 https://www.amazon.com/dp/B0BKPGWL83 ; KAKICLAY $69.99 https://www.amazon.com/dp/B09BCLRHYL
+  - Tension rod: no-name 220 lb $24.98 3.8★ (weak rating) https://www.amazon.com/dp/B0HBWJGMQM ; leikefitness $33.99 https://www.amazon.com/dp/B0DZWPL8V2 ;
+    Sportneer 440 lb $39.99 4.2★ https://www.amazon.com/dp/B09JC86WNK
+  - Not wanted (for reference): wall/joist mount from $35.99, free-standing towers from $79.99.
+- Nothing at or under $8 found; no vetted pick yet (these are price tiers, not recommendations).
