@@ -312,6 +312,37 @@
         "Iron Gym doorway pull up bar",
         "Sportneer doorway pull up bar no drill"
       ]
+    },
+    {
+      "id": "poe-switch-8port",
+      "query": "8 port gigabit PoE switch",
+      "enabled": true,
+      "sources": null,
+      "condition": "any",
+      "price_min": 15.0,
+      "price_max": 150.0,
+      "target_price": 40.0,
+      "drop_pct": null,
+      "max_miles": 10.0,
+      "must_include": [
+        "poe",
+        "8 port|8-port|8port|9 port|9-port|10 port|10-port"
+      ],
+      "exclude": [
+        "injector",
+        "splitter",
+        "extender",
+        "10/100|100mbps|fast ethernet",
+        "for parts",
+        "not working"
+      ],
+      "notes": "Interview 2026-10-17: powers 5 Basler acA2500-20gc GigE cameras (~3.2 W each over PoE, ~16 W total) plus non-PoE devices; unmanaged; 1G; PC has several NICs so the cameras are spread across them (no 10G uplink needed); new or used, pickup within 10 mi. Target $40 is an assumption (not asked): below the cheapest qualifying new model (TP-Link LS108GP $59.99, Amazon 2026-10-17).",
+      "requirements": "Gigabit (10/100/1000) Ethernet switch with at least 8 ports, of which at least 5 supply IEEE 802.3af or 802.3at (PoE/PoE+) power; total PoE budget at least 30 W. Fast-Ethernet-only (10/100) switches are not acceptable because the cameras are GigE Vision. Must support jumbo frames (9K or more) for the machine-vision cameras. Unmanaged is fine; managed is acceptable at a similar price. Must be a complete working switch including its power adapter (most PoE switches use an external power brick; a used listing without it is a part-only deal). Avoid passive / 24 V non-standard PoE and no-name brands with unverifiable PoE budgets; established brands (TP-Link, Netgear, Ubiquiti, Cisco, D-Link, Zyxel) preferred. New or used; local pickup only within 10 miles, otherwise ship to home. (User interview 2026-10-17.)",
+      "reference_queries": [
+        "TP-Link LS108GP 8 port PoE switch",
+        "Netgear GS308PP 8 port PoE+ switch",
+        "TP-Link TL-SG1008MP"
+      ]
     }
   ]
 }
