@@ -11,6 +11,7 @@ Last session: 2026-10-05 (built tools/price_watch; plan/current.md)
 - Location set to Milpitas CA (ZIP/coords in user env vars)
 
 ## Next
+- 8-port PoE switch (5 Basler GigE cams) interviewed + watched 2026-10-17 as poe-switch-8port (PR #9); $40 target is an assumption - confirm with user
 - Price watch: Discord set (channel id in env PRICEWATCH_DISCORD_TARGET, tested 2026-10-06); eBay needs user to create Production keyset + setx EBAY_APP_ID/EBAY_CERT_ID; tune targets
 - Repo: github.com/pranavhj/searchProduct (private), branch price-watch
 - SerpApi key set (user env var SERPAPI_API_KEY) 2026-10-04 — Google Shopping verified available
