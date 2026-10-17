@@ -150,3 +150,10 @@ One row per item. Status: `want` → `searching` → `found` → `bought` / `dro
   - HP 1910-8G-PoE+ JG350A $20, Menlo Park (~15 mi) https://www.facebook.com/marketplace/item/912625168309139 - gigabit managed PoE+, cheapest fit if the drive is OK; check that the power cord is included and the PoE budget
   - NETGEAR GS308EP $52, Walnut Creek (too far) https://www.facebook.com/marketplace/item/1611424660632965
   - Avoid: HP ProCurve 2520-8-PoE J9137A $15 (10/100 ports, not gigabit); Cisco Meraki MS220-8P $18 (cloud-managed, needs a paid license)
+- **Buy-now search 2026-10-17 (live):**
+  - Pick: Cisco SG300-10PP $30 OfferUp San Jose (seller 51 reviews) https://offerup.com/item/detail/d595f411-edc2-3527-a674-cd94843ce0c2 - 8 gigabit PoE+ ports, 62 W, jumbo ~9 KB (retailer specs); managed, end-of-life firmware; jumbo frames must be enabled in its web UI
+  - Netgear GC108PP (8 PoE+, 126 W) "new" $60 OfferUp San Jose (seller 1 review) https://offerup.com/item/detail/3562c049-01aa-3251-847d-74149faffc97
+  - Netgear GS108PP used w/ adapter $95 OfferUp Newark https://offerup.com/item/detail/d9e796f3-9fbc-3a47-a0b6-2f525f64b817 - more than new GS308PP, skip
+  - Avoid: Craigslist Netgear $29 Fremont = FS108P (10/100); OfferUp "Tp-link" $20 = TL-SG1024 (no PoE)
+  - Amazon LS108GP $59.99, Prime delivery Oct 18 else Oct 22; TL-SG1008MP $89.99 same; GS308PP $69.99 Oct 22-24
+  - Best Buy: TP-Link 8-port PoE $79.99, Netgear 8-port PoE+ $109.99 (local store stock not confirmed); Micro Center blocked by Cloudflare
