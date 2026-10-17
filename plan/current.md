@@ -110,6 +110,20 @@ or hits a target.
   runs (non-deterministic). Gateway `fresh` needs openclaw-config branch searchproduct-fresh-ask merged +
   gateway restart; until then calls resume one conversation.
 
+## Phase 4: fix daily run + Google Shopping (added 2026-10-17)
+- [ ] 23. Fix the broken shopping-deals venv (`tools/shopping-deals-mcp-server/.venv`): package folders
+      (dotenv, httpx, mcp, playwright...) are gone while their dist-info remains, so the MCP server fails to
+      connect and the 08:00 run on 2026-10-17 died right after startup (last log line: env applied).
+      Find the cause (cleanup tool? AV? partial reinstall on 2026-10-10?), reinstall, re-run
+      `pricewatch run --no-notify` + `testsun_tests.cmd`. Make a run that crashes at import send an alert
+      (today it failed silently).
+- [ ] 24. Google Shopping search works end to end: SerpApi source `serpapi_google_shopping` is available
+      but is NOT in `defaults.sources`, so no daily run uses it. Verify a live query returns prices,
+      add it to sources, and use it for store coverage (Best Buy / Walmart / Micro Center / Target, incl.
+      in-store / nearby availability for Milpitas if SerpApi exposes it). Open question: SerpApi plan quota
+      (searches/month) vs ~11 items x daily runs - check the account before enabling for all items.
+      Depends on 23.
+
 ## Open assumptions
 - Discord channel for alerts: unknown → set `notify.discord_target` in watchlist.json.
 - Daily 08:00 run time chosen as default.
