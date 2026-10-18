@@ -530,3 +530,199 @@ def test_amazon_bot_challenge_page_raises(monkeypatch: pytest.MonkeyPatch) -> No
     monkeypatch.setattr(amazon_src, "_fetch_with_browser", captcha)
     with pytest.raises(RuntimeError, match="no result cards"):
         asyncio.run(amazon_cheap.fetch_cheapest("power bank", 8, 45, 5))
+
+
+# --- crash alert -------------------------------------------------------------
+def _crash_setup(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> list:
+    from price_watch import __main__ as cli, notify
+
+    monkeypatch.setattr(config, "DATA_DIR", tmp_path)
+    sent: list = []
+    monkeypatch.setattr(notify, "send_toast", lambda title, body: sent.append(("toast", title, body)) or True)
+    monkeypatch.setattr(notify, "send_discord", lambda target, msg: sent.append(("discord", target, msg)) or True)
+    wl = config.Watchlist(items=[], defaults=Defaults(), notify=config.NotifyConfig(discord_target="123", toast=True))
+    monkeypatch.setattr(config, "load_watchlist", lambda *a, **k: wl)
+
+    async def boom(item_ids: object, notify: bool) -> int:
+        raise ModuleNotFoundError("No module named 'dotenv'")
+    monkeypatch.setattr(cli, "_run", boom)
+    return sent
+
+
+def test_run_crash_sends_alert_and_logs(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    from price_watch import __main__ as cli
+
+    sent = _crash_setup(monkeypatch, tmp_path)
+    assert cli.main(["run"]) == 1
+    kinds = [s[0] for s in sent]
+    assert kinds == ["discord", "toast"]
+    assert "dotenv" in sent[0][2] and sent[0][1] == "123"
+    log_text = (tmp_path / "logs" / "price_watch.log").read_text(encoding="utf-8")
+    assert "run crashed" in log_text and "ModuleNotFoundError" in log_text
+
+
+def test_run_crash_no_notify_only_logs(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    from price_watch import __main__ as cli
+
+    sent = _crash_setup(monkeypatch, tmp_path)
+    assert cli.main(["run", "--no-notify"]) == 1
+    assert sent == []
+
+
+# --- google shopping -------------------------------------------------------------
+def test_google_nearby_extension_gives_store_and_miles() -> None:
+    from price_watch.google_shopping import store_location
+
+    raw = {"source": "Micro Center", "extensions": ["Nearby, 9 mi", "LOW PRICE"]}
+    assert store_location(raw) == "Micro Center store, 9 mi (in stock nearby)"
+
+
+def test_google_also_nearby_without_miles() -> None:
+    from price_watch.google_shopping import store_location
+
+    assert store_location({"source": "Micro Center", "extensions": ["Also nearby"]}) ==         "Micro Center store (in stock nearby)"
+
+
+def test_google_online_only_shows_delivery() -> None:
+    from price_watch.google_shopping import store_location
+
+    assert store_location({"source": "Newegg.com", "delivery": "Free delivery"}) == "Newegg.com (Free delivery)"
+
+
+def test_google_location_from_env(monkeypatch: pytest.MonkeyPatch) -> None:
+    from price_watch.google_shopping import serpapi_location
+
+    monkeypatch.setenv("SHOPPING_OFFERUP_DEFAULT_CITY", "Milpitas")
+    monkeypatch.setenv("SHOPPING_OFFERUP_DEFAULT_STATE", "CA")
+    assert serpapi_location() == "Milpitas,California,United States"
+
+
+def test_google_quota_below_reserve_refuses_search() -> None:
+    from price_watch.google_shopping import Quota
+
+    q = Quota(reserve=50, left=50)
+    with pytest.raises(RuntimeError, match="50 left"):
+        q.spend()
+
+
+def test_google_quota_above_reserve_counts_down() -> None:
+    from price_watch.google_shopping import Quota
+
+    q = Quota(reserve=50, left=52)
+    q.spend()
+    assert q.left == 51
+
+
+class GoogleSpyService(FakeService):
+    def __init__(self) -> None:
+        super().__init__(20.0)
+        self.sources: list = []
+
+    async def find_best_deals(self, query: str, **kw: object) -> dict:
+        self.sources.append(kw["sources"])
+        return await super().find_best_deals(query, **kw)
+
+
+async def _google_deals(query: str, lo: object, hi: object, limit: int) -> list[dict]:
+    return [{"listing": {"id": "g1", "source": "serpapi_google_shopping", "title": "Air Duster can",
+                         "url": "https://g", "price": 9.0, "location": "Micro Center store, 9 mi (in stock nearby)"},
+             "deal_score": None}]
+
+
+def test_google_source_is_searched_by_its_own_pass_not_the_service() -> None:
+    svc = GoogleSpyService()
+    asyncio.run(fetch_item(svc, WatchItem("d", "air duster"), D, ["amazon", "serpapi_google_shopping"],
+                           google_shopping=_google_deals))
+    assert svc.sources == [["amazon"]]
+
+
+def test_google_pass_listings_are_kept() -> None:
+    res = asyncio.run(fetch_item(GoogleSpyService(), WatchItem("d", "air duster"), D,
+                                 ["amazon", "serpapi_google_shopping"], google_shopping=_google_deals))
+    assert sorted(o.key for o in res.observations) == ["amazon:a", "serpapi_google_shopping:g1"]
+
+
+def test_google_pass_failure_is_a_source_error() -> None:
+    async def broken(query: str, lo: object, hi: object, limit: int) -> list[dict]:
+        raise RuntimeError("SerpApi quota low")
+    res = asyncio.run(fetch_item(GoogleSpyService(), WatchItem("d", "air duster"), D,
+                                 ["amazon", "serpapi_google_shopping"], google_shopping=broken))
+    assert res.source_errors == {"serpapi_google_shopping": "RuntimeError: SerpApi quota low"}
+
+
+def test_google_skipped_for_used_only_item() -> None:
+    res = asyncio.run(fetch_item(GoogleSpyService(), WatchItem("d", "air duster", condition="used"), D,
+                                 ["amazon", "serpapi_google_shopping"], google_shopping=_google_deals))
+    assert [o.key for o in res.observations] == ["amazon:a"]
+
+
+# --- google shopping cache ---------------------------------------------------------
+class _FakeSerp:
+    def __init__(self) -> None:
+        self.calls = 0
+
+    async def __call__(self, query: str, price_min: object, price_max: object, limit: int) -> list[dict]:
+        self.calls += 1
+        return [{"listing": {"id": "g1", "source": "serpapi_google_shopping", "title": "PoE switch",
+                             "url": "https://g", "price": 40.0, "location": "Micro Center store, 9 mi"},
+                 "deal_score": None}]
+
+
+def _cached_google(store: Store, serp: _FakeSerp, days: int = 3):
+    from price_watch.google_shopping import GoogleShopping
+
+    g = GoogleShopping(reserve=50, store=store, cache_days=days)
+    g._search = serp  # the live SerpApi call
+    return g
+
+
+def test_google_second_search_within_cache_days_reuses_results(store: Store) -> None:
+    serp = _FakeSerp()
+    g = _cached_google(store, serp)
+    asyncio.run(g("poe switch", 20, 150, 15))
+    asyncio.run(g("poe switch", 20, 150, 15))
+    assert serp.calls == 1
+
+
+def test_google_cached_listing_is_labelled_with_fetch_date(store: Store) -> None:
+    serp = _FakeSerp()
+    asyncio.run(_cached_google(store, serp)("poe switch", 20, 150, 15))
+    store.conn.execute("UPDATE web_cache SET fetched_at='2026-10-15T08:00:00-07:00'")
+    deals = asyncio.run(_cached_google(store, serp, days=30)("poe switch", 20, 150, 15))
+    assert deals[0]["listing"]["location"] == "Micro Center store, 9 mi; checked 10-15"
+
+
+def test_google_cache_older_than_cache_days_searches_again(store: Store) -> None:
+    serp = _FakeSerp()
+    asyncio.run(_cached_google(store, serp)("poe switch", 20, 150, 15))
+    store.conn.execute("UPDATE web_cache SET fetched_at='2020-01-01T08:00:00-07:00'")
+    asyncio.run(_cached_google(store, serp)("poe switch", 20, 150, 15))
+    assert serp.calls == 2
+
+
+def test_google_cache_is_per_price_band(store: Store) -> None:
+    serp = _FakeSerp()
+    g = _cached_google(store, serp)
+    asyncio.run(g("poe switch", 20, 150, 15))
+    asyncio.run(g("poe switch", 20, 300, 15))
+    assert serp.calls == 2
+
+
+def test_google_empty_result_is_not_cached(store: Store) -> None:
+    serp = _FakeSerp()
+
+    async def empty(query: str, lo: object, hi: object, limit: int) -> list[dict]:
+        serp.calls += 1
+        return []
+    g = _cached_google(store, serp)
+    g._search = empty
+    asyncio.run(g("poe switch", 20, 150, 15))
+    asyncio.run(g("poe switch", 20, 150, 15))
+    assert serp.calls == 2
+
+
+def test_google_cache_boundary_counts_calendar_days(store: Store) -> None:
+    """Fetched at 08:00:05, next run at 08:00:02 three days later: still due (run time jitter)."""
+    from price_watch.google_shopping import cache_age_days
+
+    assert cache_age_days("2026-10-14T08:00:05-07:00", date(2026, 10, 17)) == 3

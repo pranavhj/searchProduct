@@ -110,6 +110,34 @@ or hits a target.
   runs (non-deterministic). Gateway `fresh` needs openclaw-config branch searchproduct-fresh-ask merged +
   gateway restart; until then calls resume one conversation.
 
+## Phase 4: fix daily run + Google Shopping (added 2026-10-17)
+- [x] 23. Fix the broken shopping-deals venv (`tools/shopping-deals-mcp-server/.venv`): package folders
+      (dotenv, httpx, mcp, playwright...) are gone while their dist-info remains, so the MCP server fails to
+      connect and the 08:00 run on 2026-10-17 died right after startup (last log line: env applied).
+      Find the cause (cleanup tool? AV? partial reinstall on 2026-10-10?), reinstall, re-run
+      `pricewatch run --no-notify` + `testsun_tests.cmd`. Make a run that crashes at import send an alert
+      (today it failed silently).
+      Done 2026-10-17. Cause: worktree `source-coverage-reviews` held a junction to the real
+      tools/shopping-deals-mcp-server; `git worktree remove` (2026-10-10 14:20) followed it and deleted
+      `.env`, `.git` and the venv alphabetically up to pydantic_core (locked .pyd). Runs failed 10-11..10-17.
+      Rebuilt venv (old one kept as `.venv-broken`), restored `.env` from the session log, `playwright install
+      chromium` (new Playwright 1.64). Crash in `run` now logged + Discord/toast alert. CLAUDE.md: no junctions.
+      Not restored: the server's `.git` (local changes still in src + tools/shopping-deals-local.patch).
+- [x] 24. Google Shopping search works end to end: SerpApi source `serpapi_google_shopping` is available
+      but is NOT in `defaults.sources`, so no daily run uses it. Verify a live query returns prices,
+      add it to sources, and use it for store coverage (Best Buy / Walmart / Micro Center / Target, incl.
+      in-store / nearby availability for Milpitas if SerpApi exposes it). Open question: SerpApi plan quota
+      (searches/month) vs ~11 items x daily runs - check the account before enabling for all items.
+      Depends on 23.
+      Done 2026-10-17: SerpApi Free plan 250/month (236 left); 3 non-used items x 31 days ~ 93. Own pass
+      (google_shopping.py) with home city -> "Nearby, 9 mi" store stock in the location column; quota checked
+      once per run, skipped at <= 50 left (`defaults.serpapi_reserve`); used-only items skip it. Target has no
+      results so far for PoE switches; coverage depends on what Google lists.
+- [x] 25. Cache Google Shopping results per item (user 2026-10-17): store prices don't change daily, so search
+      once every `defaults.google_cache_days` (3) and reuse the cached listings in between, labelled with the
+      date they were fetched (live-price rule). Cache in store.web_cache (key `google:<query>|<band>`);
+      cache hits spend no SerpApi search and skip the quota check; empty results are not cached.
+
 ## Open assumptions
 - Discord channel for alerts: unknown → set `notify.discord_target` in watchlist.json.
 - Daily 08:00 run time chosen as default.

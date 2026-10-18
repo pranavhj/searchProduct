@@ -12,6 +12,7 @@ One row per item. Status: `want` → `searching` → `found` → `bought` / `dro
 | Smart plug (works with Alexa) | cheap | either | Alexa-compatible, no hub; qty not given | dropped | Kasa HS103P2 2-pack $14.99 Amazon https://www.amazon.com/dp/B07B8W2KHZ ; used: Amazon Smart Plug NEW $8 Craigslist Santa Clara (2026-10-05) |
 | Desktop PC (home server / VMs) | $100 (raised from $30, 2026-10-08) | either | ≥64 GB RAM installed, ≥256 GB storage (lowered from 512 GB, 2026-10-08), complete machine; GPU only if included | searching | none ≤ $100; complete 64 GB Dell T5810 renewed $358.99 Amazon (2026-10-08) |
 | Pull-up bar (doorway) | $8 | used only | doorway hook-on or tension rod, no drilling; any grips; pickup ≤ 5 mi | searching | none ≤ $8; cheapest new doorway bars: MOMODA $24.89 https://www.amazon.com/dp/B0B3Y6R2KG , Ally Peaks $27.99 https://www.amazon.com/dp/B08MY13HYC (Amazon, 2026-10-10) |
+| 8-port PoE switch (for 5 Basler GigE cameras) | $40 target (assumed, not asked) | either | gigabit, ≥5 PoE (802.3af/at) ports, ≥30 W, jumbo frames, unmanaged OK, with power brick; pickup ≤ 10 mi | searching | new: TP-Link LS108GP (8 PoE, 62 W) $59.99 https://www.amazon.com/dp/B0CWJMRTWY ; Netgear GS308PP (8 PoE+, 83 W) $69.99 https://www.amazon.com/dp/B082G2G2F8 (Amazon, 2026-10-17); no used listing within 10 mi |
 
 ## Notes per item
 <!-- ### <Item name>
@@ -135,3 +136,24 @@ One row per item. Status: `want` → `searching` → `found` → `bought` / `dro
     Sportneer 440 lb $39.99 4.2★ https://www.amazon.com/dp/B09JC86WNK
   - Not wanted (for reference): wall/joist mount from $35.99, free-standing towers from $79.99.
 - Nothing at or under $8 found; no vetted pick yet (these are price tiers, not recommendations).
+
+### 8-port PoE switch — interview 2026-10-17
+- **Use:** power 5 Basler acA2500-20gc GigE cameras (~3.2 W each over PoE per a distributor spec, so ~16 W total) plus non-PoE devices.
+  PC has several NICs, so the cameras are split across them (each camera at full 21 fps is ~0.9 Gbit/s, so one 1G link carries only one at full rate).
+- **Answers:** unmanaged; 1 Gigabit; new or used; pickup ≤ 10 mi. Target $40 is an assumption (not asked). Watched as `poe-switch-8port`.
+- **Must check per listing:** ≥5 PoE ports (TP-Link TL-SG1008P has only 4, so it is out), gigabit not 10/100, jumbo frames, power brick included.
+  Jumbo frames per retailer spec sheets (not verified on maker datasheets): LS108GP 16 KB, GS308PP 9216 B.
+- Live Amazon, new, before tax (2026-10-17): TP-Link LS108GP 8 PoE / 62 W $59.99 https://www.amazon.com/dp/B0CWJMRTWY ;
+  Netgear GS308PP 8 PoE+ / 83 W $69.99 https://www.amazon.com/dp/B082G2G2F8 ; TP-Link TL-SG208PE easy-managed 65 W $69.99 https://www.amazon.com/dp/B0GL5627TG ;
+  TP-Link TL-SG1008MP 8 PoE+ / 126 W $89.99 https://www.amazon.com/dp/B07TX5CX37
+- Used, FB Marketplace (2026-10-17), none within 10 mi:
+  - HP 1910-8G-PoE+ JG350A $20, Menlo Park (~15 mi) https://www.facebook.com/marketplace/item/912625168309139 - gigabit managed PoE+, cheapest fit if the drive is OK; check that the power cord is included and the PoE budget
+  - NETGEAR GS308EP $52, Walnut Creek (too far) https://www.facebook.com/marketplace/item/1611424660632965
+  - Avoid: HP ProCurve 2520-8-PoE J9137A $15 (10/100 ports, not gigabit); Cisco Meraki MS220-8P $18 (cloud-managed, needs a paid license)
+- **Buy-now search 2026-10-17 (live):**
+  - Pick: Cisco SG300-10PP $30 OfferUp San Jose (seller 51 reviews) https://offerup.com/item/detail/d595f411-edc2-3527-a674-cd94843ce0c2 - 8 gigabit PoE+ ports, 62 W, jumbo ~9 KB (retailer specs); managed, end-of-life firmware; jumbo frames must be enabled in its web UI
+  - Netgear GC108PP (8 PoE+, 126 W) "new" $60 OfferUp San Jose (seller 1 review) https://offerup.com/item/detail/3562c049-01aa-3251-847d-74149faffc97
+  - Netgear GS108PP used w/ adapter $95 OfferUp Newark https://offerup.com/item/detail/d9e796f3-9fbc-3a47-a0b6-2f525f64b817 - more than new GS308PP, skip
+  - Avoid: Craigslist Netgear $29 Fremont = FS108P (10/100); OfferUp "Tp-link" $20 = TL-SG1024 (no PoE)
+  - Amazon LS108GP $59.99, Prime delivery Oct 18 else Oct 22; TL-SG1008MP $89.99 same; GS308PP $69.99 Oct 22-24
+  - Best Buy: TP-Link 8-port PoE $79.99, Netgear 8-port PoE+ $109.99 (local store stock not confirmed); Micro Center blocked by Cloudflare

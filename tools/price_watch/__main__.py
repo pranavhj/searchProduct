@@ -87,7 +87,8 @@ async def run_items(store: Any, service: Any, wl: config.Watchlist, items: list[
                     notifier: Any, reports_dir: Path, run_at: datetime | None = None,
                     geocoder: Any = None, amazon_cheapest: Any = None,
                     local_cheapest: Any = None, amazon_counts: Any = None,
-                    page_fetcher: Any = None, vetter: Any = None) -> tuple[str, Path | None]:
+                    page_fetcher: Any = None, vetter: Any = None,
+                    google_shopping: Any = None) -> tuple[str, Path | None]:
     """One full run. Returns (status, report path). Testable with fake service/notifier/store."""
     from price_watch import analyze, cheap_flags, report, vet
     from price_watch.fetch import FetchResult, fetch_item, resolve_sources
@@ -106,13 +107,15 @@ async def run_items(store: Any, service: Any, wl: config.Watchlist, items: list[
                 sources = resolve_sources(item.sources or wl.defaults.sources, available)
                 distance = geocoder.distance_miles if geocoder is not None else None
                 fetched = await fetch_item(service, item, wl.defaults, sources, distance, amazon_cheapest,
-                                           local_cheapest, amazon_counts)
+                                           local_cheapest, amazon_counts, google_shopping)
                 if geocoder is not None and geocoder.error:
                     fetched.source_errors["geocode"] = geocoder.error  # pickup listings dropped as distance_unknown
             except Exception as exc:  # one broken item must not kill the daily run
                 log.exception("item=%s fetch failed", item.id)
                 fetched = FetchResult(item.id, [], {"fetch": f"{type(exc).__name__}: {exc}"}, 0, {})
             requested = set(resolve_sources(item.sources or wl.defaults.sources, available))
+            if item.condition == "used":  # fetch_item never searches Google Shopping for used-only items
+                requested.discard("serpapi_google_shopping")
             if not fetched.observations and fetched.source_errors and (
                     "fetch" in fetched.source_errors or requested <= set(fetched.source_errors)):
                 failures += 1
@@ -174,6 +177,7 @@ async def _run(item_ids: list[str] | None, notify: bool) -> int:
     from price_watch.amazon_cheap import fetch_cheapest, fetch_review_counts
     from price_watch.amazon_page import fetch_product_page
     from price_watch.geo import Geocoder
+    from price_watch.google_shopping import GoogleShopping
     from price_watch.local_cheap import fetch_cheapest_local
 
     with Store(config.DB_PATH) as store:
@@ -192,7 +196,9 @@ async def _run(item_ids: list[str] | None, notify: bool) -> int:
         status, path = await run_items(store, ShoppingDealsService(), wl, items, notify, notifier, config.REPORTS_DIR,
                                        geocoder=geo, amazon_cheapest=fetch_cheapest,
                                        local_cheapest=fetch_cheapest_local, amazon_counts=fetch_review_counts,
-                                       page_fetcher=fetch_product_page, vetter=vetter)
+                                       page_fetcher=fetch_product_page, vetter=vetter,
+                                       google_shopping=GoogleShopping(wl.defaults.serpapi_reserve, store,
+                                                                      wl.defaults.google_cache_days))
     print(path)
     return 1 if status == "failed" else 0
 
@@ -252,6 +258,25 @@ def _cmd_history(item_id: str, days: int) -> int:
     return 0
 
 
+def _crash_alert(exc: Exception) -> None:
+    """Tell the user the daily run died; a silent crash looks the same as "no deals today"."""
+    from price_watch import notify as notifier
+
+    msg = f"Price watch run CRASHED: {type(exc).__name__}: {exc}. No prices were checked. Log: data/logs/price_watch.log"
+    target, toast = None, True
+    try:
+        wl = config.load_watchlist()
+        target, toast = wl.notify.discord_target, wl.notify.toast
+    except Exception:  # the watchlist itself may be what broke; fall back to the toast
+        log.exception("crash alert: could not load watchlist notify settings")
+    sent = []
+    if target:
+        sent.append(notifier.send_discord(target, msg))
+    if toast or not target:
+        sent.append(notifier.send_toast("Price watch run crashed", msg))
+    log.info("crash alert sent=%s discord=%s", sent, bool(target))
+
+
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(prog="pricewatch", description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("-v", "--verbose", action="store_true")
@@ -281,7 +306,13 @@ def main(argv: list[str] | None = None) -> int:
     _setup_logging(args.verbose)
 
     if args.cmd == "run":
-        return asyncio.run(_run(args.item, notify=not args.no_notify))
+        try:
+            return asyncio.run(_run(args.item, notify=not args.no_notify))
+        except Exception as exc:  # e.g. a broken venv: ImportError before any item runs
+            log.exception("run crashed before finishing")
+            if not args.no_notify:
+                _crash_alert(exc)
+            return 1
     if args.cmd == "list":
         return _cmd_list()
     if args.cmd == "add":

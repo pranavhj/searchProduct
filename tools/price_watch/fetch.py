@@ -69,6 +69,7 @@ def relevance_reason(item: WatchItem, title: str, price: float) -> str | None:
 
 # Person-to-person marketplaces: listings are local pickup unless they say shipping is offered.
 LOCAL_SOURCES = {"facebook_marketplace", "craigslist", "offerup"}
+GOOGLE_SOURCE = "serpapi_google_shopping"
 
 DistanceFn = Callable[[str | None], float | None]
 CheapestFn = Callable[[str, float | None, float | None, int], Awaitable[list[dict]]]
@@ -114,17 +115,23 @@ async def fetch_item(service: DealsService, item: WatchItem, defaults: Defaults,
                      sources: list[str] | None = None, distance: DistanceFn | None = None,
                      amazon_cheapest: CheapestFn | None = None,
                      local_cheapest: LocalCheapestFn | None = None,
-                     amazon_counts: CountsFn | None = None) -> FetchResult:
+                     amazon_counts: CountsFn | None = None,
+                     google_shopping: CheapestFn | None = None) -> FetchResult:
     sources = sources or item.sources or defaults.sources
+    # Google Shopping gets its own pass (home location for store stock); see google_shopping.py.
+    # Used-only items skip it: it lists new retail stock and each search costs SerpApi quota.
+    google = google_shopping is not None and GOOGLE_SOURCE in sources and item.condition != "used"
+    service_sources = [s for s in sources if not (s == GOOGLE_SOURCE and (google or item.condition == "used"))]
     max_miles = item.max_miles if item.max_miles is not None else defaults.max_miles
     # Local sources are distance-filtered below, so cap generously: 15 results can all be too far away.
     cap = defaults.max_results_per_source
     if any(s in LOCAL_SOURCES for s in sources):
         cap = max(cap, defaults.max_results_local)
     log.info("fetch item=%s query=%r sources=%s cap=%d", item.id, item.query, sources, cap)
-    result = await service.find_best_deals(
+    # An empty source list would make the service search every source, so skip it instead.
+    result = {} if not service_sources else await service.find_best_deals(
         item.query,
-        sources=sources,
+        sources=service_sources,
         # Ask for everything scored; relevance filtering below decides what to keep.
         max_results=cap * len(sources),
         max_results_per_source=cap,
@@ -154,6 +161,12 @@ async def fetch_item(service: DealsService, item: WatchItem, defaults: Defaults,
         except Exception as exc:  # review counts are context, not required
             log.warning("item=%s amazon review counts failed: %s", item.id, exc)
             errors = {**errors, "amazon_counts": f"{type(exc).__name__}: {exc}"}
+    if google:
+        try:
+            deals += await google_shopping(item.query, item.price_min, item.price_max, cap)
+        except Exception as exc:  # e.g. quota reserve reached; the other sources still count
+            log.warning("item=%s google shopping failed: %s", item.id, exc)
+            errors = {**errors, GOOGLE_SOURCE: f"{type(exc).__name__}: {exc}"}
     if local_cheapest is not None:
         for src in (s for s in sources if s in LOCAL_SOURCES):
             try:

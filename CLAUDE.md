@@ -8,6 +8,9 @@ User lives in **Milpitas, CA** (never committed: ZIP + coordinates live in the g
 ## Search tools (MCP, configured in `.mcp.json`)
 - `shopping-deals` — new + used: Amazon, eBay, Google Shopping (needs `SERPAPI_API_KEY`), Craigslist (`sfbay`), OfferUp, FB Marketplace. Location env already set to Milpitas. Key tools: `find_best_deals`, `compare_prices`, `compare_area_prices`, `get_ebay_sold_comps`. Ignore its resale/vehicle-flip tools. Amazon is enabled (`SHOPPING_ENABLE_AMAZON_SCRAPE`): plain HTTP first, headless Playwright fallback when Amazon serves its bot challenge (prices exclude clip-on coupons).
   Installed at `tools/shopping-deals-mcp-server/` (venv in `.venv`). API keys go in that folder's `.env`, never in `.mcp.json`.
+  **Worktrees: never junction/symlink this folder into a worktree** - `git worktree remove` follows the link and
+  deletes the real folder (2026-10-10: lost its `.env`, `.git` and half the venv; daily runs died for a week). From a
+  worktree use the main checkout's venv: `C:/Users/prana/projects/searchProduct/tools/shopping-deals-mcp-server/.venv/Scripts/python.exe` with `PYTHONPATH=tools`.
 - `secondhand` — FB Marketplace, eBay, Depop, Poshmark via `npx secondhand-mcp`. **Always pass `location: "milpitas"`** (defaults to San Francisco) and a `radiusMiles` (~25).
 - Fallback: plain WebSearch.
 
@@ -55,6 +58,11 @@ set) + Windows toast; each listing alerted once per price level.
 - Local pickup listings (FB/Craigslist/OfferUp) farther than the item's `max_miles` (straight line from
   Milpitas, geocoded via OpenStreetMap Nominatim, cached in the DB) or with unknown location are dropped;
   shippable listings are exempt. Default 25 mi; power bank 10, PC 40.
+- Google Shopping (SerpApi, `tools/price_watch/google_shopping.py`) is a default source: Best Buy / Walmart / Micro Center /
+  Newegg etc., searched with the home city so local store stock shows as "<store> store, 9 mi (in stock nearby)". One SerpApi
+  search per item per run (Free plan: 250/month); skipped once `defaults.serpapi_reserve` (50) or fewer are left, and for
+  `condition: used` items. Results are cached per query + price band and re-searched every `defaults.google_cache_days`
+  (3); cached listings show "checked MM-DD" in the location column. A run crash (e.g. broken venv) sends a Discord + toast alert.
 - Amazon is searched twice: default featured sort + cheapest-first within the item's price band
   (`tools/price_watch/amazon_cheap.py`) — page 1 of the featured sort misses cheap listings.
 - Pickup sources (Craigslist/OfferUp/Facebook) get a second price-sorted pass (`tools/price_watch/local_cheap.py`:

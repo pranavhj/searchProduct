@@ -2,15 +2,18 @@
 
 ## State
 Currently: daily price watch live (Task Scheduler 08:00, watchlist.json, 7 items); eBay official API still awaiting keys
-Last session: 2026-10-05 (built tools/price_watch; plan/current.md)
+Last session: 2026-10-17 (Phase 4: venv repaired after worktree-junction deletion; Google Shopping enabled)
 
 ## Done
+- 2026-10-17: daily run fixed (venv rebuilt, .env restored, chromium reinstalled; crash -> Discord/toast alert);
+  Google Shopping (SerpApi Free 250/mo, reserve 50) is a default source with nearby-store stock; 130 tests
 - 2026-10-05: price watch built (fetch/store/analyze/report/notify, 24 tests, adversarial review fixed 11 findings, first live run 7 items OK)
 - Created wishlist.md (tracking table) and tools-research.md (MCP servers / skills found)
 - Installed shopping-deals (tools/, venv) + secondhand (npx); both smoke-tested (list tools OK)
 - Location set to Milpitas CA (ZIP/coords in user env vars)
 
 ## Next
+- 8-port PoE switch (5 Basler GigE cams) interviewed + watched 2026-10-17 as poe-switch-8port (PR #9); $40 target is an assumption - confirm with user
 - Price watch: Discord set (channel id in env PRICEWATCH_DISCORD_TARGET, tested 2026-10-06); eBay needs user to create Production keyset + setx EBAY_APP_ID/EBAY_CERT_ID; tune targets
 - Repo: github.com/pranavhj/searchProduct (private), branch price-watch
 - SerpApi key set (user env var SERPAPI_API_KEY) 2026-10-04 — Google Shopping verified available
