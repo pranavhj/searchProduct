@@ -8,6 +8,9 @@ User lives in **Milpitas, CA** (never committed: ZIP + coordinates live in the g
 ## Search tools (MCP, configured in `.mcp.json`)
 - `shopping-deals` — new + used: Amazon, eBay, Google Shopping (needs `SERPAPI_API_KEY`), Craigslist (`sfbay`), OfferUp, FB Marketplace. Location env already set to Milpitas. Key tools: `find_best_deals`, `compare_prices`, `compare_area_prices`, `get_ebay_sold_comps`. Ignore its resale/vehicle-flip tools. Amazon is enabled (`SHOPPING_ENABLE_AMAZON_SCRAPE`): plain HTTP first, headless Playwright fallback when Amazon serves its bot challenge (prices exclude clip-on coupons).
   Installed at `tools/shopping-deals-mcp-server/` (venv in `.venv`). API keys go in that folder's `.env`, never in `.mcp.json`.
+  **Worktrees: never junction/symlink this folder into a worktree** - `git worktree remove` follows the link and
+  deletes the real folder (2026-10-10: lost its `.env`, `.git` and half the venv; daily runs died for a week). From a
+  worktree use the main checkout's venv: `C:/Users/prana/projects/searchProduct/tools/shopping-deals-mcp-server/.venv/Scripts/python.exe` with `PYTHONPATH=tools`.
 - `secondhand` — FB Marketplace, eBay, Depop, Poshmark via `npx secondhand-mcp`. **Always pass `location: "milpitas"`** (defaults to San Francisco) and a `radiusMiles` (~25).
 - Fallback: plain WebSearch.
 

@@ -530,3 +530,40 @@ def test_amazon_bot_challenge_page_raises(monkeypatch: pytest.MonkeyPatch) -> No
     monkeypatch.setattr(amazon_src, "_fetch_with_browser", captcha)
     with pytest.raises(RuntimeError, match="no result cards"):
         asyncio.run(amazon_cheap.fetch_cheapest("power bank", 8, 45, 5))
+
+
+# --- crash alert -------------------------------------------------------------
+def _crash_setup(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> list:
+    from price_watch import __main__ as cli, notify
+
+    monkeypatch.setattr(config, "DATA_DIR", tmp_path)
+    sent: list = []
+    monkeypatch.setattr(notify, "send_toast", lambda title, body: sent.append(("toast", title, body)) or True)
+    monkeypatch.setattr(notify, "send_discord", lambda target, msg: sent.append(("discord", target, msg)) or True)
+    wl = config.Watchlist(items=[], defaults=Defaults(), notify=config.NotifyConfig(discord_target="123", toast=True))
+    monkeypatch.setattr(config, "load_watchlist", lambda *a, **k: wl)
+
+    async def boom(item_ids: object, notify: bool) -> int:
+        raise ModuleNotFoundError("No module named 'dotenv'")
+    monkeypatch.setattr(cli, "_run", boom)
+    return sent
+
+
+def test_run_crash_sends_alert_and_logs(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    from price_watch import __main__ as cli
+
+    sent = _crash_setup(monkeypatch, tmp_path)
+    assert cli.main(["run"]) == 1
+    kinds = [s[0] for s in sent]
+    assert kinds == ["discord", "toast"]
+    assert "dotenv" in sent[0][2] and sent[0][1] == "123"
+    log_text = (tmp_path / "logs" / "price_watch.log").read_text(encoding="utf-8")
+    assert "run crashed" in log_text and "ModuleNotFoundError" in log_text
+
+
+def test_run_crash_no_notify_only_logs(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    from price_watch import __main__ as cli
+
+    sent = _crash_setup(monkeypatch, tmp_path)
+    assert cli.main(["run", "--no-notify"]) == 1
+    assert sent == []
