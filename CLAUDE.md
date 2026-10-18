@@ -58,6 +58,10 @@ set) + Windows toast; each listing alerted once per price level.
 - Local pickup listings (FB/Craigslist/OfferUp) farther than the item's `max_miles` (straight line from
   Milpitas, geocoded via OpenStreetMap Nominatim, cached in the DB) or with unknown location are dropped;
   shippable listings are exempt. Default 25 mi; power bank 10, PC 40.
+- Google Shopping (SerpApi, `tools/price_watch/google_shopping.py`) is a default source: Best Buy / Walmart / Micro Center /
+  Newegg etc., searched with the home city so local store stock shows as "<store> store, 9 mi (in stock nearby)". One SerpApi
+  search per item per run (Free plan: 250/month); skipped once `defaults.serpapi_reserve` (50) or fewer are left, and for
+  `condition: used` items. A run crash (e.g. broken venv) sends a Discord + toast alert.
 - Amazon is searched twice: default featured sort + cheapest-first within the item's price band
   (`tools/price_watch/amazon_cheap.py`) — page 1 of the featured sort misses cheap listings.
 - Pickup sources (Craigslist/OfferUp/Facebook) get a second price-sorted pass (`tools/price_watch/local_cheap.py`:

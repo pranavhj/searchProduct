@@ -3,6 +3,7 @@
     "sources": [
       "amazon",
       "ebay_public",
+      "serpapi_google_shopping",
       "craigslist",
       "offerup",
       "facebook_marketplace"

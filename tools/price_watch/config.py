@@ -18,8 +18,10 @@ DATA_DIR = PROJECT_ROOT / "data"
 DB_PATH = DATA_DIR / "price_watch.db"
 REPORTS_DIR = PROJECT_ROOT / "reports" / "price-watch"
 
-# serpapi_google_shopping is opt-in per item: each query spends a SerpApi credit (daily x N items adds up).
-DEFAULT_SOURCES = ["amazon", "ebay_public", "craigslist", "offerup", "facebook_marketplace"]
+# serpapi_google_shopping spends one SerpApi search per item per run (free plan 250/month);
+# Defaults.serpapi_reserve stops it before the quota runs out.
+DEFAULT_SOURCES = ["amazon", "ebay_public", "serpapi_google_shopping", "craigslist", "offerup",
+                   "facebook_marketplace"]
 
 
 
@@ -56,6 +58,7 @@ class Defaults:
     max_miles: float = 25.0
     vet: bool = True  # quality-vet every reported listing + alert (one LLM Gateway call per listing)
     vet_gateway_project: str = "searchproduct_vet"  # LLM Gateway project (Haiku); see vet.py
+    serpapi_reserve: int = 50  # skip Google Shopping once this few SerpApi searches are left this month
     vet_cache_days: int = 7  # reuse a verdict (and web-search results) for the same listing+price this long
 
 
