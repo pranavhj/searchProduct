@@ -59,6 +59,7 @@ class Defaults:
     vet: bool = True  # quality-vet every reported listing + alert (one LLM Gateway call per listing)
     vet_gateway_project: str = "searchproduct_vet"  # LLM Gateway project (Haiku); see vet.py
     serpapi_reserve: int = 50  # skip Google Shopping once this few SerpApi searches are left this month
+    google_cache_days: int = 3  # reuse Google Shopping results this many days before searching again (0 = daily)
     vet_cache_days: int = 7  # reuse a verdict (and web-search results) for the same listing+price this long
 
 

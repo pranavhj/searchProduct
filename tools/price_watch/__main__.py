@@ -197,7 +197,8 @@ async def _run(item_ids: list[str] | None, notify: bool) -> int:
                                        geocoder=geo, amazon_cheapest=fetch_cheapest,
                                        local_cheapest=fetch_cheapest_local, amazon_counts=fetch_review_counts,
                                        page_fetcher=fetch_product_page, vetter=vetter,
-                                       google_shopping=GoogleShopping(wl.defaults.serpapi_reserve))
+                                       google_shopping=GoogleShopping(wl.defaults.serpapi_reserve, store,
+                                                                      wl.defaults.google_cache_days))
     print(path)
     return 1 if status == "failed" else 0
 

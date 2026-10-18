@@ -224,6 +224,11 @@ class Store:
             return None
         return row[0]
 
+    def get_web_row(self, query: str) -> tuple[str, str] | None:
+        """(result_json, fetched_at) regardless of age; the caller applies its own freshness rule."""
+        row = self.conn.execute("SELECT result_json, fetched_at FROM web_cache WHERE query=?", (query,)).fetchone()
+        return (row[0], row[1]) if row else None
+
     def put_web(self, query: str, result_json: str) -> None:
         self.conn.execute("INSERT OR REPLACE INTO web_cache VALUES (?,?,?)", (query, result_json, _now().isoformat()))
         self.conn.commit()

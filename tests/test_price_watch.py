@@ -654,3 +654,75 @@ def test_google_skipped_for_used_only_item() -> None:
     res = asyncio.run(fetch_item(GoogleSpyService(), WatchItem("d", "air duster", condition="used"), D,
                                  ["amazon", "serpapi_google_shopping"], google_shopping=_google_deals))
     assert [o.key for o in res.observations] == ["amazon:a"]
+
+
+# --- google shopping cache ---------------------------------------------------------
+class _FakeSerp:
+    def __init__(self) -> None:
+        self.calls = 0
+
+    async def __call__(self, query: str, price_min: object, price_max: object, limit: int) -> list[dict]:
+        self.calls += 1
+        return [{"listing": {"id": "g1", "source": "serpapi_google_shopping", "title": "PoE switch",
+                             "url": "https://g", "price": 40.0, "location": "Micro Center store, 9 mi"},
+                 "deal_score": None}]
+
+
+def _cached_google(store: Store, serp: _FakeSerp, days: int = 3):
+    from price_watch.google_shopping import GoogleShopping
+
+    g = GoogleShopping(reserve=50, store=store, cache_days=days)
+    g._search = serp  # the live SerpApi call
+    return g
+
+
+def test_google_second_search_within_cache_days_reuses_results(store: Store) -> None:
+    serp = _FakeSerp()
+    g = _cached_google(store, serp)
+    asyncio.run(g("poe switch", 20, 150, 15))
+    asyncio.run(g("poe switch", 20, 150, 15))
+    assert serp.calls == 1
+
+
+def test_google_cached_listing_is_labelled_with_fetch_date(store: Store) -> None:
+    serp = _FakeSerp()
+    asyncio.run(_cached_google(store, serp)("poe switch", 20, 150, 15))
+    store.conn.execute("UPDATE web_cache SET fetched_at='2026-10-15T08:00:00-07:00'")
+    deals = asyncio.run(_cached_google(store, serp, days=30)("poe switch", 20, 150, 15))
+    assert deals[0]["listing"]["location"] == "Micro Center store, 9 mi; checked 10-15"
+
+
+def test_google_cache_older_than_cache_days_searches_again(store: Store) -> None:
+    serp = _FakeSerp()
+    asyncio.run(_cached_google(store, serp)("poe switch", 20, 150, 15))
+    store.conn.execute("UPDATE web_cache SET fetched_at='2020-01-01T08:00:00-07:00'")
+    asyncio.run(_cached_google(store, serp)("poe switch", 20, 150, 15))
+    assert serp.calls == 2
+
+
+def test_google_cache_is_per_price_band(store: Store) -> None:
+    serp = _FakeSerp()
+    g = _cached_google(store, serp)
+    asyncio.run(g("poe switch", 20, 150, 15))
+    asyncio.run(g("poe switch", 20, 300, 15))
+    assert serp.calls == 2
+
+
+def test_google_empty_result_is_not_cached(store: Store) -> None:
+    serp = _FakeSerp()
+
+    async def empty(query: str, lo: object, hi: object, limit: int) -> list[dict]:
+        serp.calls += 1
+        return []
+    g = _cached_google(store, serp)
+    g._search = empty
+    asyncio.run(g("poe switch", 20, 150, 15))
+    asyncio.run(g("poe switch", 20, 150, 15))
+    assert serp.calls == 2
+
+
+def test_google_cache_boundary_counts_calendar_days(store: Store) -> None:
+    """Fetched at 08:00:05, next run at 08:00:02 three days later: still due (run time jitter)."""
+    from price_watch.google_shopping import cache_age_days
+
+    assert cache_age_days("2026-10-14T08:00:05-07:00", date(2026, 10, 17)) == 3

@@ -133,6 +133,10 @@ or hits a target.
       (google_shopping.py) with home city -> "Nearby, 9 mi" store stock in the location column; quota checked
       once per run, skipped at <= 50 left (`defaults.serpapi_reserve`); used-only items skip it. Target has no
       results so far for PoE switches; coverage depends on what Google lists.
+- [x] 25. Cache Google Shopping results per item (user 2026-10-17): store prices don't change daily, so search
+      once every `defaults.google_cache_days` (3) and reuse the cached listings in between, labelled with the
+      date they were fetched (live-price rule). Cache in store.web_cache (key `google:<query>|<band>`);
+      cache hits spend no SerpApi search and skip the quota check; empty results are not cached.
 
 ## Open assumptions
 - Discord channel for alerts: unknown → set `notify.discord_target` in watchlist.json.
