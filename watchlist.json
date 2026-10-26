@@ -344,6 +344,61 @@
         "Netgear GS308PP 8 port PoE+ switch",
         "TP-Link TL-SG1008MP"
       ]
+    },
+    {
+      "id": "desktop-robot-arm",
+      "query": "robot arm",
+      "enabled": true,
+      "sources": null,
+      "condition": "any",
+      "price_min": 60.0,
+      "price_max": 700.0,
+      "target_price": 200.0,
+      "drop_pct": null,
+      "max_miles": 50.0,
+      "must_include": [
+        "uarm|dobot|dexarm|rotrics|mycobot|my cobot|elephant robotics|mirobot|wlkata|ufactory|lite 6|lite6"
+      ],
+      "exclude": [
+        "hiwonder",
+        "lewansoul",
+        "learm",
+        "acebott",
+        "adeept",
+        "yahboom",
+        "mearm",
+        "so-101",
+        "so-arm",
+        "lerobot",
+        "diy",
+        "hydraulic",
+        "for parts",
+        "parts only",
+        "not working",
+        "as-is",
+        "incomplete",
+        "gripper only",
+        "suction pump",
+        "3d printing kit",
+        "printing module",
+        "laser module",
+        "enclosure",
+        "sliding rail",
+        "conveyor",
+        "pen holder",
+        "accessory",
+        "replacement",
+        "controller only",
+        "base only"
+      ],
+      "notes": "Interview 2026-10-26: wants a desk-assistant arm, NOT a hobby/build project. Budget $200 (user). Under $200 new, everything is a hobby kit; factory-built arms were $300-600 used on eBay (2026-10-26) and $850-1000 new. Alerts at <= $200; price_max 700 so near misses show in the report. The daily run cannot read eBay (blocked), so eBay used listings need a manual check.",
+      "requirements": "A factory-built desktop robot arm that works out of the box as a desk assistant, not a hobby kit to assemble and tinker with. Acceptable: UFACTORY uArm Swift Pro or Lite 6, Rotrics DexArm, Dobot Magician / Magician Lite, Elephant Robotics myCobot 280/320, WLKATA Mirobot, or similar from an established maker. Must use stepper motors with encoders or closed-loop servos (position feedback), roughly 0.5 mm repeatability or better, and about 250 g payload or more. Must be complete and working, including power supply and controller; incomplete kits, parts-only and accessory listings do not count. Not acceptable: hobby servo kits (Hiwonder xArm, LewanSoul/LeArm, Adeept, Acebott, aluminium 6DOF frames with MG996R servos), toy or hydraulic arms, and SO-101/LeRobot DIY arms that need 3D printing. Used is fine (a discontinued model is OK if complete). Budget about $200 total; local pickup within 50 miles of Milpitas, otherwise shipped. (User 2026-10-26.)",
+      "reference_queries": [
+        "UFACTORY uArm Swift Pro",
+        "Rotrics DexArm",
+        "Dobot Magician Lite",
+        "Elephant Robotics myCobot 280"
+      ]
     }
   ]
 }
