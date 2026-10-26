@@ -13,6 +13,7 @@ One row per item. Status: `want` → `searching` → `found` → `bought` / `dro
 | Desktop PC (home server / VMs) | $100 (raised from $30, 2026-10-08) | either | ≥64 GB RAM installed, ≥256 GB storage (lowered from 512 GB, 2026-10-08), complete machine; GPU only if included | searching | none ≤ $100; complete 64 GB Dell T5810 renewed $358.99 Amazon (2026-10-08) |
 | Pull-up bar (doorway) | $8 | used only | doorway hook-on or tension rod, no drilling; any grips; pickup ≤ 5 mi | searching | none ≤ $8; cheapest new doorway bars: MOMODA $24.89 https://www.amazon.com/dp/B0B3Y6R2KG , Ally Peaks $27.99 https://www.amazon.com/dp/B08MY13HYC (Amazon, 2026-10-10) |
 | 8-port PoE switch (for 5 Basler GigE cameras) | $40 target (assumed, not asked) | either | gigabit, ≥5 PoE (802.3af/at) ports, ≥30 W, jumbo frames, unmanaged OK, with power brick; pickup ≤ 10 mi | searching | new: TP-Link LS108GP (8 PoE, 62 W) $59.99 https://www.amazon.com/dp/B0CWJMRTWY ; Netgear GS308PP (8 PoE+, 83 W) $69.99 https://www.amazon.com/dp/B082G2G2F8 (Amazon, 2026-10-17); no used listing within 10 mi |
+| Desktop robot arm (desk assistant, not a hobby kit) | $200 | either | factory-built (uArm / DexArm / Dobot / myCobot / Mirobot class), position feedback, complete; pickup ≤ 50 mi or shipped | searching | none ≤ $200; nearest: uArm Swift Pro used $300 + $19.80 eBay https://www.ebay.com/itm/336837689254 ; DexArm unused $444.95 eBay https://www.ebay.com/itm/307164940790 (2026-10-26) |
 
 ## Notes per item
 <!-- ### <Item name>
@@ -157,3 +158,18 @@ One row per item. Status: `want` → `searching` → `found` → `bought` / `dro
   - Avoid: Craigslist Netgear $29 Fremont = FS108P (10/100); OfferUp "Tp-link" $20 = TL-SG1024 (no PoE)
   - Amazon LS108GP $59.99, Prime delivery Oct 18 else Oct 22; TL-SG1008MP $89.99 same; GS308PP $69.99 Oct 22-24
   - Best Buy: TP-Link 8-port PoE $79.99, Netgear 8-port PoE+ $109.99 (local store stock not confirmed); Micro Center blocked by Cloudflare
+
+### Desktop robot arm — interview 2026-10-26
+- **Wants:** a desk-assistant arm that works out of the box, **not a hobby/robotics project** (user, 2026-10-26). Budget $200; new or used; pickup ≤ 50 mi.
+  Watched as `desktop-robot-arm` (filters to factory brands, drops hobby kits / parts / accessories).
+- **Why hardware still matters with AI-written code:** cheap kits use hobby servos with no position feedback (jitter, gear play);
+  factory arms use encoders, are calibrated, wire through the joints and lift ~250-500 g. Payload is similar in both classes, so neither does real chores.
+- **Live prices 2026-10-26:**
+  - New, factory-built: myCobot 280 Pi $918.99 https://www.amazon.com/dp/B0GKMS7PYC ; Dobot Magician Lite $999 https://www.amazon.com/dp/B086V7XJLY
+  - Used/open box (eBay): uArm Swift Pro $300 + $19.80, Seattle, no returns, "barely used, all parts" https://www.ebay.com/itm/336837689254 (best value; offer ~$250);
+    Rotrics DexArm unused open box $444.95 free ship, 30-day returns https://www.ebay.com/itm/307164940790 ;
+    WLKATA Mirobot open box $499 https://www.ebay.com/itm/257767279796 ; Dobot Magician Lite "barely used" $599 https://www.ebay.com/itm/267505468050
+  - Avoid: DexArm "incomplete" $349.95 https://www.ebay.com/itm/366727845004 (missing parts not listed)
+  - Local (FB/CL/OfferUp, 50 mi): only toy/hobby kits or industrial arms ($1,400+). uArm Swift Pro and DexArm are discontinued; no recent Rotrics news found.
+  - Hobby class, for reference only: Hiwonder xArm1S $199.99 new Amazon https://www.amazon.com/dp/B0793PFGCY , $180 used eBay.
+- The daily run cannot read eBay (blocked), so re-check eBay by hand now and then.
