@@ -159,33 +159,66 @@ def write(text: str, reports_dir: Path, run_at: datetime) -> Path:
     return path
 
 
-def digest(summaries: list[ItemSummary], report_path: Path) -> str:
-    """Short plain-text digest for Discord (one line per item + alerts)."""
+GOOD_VERDICTS = ("buy", "ok")
+SOURCE_SHORT = {"facebook_marketplace": "FB", "craigslist": "CL", "offerup": "OfferUp", "amazon": "Amazon",
+                "ebay": "eBay", "ebay_public": "eBay", "serpapi_google_shopping": "Google"}
+KIND_SHORT = {"target_hit": "TARGET", "big_drop": "DROP", "listing_drop": "CUT"}
+MAX_ROWS_PER_ITEM = 3
+
+
+def good_listings(s: ItemSummary) -> list[Observation]:
+    """Listings worth showing, cheapest first: vetted buy/ok, never 'avoid' or flagged 'probably a trap'.
+
+    When vetting did not run for the item (off, gateway down, crash) nothing is known to be bad,
+    so every listing not flagged as a trap counts and is shown as 'unchecked'."""
+    vetted = bool(s.vettings)
+    ok = [o for o in s.fetch.observations
+          if getattr(o.cheap, "verdict", None) != "probably a trap"
+          and (not vetted or getattr(s.vettings.get(o.key), "verdict", None) in GOOD_VERDICTS)]
+    return sorted(ok, key=lambda o: o.price)
+
+
+def _digest_rows(s: ItemSummary) -> list[tuple[Observation, str]]:
+    """(listing, alert flag) rows for one item: its alerted good listings plus the cheapest good one."""
+    good = good_listings(s)
+    if not good:
+        return []
+    alerts = {a.obs.key: a for a in s.alerts}
+    picks = [o for o in good if o.key in alerts]
+    if good[0] not in picks:
+        picks.append(good[0])
+    rows = []
+    for o in sorted(picks, key=lambda o: o.price)[:MAX_ROWS_PER_ITEM]:
+        a = alerts.get(o.key)
+        flag = (KIND_SHORT.get(a.kind, a.kind) + (" retry" if a.message.endswith("(retry)") else "")) if a else ""
+        rows.append((o, flag))
+    return rows
+
+
+def digest(summaries: list[ItemSummary], report_path: Path, run_at: datetime | None = None) -> str:
+    """Discord digest: a table of each item's best good listing (+ alerted good ones); bad listings never shown."""
     alerts = [a for s in summaries for a in s.alerts]
-    lines = [f"**Price watch** — {len(alerts)} alert(s)"]
-    for s_ in summaries:
-        for a in s_.alerts:
-            lines.append(alert_line(a, md_links=False, vetting=s_.vettings.get(a.obs.key)))
-            lines += [f"    {line}" for line in vet_lines(a.obs, brief=True)]
-    withheld = sum(len(s_.skipped_alerts) for s_ in summaries)
-    if withheld:
-        lines.append(f"({withheld} alert(s) withheld: listing vetted ⛔ avoid — see report)")
-    lines.append("")
-    for s in summaries:
-        if s.best:
-            chg = f" ({s.change_pct:+.0f}%)" if s.change_pct is not None else ""
-            where = f", {s.best.distance_mi:.0f} mi" if s.best.distance_mi is not None else ""
-            lines.append(f"• {s.item.id}: best {_money(s.best.price)}{chg} — {s.best.source}{where} <{s.best.url}>"
-                         + (f" {verdict_tag(s, s.best.key)}" if s.best.key in s.vettings else ""))
-            good = s.best_vetted() if s.vettings else None
-            if good is not None and good.key != s.best.key:
-                v = s.vettings.get(good.key)
-                lines.append(f"  best not-avoid: {_money(good.price)} — {_cell(good.title)[:60]} <{good.url}>"
-                             + (f" {verdict_tag(s, good.key)}: {vetting_note(v, short=True)}" if v else ""))
-        else:
-            lines.append(f"• {s.item.id}: no relevant listings")
+    table = [(s, o, flag) for s in summaries for o, flag in _digest_rows(s)]
+    with_deal = len({s.item.id for s, _, _ in table})
+    when = f" {run_at:%b %d}" if run_at else ""
+    lines = [f"**Price watch{when}** — {len(alerts)} alert(s) · {with_deal} of {len(summaries)} items have a good deal"]
+    if table:
+        lines += ["```", f"{'#':>2} {'Item':<20} {'Price':>8} {'Target':>7} {'Verdict':<9} {'Where':<11} Alert"]
+        for n, (s, o, flag) in enumerate(table, 1):
+            v = s.vettings.get(o.key)
+            target = _money(s.item.target_price) if s.item.target_price is not None else "-"
+            where = SOURCE_SHORT.get(o.source, o.source)
+            if o.distance_mi is not None:
+                where += f" {o.distance_mi:.0f}mi"
+            lines.append(f"{n:>2} {s.item.id[:20]:<20} {_money(o.price):>8} {target:>7} "
+                         f"{(v.verdict if v else 'unchecked'):<9} {where[:11]:<11} {flag}".rstrip())
+        lines.append("```")
+        lines += [f"{n}. {_cell(o.title)[:70]} <{o.url}>" for n, (_, o, _) in enumerate(table, 1)]
+    none = [s.item.id for s in summaries if not good_listings(s)]
+    if none:
+        lines.append(f"No good deal yet: {', '.join(none)}")
     missing = [s.item.id for s in summaries if not s.item.requirements]
     if missing:
         lines.append(f"⚠️ {', '.join(missing)}: {MISSING_REQUIREMENTS}")
-    lines.append(f"Report: {report_path}")
+    lines.append(f"Full report: {report_path}")
     return "\n".join(lines)
