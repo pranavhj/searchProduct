@@ -222,3 +222,19 @@ def digest(summaries: list[ItemSummary], report_path: Path, run_at: datetime | N
         lines.append(f"⚠️ {', '.join(missing)}: {MISSING_REQUIREMENTS}")
     lines.append(f"Full report: {report_path}")
     return "\n".join(lines)
+
+
+def discord_chunks(text: str, limit: int = 1900) -> list[str]:
+    """Split on line boundaries under Discord's 2000-char limit; a split inside a ``` table closes and reopens it."""
+    chunks, cur, in_code = [], [], False
+    for line in text.split("\n"):
+        reserve = len("\n```") if in_code and not line.startswith("```") else 0  # the closing fence fills it
+        if cur and len("\n".join(cur + [line])) + reserve > limit:
+            chunks.append("\n".join(cur + (["```"] if in_code else [])))
+            cur = ["```"] if in_code else []
+        cur.append(line)
+        if line.startswith("```"):
+            in_code = not in_code
+    if cur:
+        chunks.append("\n".join(cur))
+    return chunks
