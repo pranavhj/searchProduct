@@ -13,6 +13,14 @@ One row per item. Status: `want` → `searching` → `found` → `bought` / `dro
 | Desktop PC (home server / VMs) | $100 (raised from $30, 2026-10-08) | either | no RAM minimum (64 GB requirement dropped 2026-10-29), ≥256 GB storage (lowered from 512 GB, 2026-10-08), complete machine; **GPU included (strict)**; **total < $100 (strict)** (both strict since 2026-10-29) | searching | none ≤ $100; complete 64 GB Dell T5810 renewed $358.99 Amazon (2026-10-08) |
 | 8-port PoE switch (for 5 Basler GigE cameras) | $40 target (assumed, not asked) | either | gigabit, ≥5 PoE (802.3af/at) ports, ≥30 W, jumbo frames, unmanaged OK, with power brick; pickup ≤ 10 mi | searching | new: TP-Link LS108GP (8 PoE, 62 W) $59.99 https://www.amazon.com/dp/B0CWJMRTWY ; Netgear GS308PP (8 PoE+, 83 W) $69.99 https://www.amazon.com/dp/B082G2G2F8 (Amazon, 2026-10-17); no used listing within 10 mi |
 | Desktop robot arm (desk assistant, not a hobby kit) | $200 | either | factory-built (uArm / DexArm / Dobot / myCobot / Mirobot class), position feedback, complete; pickup ≤ 50 mi or shipped | searching | none ≤ $200; nearest: uArm Swift Pro used $300 + $19.80 eBay https://www.ebay.com/itm/336837689254 ; DexArm unused $444.95 eBay https://www.ebay.com/itm/307164940790 (2026-10-26) |
+| Resistance bands (long loops) | $15 (assumed) | used first | 41 in loop set, light to heavy, 3-5 resistances, no cracks | searching | not yet priced |
+| Plyo box (foam, 3-in-1) | $40 (assumed) | used first | 20/24/30 in foam, stable; pickup | searching | not yet priced |
+| Exercise mat (yoga, 4-6 mm) | $8 (assumed) | used first | 4-6 mm, clean, undamaged | searching | not yet priced |
+| Strap-on weights (ankle/wrist, 1-5 lb each) | $15 (assumed) | used first | adjustable, working straps; no dumbbells/vest | searching | not yet priced |
+| Webcam x4 (same model; test 1 first) | $25 each (assumed) | used first | 1080p30 OK, MJPEG, lockable exposure/focus/WB on Windows, reliable | searching | FB Milpitas 2026-10-30: C920S $20 San Jose https://www.facebook.com/marketplace/item/2155873988344260 ; C920 $32 Sunnyvale https://www.facebook.com/marketplace/item/2021456178570845 ; C922-class $50 Milpitas https://www.facebook.com/marketplace/item/2267441474091377 |
+| Tripods x4 (webcam, desk height 20-60 in) | $8 each (assumed) | used first | 1/4-20 mount, holds <1 lb, stable | searching | not yet priced |
+| Activforce 2 | $60 used only | used (new ~$90) | working unit, only under ~$60 | searching | none yet |
+| Garmin Running Dynamics Pod + watch (P3) | later | used first | L/R ground-contact-time balance; COROS POD alternative | want (P3, watch disabled) | not yet priced |
 
 ## Notes per item
 <!-- ### <Item name>
@@ -161,3 +169,11 @@ One row per item. Status: `want` → `searching` → `found` → `bought` / `dro
   - Local (FB/CL/OfferUp, 50 mi): only toy/hobby kits or industrial arms ($1,400+). uArm Swift Pro and DexArm are discontinued; no recent Rotrics news found.
   - Hobby class, for reference only: Hiwonder xArm1S $199.99 new Amazon https://www.amazon.com/dp/B0793PFGCY , $180 used eBay.
 - The daily run cannot read eBay (blocked), so re-check eBay by hand now and then.
+
+### Training gear batch — interview 2026-10-30
+- **Rule (user):** marketplace/used first; new only if the price difference vs used is very small. Targets marked "assumed" were not asked - tune them.
+- **Answers:** bands = loop set light to heavy; plyo box = foam 3-in-1 20/24/30 in; mat = yoga 4-6 mm; weights = adjustable ankle/wrist 1-5 lb only (no dumbbells, no vest).
+- **Webcam:** 1080p30 acceptable (user), reliability is what matters. The original Brio 4K does 1080p60 but costs $50-90 used (FB Milpitas 2026-10-30), so not required. Brio 100/101 ($10-25) excluded: likely no manual exposure/focus/WB lock (medium confidence - verify before buying). Test 1 for MJPEG + locks on Windows, then buy 3 more.
+- **Tripods:** 4x, webcam at desk height.
+- **Activforce 2:** only if a used unit is under ~$60 (user); Baseline A has no strength number without it.
+- **Garmin/L-R balance (P3):** user wants running ground-contact-time balance; cheapest route to price later: used Garmin Forerunner 245/255 + Running Dynamics Pod vs COROS POD (+ COROS watch). Search result only, not priced.
