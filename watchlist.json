@@ -364,6 +364,244 @@
         "Dobot Magician Lite",
         "Elephant Robotics myCobot 280"
       ]
+    },
+    {
+      "id": "resistance-bands-loop",
+      "query": "resistance bands loop set",
+      "enabled": true,
+      "sources": null,
+      "condition": "any",
+      "price_min": 3.0,
+      "price_max": 40.0,
+      "target_price": 15.0,
+      "drop_pct": null,
+      "max_miles": 25.0,
+      "must_include": [
+        "band"
+      ],
+      "exclude": [
+        "mini band",
+        "hip band",
+        "fabric",
+        "tube",
+        "handle",
+        "door anchor",
+        "single band",
+        "lot of 1"
+      ],
+      "notes": "Interview 2026-10-30: loop set light to heavy. Buying rule (user 2026-10-30): used/marketplace first; recommend new only if the price difference vs used is very small. Target is an assumption (not asked) - tune.",
+      "requirements": "Long loop resistance bands (about 41 in, pull-up style), a set from light to heavy (3-5 resistances), latex, undamaged (no cracks or stretched-out loops). Not mini/hip bands, not tube bands with handles. Buying rule (user 2026-10-30): used/marketplace first; recommend new only if the price difference vs used is very small.",
+      "reference_queries": [
+        "Fit Simplify resistance loop bands set 41 inch",
+        "Rogue monster bands set"
+      ]
+    },
+    {
+      "id": "plyo-box-foam",
+      "query": "foam plyo box",
+      "enabled": true,
+      "sources": null,
+      "condition": "any",
+      "price_min": 10.0,
+      "price_max": 100.0,
+      "target_price": 40.0,
+      "drop_pct": null,
+      "max_miles": 25.0,
+      "must_include": [
+        "plyo|jump box|soft box|box"
+      ],
+      "exclude": [
+        "wood",
+        "wooden",
+        "steel",
+        "aerobic step",
+        "step platform",
+        "stepper"
+      ],
+      "notes": "Interview 2026-10-30: foam 3-in-1 plyo box, 20/24/30 in. Buying rule (user 2026-10-30): used/marketplace first; recommend new only if the price difference vs used is very small. Target is an assumption (not asked) - tune.",
+      "requirements": "Foam 3-in-1 plyo box (20/24/30 in) for box jumps and step-ups; stable, not collapsed or crumbling foam. Not wood/steel boxes or low aerobic steps. Bulky: local pickup preferred. Buying rule (user 2026-10-30): used/marketplace first; recommend new only if the price difference vs used is very small.",
+      "reference_queries": [
+        "Amazon Basics foam plyo box 3-in-1",
+        "Yes4All foam plyo box 3 in 1"
+      ]
+    },
+    {
+      "id": "exercise-mat-yoga",
+      "query": "yoga mat",
+      "enabled": true,
+      "sources": null,
+      "condition": "any",
+      "price_min": 2.0,
+      "price_max": 25.0,
+      "target_price": 8.0,
+      "drop_pct": null,
+      "max_miles": 25.0,
+      "must_include": [
+        "mat"
+      ],
+      "exclude": [
+        "tile",
+        "interlocking",
+        "puzzle",
+        "gym flooring",
+        "rubber flooring",
+        "stall mat",
+        "car mat",
+        "door mat",
+        "mouse"
+      ],
+      "notes": "Interview 2026-10-30: yoga mat 4-6 mm. Buying rule (user 2026-10-30): used/marketplace first; recommend new only if the price difference vs used is very small. Target is an assumption (not asked) - tune.",
+      "requirements": "Yoga mat 4-6 mm thick, clean, not torn or flaking. Not thick foam, tiles or flooring mats. Buying rule (user 2026-10-30): used/marketplace first; recommend new only if the price difference vs used is very small.",
+      "reference_queries": [
+        "Gaiam yoga mat 5mm",
+        "Manduka yoga mat"
+      ]
+    },
+    {
+      "id": "strap-on-weights",
+      "query": "adjustable ankle wrist weights",
+      "enabled": true,
+      "sources": null,
+      "condition": "any",
+      "price_min": 3.0,
+      "price_max": 40.0,
+      "target_price": 15.0,
+      "drop_pct": null,
+      "max_miles": 25.0,
+      "must_include": [
+        "ankle|wrist"
+      ],
+      "exclude": [
+        "vest",
+        "dumbbell",
+        "barbell",
+        "kettlebell",
+        "weight plate",
+        "lot of",
+        "bench"
+      ],
+      "notes": "Interview 2026-10-30: adjustable ankle/wrist weights, 1-5 lb each; weighted vest and dumbbells ruled out. Buying rule (user 2026-10-30): used/marketplace first; recommend new only if the price difference vs used is very small. Target is an assumption (not asked) - tune.",
+      "requirements": "Strap-on body weights only (user: no dumbbells): adjustable ankle/wrist weights, 1-5 lb each (removable sand/metal bars, about 2-10 lb per pair), working velcro straps. Not dumbbells, not a weighted vest. Buying rule (user 2026-10-30): used/marketplace first; recommend new only if the price difference vs used is very small.",
+      "reference_queries": [
+        "Sportneer adjustable ankle weights 1-5 lb",
+        "Gaiam ankle weights"
+      ]
+    },
+    {
+      "id": "webcam-1080p-mjpeg",
+      "query": "webcam 1080p",
+      "enabled": true,
+      "sources": null,
+      "condition": "any",
+      "price_min": 5.0,
+      "price_max": 60.0,
+      "target_price": 25.0,
+      "drop_pct": null,
+      "max_miles": 25.0,
+      "must_include": [
+        "c920|c922|c925|brio|webcam"
+      ],
+      "exclude": [
+        "c270",
+        "c310",
+        "brio 100",
+        "brio 101",
+        "for parts",
+        "broken",
+        "ring light",
+        "mic only",
+        "tripod only",
+        "laptop"
+      ],
+      "notes": "Interview 2026-10-30: 1080p30 OK; reliability matters most. Seen live FB Milpitas 2026-10-30: C920S $20 San Jose, C920 $32 Sunnyvale, 1080p Pro Stream (C922) $50 Milpitas. Buying rule (user 2026-10-30): used/marketplace first; recommend new only if the price difference vs used is very small. Target is an assumption (not asked) - tune.",
+      "requirements": "Need 4 of the SAME model (test 1 first, then 3 more). 1080p30 is acceptable (user 2026-10-30); required: MJPEG output, lockable exposure, focus and white balance on Windows, and reliability (no dead/flaky units). Candidates: Logitech C920/C920S/C922/C925e (verify), original Brio 4K only if cheap. Brio 100/101 excluded as likely lacking manual controls (medium confidence - verify). Not 720p models (C270/C310). Buying rule (user 2026-10-30): used/marketplace first; recommend new only if the price difference vs used is very small.",
+      "reference_queries": [
+        "Logitech C920 HD Pro webcam",
+        "Logitech C922 Pro Stream webcam"
+      ]
+    },
+    {
+      "id": "tripod-webcam-4x",
+      "query": "tripod",
+      "enabled": true,
+      "sources": null,
+      "condition": "any",
+      "price_min": 2.0,
+      "price_max": 30.0,
+      "target_price": 8.0,
+      "drop_pct": null,
+      "max_miles": 25.0,
+      "must_include": [
+        "tripod"
+      ],
+      "exclude": [
+        "camera bag",
+        "monopod",
+        "selfie",
+        "phone holder only",
+        "ring light",
+        "light stand",
+        "studio",
+        "gimbal",
+        "tripod head only",
+        "drone"
+      ],
+      "notes": "Interview 2026-10-30: webcam use, desk height 20-60 in. Buying rule (user 2026-10-30): used/marketplace first; recommend new only if the price difference vs used is very small. Target is an assumption (not asked) - tune.",
+      "requirements": "Need 4 tripods holding a webcam (<1 lb) at desk/table height, about 20-60 in, 1/4-20 screw mount, stable and not wobbly. Quantity of 4: lots of several are fine if the per-unit price is low. Buying rule (user 2026-10-30): used/marketplace first; recommend new only if the price difference vs used is very small.",
+      "reference_queries": [
+        "Amazon Basics 60-inch lightweight tripod",
+        "Amazon Basics 50 inch tripod"
+      ]
+    },
+    {
+      "id": "activforce-2",
+      "query": "Activforce 2",
+      "enabled": true,
+      "sources": null,
+      "condition": "any",
+      "price_min": 10.0,
+      "price_max": 90.0,
+      "target_price": 60.0,
+      "drop_pct": null,
+      "max_miles": 25.0,
+      "must_include": [
+        "activforce"
+      ],
+      "exclude": [
+        "activforce 1",
+        "case only",
+        "strap only"
+      ],
+      "notes": "Interview 2026-10-30: opportunistic - only a used unit under ~$60. Buying rule (user 2026-10-30): used/marketplace first; recommend new only if the price difference vs used is very small. Target is an assumption (not asked) - tune.",
+      "requirements": "Activforce 2 strength sensor. Buy only if a used one appears under about $60 (user 2026-10-30; new is about $90). Must be complete and working. Buying rule (user 2026-10-30): used/marketplace first; recommend new only if the price difference vs used is very small.",
+      "reference_queries": [
+        "Activforce 2 strength sensor"
+      ]
+    },
+    {
+      "id": "garmin-running-dynamics-pod",
+      "query": "Garmin Running Dynamics Pod",
+      "enabled": false,
+      "sources": null,
+      "condition": "any",
+      "price_min": 10.0,
+      "price_max": 80.0,
+      "target_price": 35.0,
+      "drop_pct": null,
+      "max_miles": 25.0,
+      "must_include": [
+        "running dynamics|rd pod"
+      ],
+      "exclude": [
+        "case only",
+        "clip only"
+      ],
+      "notes": "P3. Disabled until the user enables it. COROS POD is the non-Garmin alternative (L/R balance) - not yet priced. Buying rule (user 2026-10-30): used/marketplace first; recommend new only if the price difference vs used is very small. Target is an assumption (not asked) - tune.",
+      "requirements": "P3, much later. Goal: left/right ground-contact-time balance when running (user 2026-10-30). Route: a used Garmin Forerunner 245/255-class watch that supports the pod + the Running Dynamics Pod, or a COROS POD with a COROS watch; pick the cheaper. Use marketplace first. Buying rule (user 2026-10-30): used/marketplace first; recommend new only if the price difference vs used is very small.",
+      "reference_queries": [
+        "Garmin Running Dynamics Pod",
+        "COROS POD performance"
+      ]
     }
   ]
 }
