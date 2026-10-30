@@ -53,7 +53,7 @@ def _run(store: Store, tmp_path: Path, notifier: FakeNotifier, service: object, 
 def test_avoid_alert_line_not_in_discord_message(store: Store, tmp_path: Path) -> None:
     notifier = FakeNotifier(ok=True)
     _run(store, tmp_path, notifier, FakeService(25), _vetter({"amazon:a": "avoid"}))
-    assert "🎯 Target hit" not in notifier.discord[0]
+    assert "TARGET" not in notifier.discord[0]
 
 
 def test_avoid_alert_not_recorded_as_sent(store: Store, tmp_path: Path) -> None:
@@ -70,19 +70,19 @@ def test_avoid_listings_do_not_use_up_target_alert_cap(store: Store, tmp_path: P
     notifier = FakeNotifier(ok=True)
     avoid3 = {"amazon:l0": "avoid", "amazon:l1": "avoid", "amazon:l2": "avoid"}
     _run(store, tmp_path, notifier, FakeMulti(), _vetter(avoid3))
-    assert "Air Duster 3 (amazon" in notifier.discord[0]  # alert-line format, not the "best" line
+    assert "Air Duster 3 <" in notifier.discord[0]
 
 
 def test_target_cap_still_applies_after_vetting(store: Store, tmp_path: Path) -> None:
     notifier = FakeNotifier(ok=True)
     _run(store, tmp_path, notifier, FakeMulti(), _vetter({}))
-    assert notifier.discord[0].count("🎯 Target hit") == 3
+    assert notifier.discord[0].count("TARGET") == 3
 
 
 def test_vetter_crash_still_sends_alert(store: Store, tmp_path: Path) -> None:
     notifier = FakeNotifier(ok=True)
     _run(store, tmp_path, notifier, FakeService(25), _broken_vetter())
-    assert "🎯 Target hit" in notifier.discord[0]
+    assert "TARGET" in notifier.discord[0]
 
 
 def test_vetter_crash_still_writes_report(store: Store, tmp_path: Path) -> None:

@@ -50,7 +50,7 @@ def _deliver(wl: config.Watchlist, summaries: list, alerts: list, path: Path, no
 
     discord_ok = None
     if wl.notify.discord_target and (alerts or wl.notify.discord_digest_always):
-        discord_ok = notifier.send_discord(wl.notify.discord_target, report.digest(summaries, path))
+        discord_ok = notifier.send_discord(wl.notify.discord_target, report.digest(summaries, path, datetime.now()))
     toast_ok = None
     if wl.notify.toast and alerts:
         body = "; ".join(f"{a.item_id}: ${a.obs.price:.2f}" for a in alerts)

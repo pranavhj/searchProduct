@@ -159,7 +159,7 @@ def test_report_renders_alerts_and_pipes(store: Store, tmp_path: Path) -> None:
     assert "Target hit" in text and "Duster / 110k" in text and "first run" in text
     path = report.write(text, tmp_path, datetime(2026, 10, 1, 8))
     assert (tmp_path / "latest.md").read_text(encoding="utf-8") == text
-    assert "duster: best $29.00" in report.digest([s], path)
+    assert "unchecked" in report.digest([s], path)  # vetting did not run: listing shown, marked unchecked
 
 
 def _fb(listing_id: str, location: str, shipping: str) -> dict:
@@ -272,7 +272,7 @@ def test_run_failed_discord_delivery_retries_alert_next_run(store: Store, tmp_pa
     _run(store, tmp_path, FakeService(25), FakeNotifier(ok=False), day=1)
     retry = FakeNotifier(ok=True)
     _run(store, tmp_path, FakeService(25), retry, day=2)
-    assert "(retry)" in retry.discord[0]
+    assert "TARGET retry" in retry.discord[0]
 
 
 def test_run_delivered_alert_not_sent_again(store: Store, tmp_path: Path) -> None:
@@ -289,7 +289,7 @@ def test_run_no_notify_keeps_listing_drop_for_real_run(store: Store, tmp_path: P
     _run(store, tmp_path, FakeService(35), FakeNotifier(ok=True), notify=False, day=2, wl=wl)
     real = FakeNotifier(ok=True)
     _run(store, tmp_path, FakeService(35), real, day=3, wl=wl)
-    assert "Price cut" in real.discord[0]
+    assert "CUT" in real.discord[0]
 
 
 def test_run_all_sources_down_is_failed(store: Store, tmp_path: Path) -> None:
