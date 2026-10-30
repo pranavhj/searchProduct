@@ -48,3 +48,23 @@ def test_alerted_pick_marked_target() -> None:
     s = _summary([o], {"c": "buy"}, alerts=[Alert("cam", "target_hit", o, None, "m")])
     row = [line for line in report.digest([s], Path("r.md")).splitlines() if line.startswith(" 1 cam")][0]
     assert row.endswith("TARGET")
+
+
+TABLE = "head\n```\nrow 1 aaaaaaaa\nrow 2 bbbbbbbb\nrow 3 cccccccc\n```\nlink 1"
+
+
+def test_short_digest_is_one_chunk() -> None:
+    assert report.discord_chunks(TABLE) == [TABLE]
+
+
+def test_split_inside_table_closes_and_reopens_fence() -> None:
+    assert report.discord_chunks(TABLE, limit=45) == ["head\n```\nrow 1 aaaaaaaa\nrow 2 bbbbbbbb\n```",
+                                                      "```\nrow 3 cccccccc\n```\nlink 1"]
+
+
+def test_split_just_before_closing_fence_leaves_no_empty_block() -> None:
+    assert "```\n```" not in "".join(report.discord_chunks(TABLE, limit=37))
+
+
+def test_every_chunk_within_limit() -> None:
+    assert max(len(c) for c in report.discord_chunks(TABLE, limit=30)) <= 30
