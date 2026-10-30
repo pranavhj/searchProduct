@@ -179,25 +179,21 @@
     },
     {
       "id": "desktop-pc-64gb-ram",
-      "query": "desktop pc 64gb ram",
+      "query": "desktop pc gpu",
       "enabled": true,
       "sources": null,
       "condition": "any",
       "price_min": null,
-      "price_max": 400.0,
+      "price_max": 100.0,
       "target_price": 100.0,
       "drop_pct": null,
       "must_include": [
         "pc|desktop|computer|workstation|tower|server|optiplex|thinkcentre|elitedesk|precision|z440|z640|z840|mac pro|mac studio",
-        "64gb ram|64gb ddr|64 gb ram|64 gb ddr|96gb ram|96gb ddr|96 gb ram|96 gb ddr|128gb ram|128gb ddr|128 gb ram|128 gb ddr|192gb ram|192gb ddr|192 gb ram|192 gb ddr|256gb ram|256gb ddr|256 gb ram|256 gb ddr"
+        "gpu|geforce|gtx|rtx|quadro|radeon|nvidia|graphics card|video card|rx ?[0-9]{3,4}|gt ?[0-9]{3,4}"
       ],
       "exclude": [
         "laptop",
         "notebook",
-        "ram only",
-        "memory kit",
-        "ram kit",
-        "sodimm",
         "wanted",
         "iso ",
         "for parts",
@@ -208,46 +204,33 @@
         "part out",
         "parting out",
         "selling parts",
-        "motherboard",
-        "up to 64gb",
-        "up to 128gb",
-        "max 64gb",
-        "max 128gb",
-        "supports 64gb",
-        "supports 128gb",
-        "support 64gb",
-        "support 128gb",
-        "supports up to"
+        "motherboard"
       ],
-      "notes": "Originally <$30; raised to $100 2026-10-08 (interview), >=64GB RAM, >=256GB storage (was 512GB until 2026-10-08) (knowingly unrealistic). price_max 250 so report shows nearest misses; alerts only <= $30. Storage not reliably in titles - verify per listing. Parts sales list one per-part price for a whole build - excluded (user 2026-10-06). Target $100 set 2026-10-08 (knowingly low: 64GB RAM alone ~$250 used / ~$400 new); base PC + RAM only if cheaper overall.",
+      "notes": "2026-10-29: RAM requirement removed (queries/filters no longer mention 64GB); GPU included and price < $100 are now strict (must_include GPU keyword, price_max 100). Originally <$30; raised to $100 2026-10-08 (interview), >=64GB RAM, >=256GB storage (was 512GB until 2026-10-08) (knowingly unrealistic). price_max 250 so report shows nearest misses; alerts only <= $30. Storage not reliably in titles - verify per listing. Parts sales list one per-part price for a whole build - excluded (user 2026-10-06). Target $100 set 2026-10-08 (knowingly low: 64GB RAM alone ~$250 used / ~$400 new); base PC + RAM only if cheaper overall.",
       "max_miles": 40.0,
       "reference_queries": [
-        "Dell Precision T5810 64GB renewed",
-        "HP Z440 64GB renewed"
+        "Dell Precision T5810 GTX",
+        "HP Z440 GPU"
       ],
-      "requirements": "Home server / VMs (Docker, VMs, NAS, self-hosting). Must have >=64GB RAM installed and included in the price, >=256GB storage (or a cheap add; lowered from 512GB on 2026-10-08), and be a complete working machine (not parts). An old multi-core Xeon workstation is fine, including DDR3-era ones (HP Z420/Z620, Dell T3600/T5600) where used 64GB DDR3 is very cheap; RAM capacity matters more than CPU speed. A dedicated GPU is nice to have only if included - don't pay extra for it. Used is fine; noise and power draw are not critical."
+      "requirements": "Home server / VMs (Docker, VMs, NAS, self-hosting). No RAM minimum (dropped 2026-10-29: 64GB was unrealistic at this price). Must have >=256GB storage (or a cheap add; lowered from 512GB on 2026-10-08), and be a complete working machine (not parts). An old multi-core Xeon workstation is fine, including DDR3-era ones (HP Z420/Z620, Dell T3600/T5600) ; CPU and RAM size are not requirements. STRICT requirement 1 (user 2026-10-29): a dedicated GPU must be included - listings without a GPU are avoid. STRICT requirement 2: total price must be under $100 (sticker + shipping, before tax) - anything over is avoid. Used is fine; noise and power draw are not critical."
     },
     {
       "id": "workstation-64gb-ram",
-      "query": "workstation 64gb ram",
+      "query": "workstation gpu",
       "enabled": true,
       "sources": null,
       "condition": "any",
       "price_min": null,
-      "price_max": 400.0,
+      "price_max": 100.0,
       "target_price": 100.0,
       "drop_pct": null,
       "must_include": [
         "pc|desktop|computer|workstation|tower|server|optiplex|thinkcentre|elitedesk|precision|z440|z640|z840|mac pro|mac studio",
-        "64gb ram|64gb ddr|64 gb ram|64 gb ddr|96gb ram|96gb ddr|96 gb ram|96 gb ddr|128gb ram|128gb ddr|128 gb ram|128 gb ddr|192gb ram|192gb ddr|192 gb ram|192 gb ddr|256gb ram|256gb ddr|256 gb ram|256 gb ddr"
+        "gpu|geforce|gtx|rtx|quadro|radeon|nvidia|graphics card|video card|rx ?[0-9]{3,4}|gt ?[0-9]{3,4}"
       ],
       "exclude": [
         "laptop",
         "notebook",
-        "ram only",
-        "memory kit",
-        "ram kit",
-        "sodimm",
         "wanted",
         "iso ",
         "for parts",
@@ -258,61 +241,15 @@
         "part out",
         "parting out",
         "selling parts",
-        "motherboard",
-        "up to 64gb",
-        "up to 128gb",
-        "max 64gb",
-        "max 128gb",
-        "supports 64gb",
-        "supports 128gb",
-        "support 64gb",
-        "support 128gb",
-        "supports up to"
+        "motherboard"
       ],
-      "notes": "Same need as desktop-pc-64gb-ram; workstation listings (Z440/T5810/Precision) rarely say 'desktop pc'. Added 2026-10-08 after the interview. Target $100 set 2026-10-08 (knowingly low: 64GB RAM alone ~$250 used / ~$400 new); base PC + RAM only if cheaper overall. Storage requirement lowered to 256GB on 2026-10-08.",
+      "notes": "2026-10-29: RAM requirement removed (queries/filters no longer mention 64GB); GPU included and price < $100 are now strict (must_include GPU keyword, price_max 100). Same need as desktop-pc-64gb-ram; workstation listings (Z440/T5810/Precision) rarely say 'desktop pc'. Added 2026-10-08 after the interview. Target $100 set 2026-10-08 (knowingly low: 64GB RAM alone ~$250 used / ~$400 new); base PC + RAM only if cheaper overall. Storage requirement lowered to 256GB on 2026-10-08.",
       "max_miles": 40.0,
       "reference_queries": [
-        "Dell Precision T5810 64GB renewed",
-        "HP Z440 64GB renewed"
+        "Dell Precision T5810 GTX",
+        "HP Z440 GPU"
       ],
-      "requirements": "Home server / VMs (Docker, VMs, NAS, self-hosting). Must have >=64GB RAM installed and included in the price, >=256GB storage (or a cheap add; lowered from 512GB on 2026-10-08), and be a complete working machine (not parts). An old multi-core Xeon workstation is fine, including DDR3-era ones (HP Z420/Z620, Dell T3600/T5600) where used 64GB DDR3 is very cheap; RAM capacity matters more than CPU speed. A dedicated GPU is nice to have only if included - don't pay extra for it. Used is fine; noise and power draw are not critical."
-    },
-    {
-      "id": "pull-up-bar",
-      "query": "pull up bar",
-      "enabled": true,
-      "sources": null,
-      "condition": "used",
-      "price_min": 3.0,
-      "price_max": 60.0,
-      "target_price": 8.0,
-      "drop_pct": null,
-      "max_miles": 5.0,
-      "must_include": [
-        "pull up|pull-up|pullup|chin up|chin-up",
-        "bar"
-      ],
-      "exclude": [
-        "assist",
-        "replacement",
-        "handle only",
-        "band only",
-        "wall mount",
-        "wall-mount",
-        "ceiling",
-        "joist",
-        "power tower",
-        "free standing",
-        "freestanding",
-        "dip station",
-        "squat rack"
-      ],
-      "notes": "Target $8 sticker (user 2026-10-06, kept 2026-10-10 knowing the cheapest new doorway bar is ~$25: expect only used local hits). Interview 2026-10-10: doorway hook-on or tension rod, any grips, pickup within 5 mi. Used only (user 2026-10-10, corrected from 'either').",
-      "requirements": "Doorway pull-up bar that needs no drilling: either the hook-on / leverage type that hangs on the door frame, or a tension rod that tightens between the door jambs. Not wall-, ceiling- or joist-mounted bars and not free-standing power towers. A plain straight bar is fine; multi-grip is not needed. Must be USED (second-hand) - do not recommend new retail listings; it must be complete (hooks/brackets, end pads, foam or rubber contact pads) and hold an adult. Local pickup only within 5 miles. (User interview 2026-10-10.)",
-      "reference_queries": [
-        "Iron Gym doorway pull up bar",
-        "Sportneer doorway pull up bar no drill"
-      ]
+      "requirements": "Home server / VMs (Docker, VMs, NAS, self-hosting). No RAM minimum (dropped 2026-10-29: 64GB was unrealistic at this price). Must have >=256GB storage (or a cheap add; lowered from 512GB on 2026-10-08), and be a complete working machine (not parts). An old multi-core Xeon workstation is fine, including DDR3-era ones (HP Z420/Z620, Dell T3600/T5600) ; CPU and RAM size are not requirements. STRICT requirement 1 (user 2026-10-29): a dedicated GPU must be included - listings without a GPU are avoid. STRICT requirement 2: total price must be under $100 (sticker + shipping, before tax) - anything over is avoid. Used is fine; noise and power draw are not critical."
     },
     {
       "id": "poe-switch-8port",
