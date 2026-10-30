@@ -10,7 +10,7 @@ One row per item. Status: `want` → `searching` → `found` → `bought` / `dro
 | Desk motor driver (replace fried BTS7960) + desk cable management | cheap | new | single DC motor, Arduino PWM; supply voltage TBD | dropped | BTS7960 2-pack $14.99 https://www.amazon.com/dp/B0D732VYGZ ; Cytron MD13S $15.30 https://www.amazon.com/dp/B07CW3GRL6 (2026-10-04) |
 | Electric precision screwdriver (slim pen, fwd/rev buttons, bit set) | cheap | either | thin, 2 buttons, decent torque, many bits | dropped | HOTO 25-in-1 $32.99 Amazon https://www.amazon.com/dp/B09MR5HFPB ; cheapest SHARDEN $19.99 https://www.amazon.com/dp/B0CY2LCWBZ (2026-10-04) |
 | Smart plug (works with Alexa) | cheap | either | Alexa-compatible, no hub; qty not given | dropped | Kasa HS103P2 2-pack $14.99 Amazon https://www.amazon.com/dp/B07B8W2KHZ ; used: Amazon Smart Plug NEW $8 Craigslist Santa Clara (2026-10-05) |
-| Desktop PC (home server / VMs) | $100 (raised from $30, 2026-10-08) | either | ≥64 GB RAM installed, ≥256 GB storage (lowered from 512 GB, 2026-10-08), complete machine; **GPU included (strict)**; **total < $100 (strict)** (both strict since 2026-10-29) | searching | none ≤ $100; complete 64 GB Dell T5810 renewed $358.99 Amazon (2026-10-08) |
+| Desktop PC (home server / VMs) | $100 (raised from $30, 2026-10-08) | either | no RAM minimum (64 GB requirement dropped 2026-10-29), ≥256 GB storage (lowered from 512 GB, 2026-10-08), complete machine; **GPU included (strict)**; **total < $100 (strict)** (both strict since 2026-10-29) | searching | none ≤ $100; complete 64 GB Dell T5810 renewed $358.99 Amazon (2026-10-08) |
 | 8-port PoE switch (for 5 Basler GigE cameras) | $40 target (assumed, not asked) | either | gigabit, ≥5 PoE (802.3af/at) ports, ≥30 W, jumbo frames, unmanaged OK, with power brick; pickup ≤ 10 mi | searching | new: TP-Link LS108GP (8 PoE, 62 W) $59.99 https://www.amazon.com/dp/B0CWJMRTWY ; Netgear GS308PP (8 PoE+, 83 W) $69.99 https://www.amazon.com/dp/B082G2G2F8 (Amazon, 2026-10-17); no used listing within 10 mi |
 | Desktop robot arm (desk assistant, not a hobby kit) | $200 | either | factory-built (uArm / DexArm / Dobot / myCobot / Mirobot class), position feedback, complete; pickup ≤ 50 mi or shipped | searching | none ≤ $200; nearest: uArm Swift Pro used $300 + $19.80 eBay https://www.ebay.com/itm/336837689254 ; DexArm unused $444.95 eBay https://www.ebay.com/itm/307164940790 (2026-10-26) |
 
@@ -107,9 +107,9 @@ One row per item. Status: `want` → `searching` → `found` → `bought` / `dro
   - Amazon Smart Plug $10 FB Mountain View https://www.facebook.com/marketplace/item/856371850367085
   - Bundle (TP-Link bulb + Gosund plugs + Amazon plug) $10 FB Danville https://www.facebook.com/marketplace/item/2144310656205987
 
-### Desktop PC (≥64 GB RAM, ≥256 GB storage since 2026-10-08 (was 512 GB), < $30) — added 2026-10-06
+### Desktop PC (GPU included, < $100; RAM requirement dropped 2026-10-29; ≥256 GB storage) — added 2026-10-06
 - **Interview 2026-10-08:** use = home server / VMs; target raised to $100; GPU nice-to-have only if
-  included (made strict 2026-10-29, with price < $100 also strict); DIY (base PC + RAM) OK if cheaper overall. Watched as `desktop-pc-64gb-ram` + `workstation-64gb-ram`.
+  included (made strict 2026-10-29, with price < $100 also strict); DIY (base PC + RAM) OK if cheaper overall. Watched as `desktop-pc-64gb-ram` + `workstation-64gb-ram` (ids kept for history; RAM filter removed 2026-10-29).
 - Live price tiers 2026-10-08:
   - Renewed 64 GB Xeon workstations: Dell T5810 12-core 64 GB 480 GB SSD $358.99 https://www.amazon.com/dp/B07V5KL5MK ;
     T7810 2x Xeon 64 GB no drive $467 https://www.amazon.com/dp/B0GXLDLV97 ; used HP Z640 64 GB + GTX 1080 $450 FB Carmichael (far)
