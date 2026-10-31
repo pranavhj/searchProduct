@@ -29,7 +29,7 @@ def test_avoid_and_unvetted_listings_never_shown() -> None:
                  {"a": "avoid", "c": "ok"})
     text = report.digest([s], Path("r.md"))
     assert "GPU bracket" not in text and "mystery cam" not in text
-    assert "Logitech C920 <https://x/c>" in text and "$20.00" in text
+    assert "**$20.00** (target $25.00) · ok · FB 7 mi · [Logitech C920](<https://x/c>)" in text
 
 
 def test_trap_flag_hides_listing_even_if_vetted_ok() -> None:
@@ -46,8 +46,12 @@ def test_item_without_good_listing_is_one_line() -> None:
 def test_alerted_pick_marked_target() -> None:
     o = _o("c", 20, "Logitech C920")
     s = _summary([o], {"c": "buy"}, alerts=[Alert("cam", "target_hit", o, None, "m")])
-    row = [line for line in report.digest([s], Path("r.md")).splitlines() if line.startswith(" 1 cam")][0]
-    assert row.endswith("TARGET")
+    assert "🎯 TARGET · **cam** · **$20.00**" in report.digest([s], Path("r.md"))
+
+
+def test_link_text_brackets_do_not_break_masked_link() -> None:
+    s = _summary([_o("c", 20, "Cam [new] 1080p")], {"c": "ok"})
+    assert "[Cam (new) 1080p](<https://x/c>)" in report.digest([s], Path("r.md"))
 
 
 TABLE = "head\n```\nrow 1 aaaaaaaa\nrow 2 bbbbbbbb\nrow 3 cccccccc\n```\nlink 1"

@@ -163,6 +163,7 @@ GOOD_VERDICTS = ("buy", "ok")
 SOURCE_SHORT = {"facebook_marketplace": "FB", "craigslist": "CL", "offerup": "OfferUp", "amazon": "Amazon",
                 "ebay": "eBay", "ebay_public": "eBay", "serpapi_google_shopping": "Google"}
 KIND_SHORT = {"target_hit": "TARGET", "big_drop": "DROP", "listing_drop": "CUT"}
+ALERT_ICON = {"TARGET": "🎯", "DROP": "📉", "CUT": "✂️"}
 MAX_ROWS_PER_ITEM = 3
 
 
@@ -196,24 +197,23 @@ def _digest_rows(s: ItemSummary) -> list[tuple[Observation, str]]:
 
 
 def digest(summaries: list[ItemSummary], report_path: Path, run_at: datetime | None = None) -> str:
-    """Discord digest: a table of each item's best good listing (+ alerted good ones); bad listings never shown."""
+    """Discord digest: one line per deal with its link inline (each item's best good listing + alerted good
+    ones); bad listings never shown."""
     alerts = [a for s in summaries for a in s.alerts]
     table = [(s, o, flag) for s in summaries for o, flag in _digest_rows(s)]
     with_deal = len({s.item.id for s, _, _ in table})
     when = f" {run_at:%b %d}" if run_at else ""
     lines = [f"**Price watch{when}** — {len(alerts)} alert(s) · {with_deal} of {len(summaries)} items have a good deal"]
-    if table:
-        lines += ["```", f"{'#':>2} {'Item':<20} {'Price':>8} {'Target':>7} {'Verdict':<9} {'Where':<11} Alert"]
-        for n, (s, o, flag) in enumerate(table, 1):
-            v = s.vettings.get(o.key)
-            target = _money(s.item.target_price) if s.item.target_price is not None else "-"
-            where = SOURCE_SHORT.get(o.source, o.source)
-            if o.distance_mi is not None:
-                where += f" {o.distance_mi:.0f}mi"
-            lines.append(f"{n:>2} {s.item.id[:20]:<20} {_money(o.price):>8} {target:>7} "
-                         f"{(v.verdict if v else 'unchecked'):<9} {where[:11]:<11} {flag}".rstrip())
-        lines.append("```")
-        lines += [f"{n}. {_cell(o.title)[:70]} <{o.url}>" for n, (_, o, _) in enumerate(table, 1)]
+    for s, o, flag in table:
+        v = s.vettings.get(o.key)
+        target = f" (target {_money(s.item.target_price)})" if s.item.target_price is not None else ""
+        where = SOURCE_SHORT.get(o.source, o.source)
+        if o.distance_mi is not None:
+            where += f" {o.distance_mi:.0f} mi"
+        icon = f"{ALERT_ICON.get(flag.split()[0], '')} {flag} · " if flag else "• "
+        title = _cell(o.title).replace("[", "(").replace("]", ")")[:60]
+        lines.append(f"{icon}**{s.item.id}** · **{_money(o.price)}**{target} · {v.verdict if v else 'unchecked'} · "
+                     f"{where} · [{title}](<{o.url}>)")
     none = [s.item.id for s in summaries if not good_listings(s)]
     if none:
         lines.append(f"No good deal yet: {', '.join(none)}")

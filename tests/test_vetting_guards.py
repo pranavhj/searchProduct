@@ -70,7 +70,7 @@ def test_avoid_listings_do_not_use_up_target_alert_cap(store: Store, tmp_path: P
     notifier = FakeNotifier(ok=True)
     avoid3 = {"amazon:l0": "avoid", "amazon:l1": "avoid", "amazon:l2": "avoid"}
     _run(store, tmp_path, notifier, FakeMulti(), _vetter(avoid3))
-    assert "Air Duster 3 <" in notifier.discord[0]
+    assert "[Air Duster 3](<" in notifier.discord[0]
 
 
 def test_target_cap_still_applies_after_vetting(store: Store, tmp_path: Path) -> None:
