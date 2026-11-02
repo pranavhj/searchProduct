@@ -1,6 +1,6 @@
 """Price watch CLI.
 
-  pricewatch run [--item ID ...] [--no-notify]   search every enabled item, report, alert
+  pricewatch run [--item ID ...] [--no-notify] [--local]   search every enabled item, report, alert
   pricewatch list                                show the watchlist
   pricewatch add "query" [--target 30] [--include "a|b"] [--exclude x] ...
   pricewatch remove ID | enable ID | disable ID
@@ -10,8 +10,11 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import dataclasses
 import logging
+import os
 import sys
+import time
 from datetime import datetime
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
@@ -40,18 +43,21 @@ def _setup_logging(verbose: bool) -> None:
         logging.getLogger(noisy).setLevel(logging.WARNING)
 
 
-def _deliver(wl: config.Watchlist, summaries: list, alerts: list, path: Path, notifier: Any) -> bool:
+def _deliver(wl: config.Watchlist, summaries: list, alerts: list, path: Path, notifier: Any,
+             alerts_only: bool = False) -> bool:
     """Send notifications; True if alerts count as delivered.
 
     Discord (full links) is the primary channel when configured; the toast only carries prices,
     so it counts as delivery only when Discord is not set up. No channel at all = report-only setup.
+    alerts_only (frequent local runs): no daily digest, only lines for new alerts.
     """
     from price_watch import report
 
     discord_ok = None
-    if wl.notify.discord_target and (alerts or wl.notify.discord_digest_always):
-        chunks = report.discord_chunks(report.digest(summaries, path, datetime.now()))
-        discord_ok = all([notifier.send_discord(wl.notify.discord_target, c) for c in chunks])
+    if wl.notify.discord_target and (alerts or (wl.notify.discord_digest_always and not alerts_only)):
+        text = report.digest(summaries, path, datetime.now(), alerts_only=alerts_only)
+        discord_ok = all([notifier.send_discord(wl.notify.discord_target, c) for c in report.discord_chunks(text)]) \
+            if text else True
     toast_ok = None
     if wl.notify.toast and alerts:
         body = "; ".join(f"{a.item_id}: ${a.obs.price:.2f}" for a in alerts)
@@ -89,7 +95,7 @@ async def run_items(store: Any, service: Any, wl: config.Watchlist, items: list[
                     geocoder: Any = None, amazon_cheapest: Any = None,
                     local_cheapest: Any = None, amazon_counts: Any = None,
                     page_fetcher: Any = None, vetter: Any = None,
-                    google_shopping: Any = None) -> tuple[str, Path | None]:
+                    google_shopping: Any = None, alerts_only: bool = False) -> tuple[str, Path | None]:
     """One full run. Returns (status, report path). Testable with fake service/notifier/store."""
     from price_watch import analyze, cheap_flags, report, vet
     from price_watch.fetch import FetchResult, fetch_item, resolve_sources
@@ -141,7 +147,7 @@ async def run_items(store: Any, service: Any, wl: config.Watchlist, items: list[
 
         path = report.write(report.render(summaries, run_at, wl.defaults.top_n_report), reports_dir, run_at)
         alerts = [a for s in summaries for a in s.alerts]
-        delivered = notify and _deliver(wl, summaries, alerts, path, notifier)
+        delivered = notify and _deliver(wl, summaries, alerts, path, notifier, alerts_only)
         for a in alerts:
             if delivered:
                 store.record_alert(a.item_id, a.obs.key, a.obs.price, a.kind)
@@ -158,7 +164,42 @@ async def run_items(store: Any, service: Any, wl: config.Watchlist, items: list[
     return status, path
 
 
-async def _run(item_ids: list[str] | None, notify: bool) -> int:
+# Longer than the longest scheduled run (local task limit 90 min), so a lock this old is from a killed run.
+RUN_LOCK_STALE_S = 100 * 60
+DAILY_LOCK_WAIT_S = 20 * 60  # the daily task is killed at 1 h: wait + a ~30 min run must fit
+
+
+def acquire_run_lock(path: Path, now: float | None = None) -> bool:
+    """One run at a time (daily + 2-hourly local runs share the DB and the sent-alert records)."""
+    now = time.time() if now is None else now
+    try:
+        if now - path.stat().st_mtime < RUN_LOCK_STALE_S:
+            return False
+        path.unlink()
+        log.warning("removed stale run lock %s", path)
+    except FileNotFoundError:
+        pass
+    try:
+        with path.open("x", encoding="utf-8") as f:
+            f.write(str(os.getpid()))
+    except FileExistsError:
+        return False
+    return True
+
+
+def local_only(items: list[WatchItem], default_sources: list[str]) -> list[WatchItem]:
+    """Copies of items restricted to pickup sources (FB / Craigslist / OfferUp); items with none are dropped."""
+    from price_watch.fetch import LOCAL_SOURCES
+
+    out = []
+    for i in items:
+        sources = [s for s in (i.sources or default_sources) if s in LOCAL_SOURCES]
+        if sources:
+            out.append(dataclasses.replace(i, sources=sources))
+    return out
+
+
+async def _run(item_ids: list[str] | None, notify: bool, local: bool = False) -> int:
     from price_watch import notify as notifier
     from price_watch.store import Store
 
@@ -172,6 +213,8 @@ async def _run(item_ids: list[str] | None, notify: bool) -> int:
             log.error("unknown item ids: %s", sorted(missing))
             return 2
     items = [i for i in wl.items if i.enabled and (not item_ids or i.id in item_ids)]
+    if local:
+        items = local_only(items, wl.defaults.sources)
     if not items:
         log.warning("nothing to watch (no enabled items)")
         return 0
@@ -194,12 +237,14 @@ async def _run(item_ids: list[str] | None, notify: bool) -> int:
                 return await vet.vet_listings(store, item, to_vet, peers, wl.defaults, runner,
                                               detail=amazon_detail.fetch_detail,
                                               reference=amazon_detail.search_reference, budget=budget)
-        status, path = await run_items(store, ShoppingDealsService(), wl, items, notify, notifier, config.REPORTS_DIR,
+        reports_dir = config.REPORTS_DIR / "local" if local else config.REPORTS_DIR  # keep latest.md = daily run
+        status, path = await run_items(store, ShoppingDealsService(), wl, items, notify, notifier, reports_dir,
                                        geocoder=geo, amazon_cheapest=fetch_cheapest,
                                        local_cheapest=fetch_cheapest_local, amazon_counts=fetch_review_counts,
                                        page_fetcher=fetch_product_page, vetter=vetter,
                                        google_shopping=GoogleShopping(wl.defaults.serpapi_reserve, store,
-                                                                      wl.defaults.google_cache_days))
+                                                                      wl.defaults.google_cache_days),
+                                       alerts_only=local)
     print(path)
     return 1 if status == "failed" else 0
 
@@ -285,6 +330,8 @@ def main(argv: list[str] | None = None) -> int:
     r = sub.add_parser("run")
     r.add_argument("--item", action="append", help="only this item id (repeatable)")
     r.add_argument("--no-notify", action="store_true", help="report only; no Discord/toast, alerts not marked sent")
+    r.add_argument("--local", action="store_true",
+                   help="pickup sources only (FB/Craigslist/OfferUp); Discord only for new good deals, no digest")
     sub.add_parser("list")
     a = sub.add_parser("add")
     a.add_argument("query")
@@ -307,13 +354,28 @@ def main(argv: list[str] | None = None) -> int:
     _setup_logging(args.verbose)
 
     if args.cmd == "run":
+        lock = config.DATA_DIR / "run.lock"
+        config.DATA_DIR.mkdir(parents=True, exist_ok=True)
+        deadline = time.time() + (0 if args.local else DAILY_LOCK_WAIT_S)  # local runs skip; daily waits its turn
+        while not acquire_run_lock(lock):
+            if time.time() >= deadline:
+                if args.local:
+                    log.info("another price-watch run is in progress (%s); skipping this local run", lock)
+                    return 0
+                log.error("another price-watch run held %s for %d min; daily run gave up", lock, DAILY_LOCK_WAIT_S // 60)
+                if not args.no_notify:
+                    _crash_alert(RuntimeError(f"another run held {lock.name} for {DAILY_LOCK_WAIT_S // 60} min"))
+                return 1
+            time.sleep(30)
         try:
-            return asyncio.run(_run(args.item, notify=not args.no_notify))
+            return asyncio.run(_run(args.item, notify=not args.no_notify, local=args.local))
         except Exception as exc:  # e.g. a broken venv: ImportError before any item runs
             log.exception("run crashed before finishing")
             if not args.no_notify:
                 _crash_alert(exc)
             return 1
+        finally:
+            lock.unlink(missing_ok=True)
     if args.cmd == "list":
         return _cmd_list()
     if args.cmd == "add":

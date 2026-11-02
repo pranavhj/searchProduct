@@ -76,7 +76,11 @@ set) + Windows toast; each listing alerted once per price level.
 
 ## Available Automation
 - `pricewatch list | add "query" --target 30 --include "a|b" --exclude x | remove/enable/disable ID | history ID`
-- `pricewatch run [--item ID] [--no-notify]` — manual run (`--no-notify` = report only)
+- `pricewatch run [--item ID] [--no-notify] [--local]` — manual run (`--no-notify` = report only; `--local` =
+  FB/Craigslist/OfferUp only, report in `reports/price-watch/local/`, Discord only for new good deals, no digest).
+  One run at a time (`data/run.lock`, stale after 100 min): a local run skips if another is running; the daily run waits up to 20 min, then sends a crash alert.
+- Discord digest (daily): one line per deal, link inline; only listings vetted buy/ok (unvetted shown as "unchecked"
+  only when vetting did not run). Avoid / "probably a trap" listings never appear; full detail is in the report.
 - Quality vetting (in every run): each reported listing + alert gets a buy/ok/avoid verdict. price_watch
   gathers evidence (Amazon product page, live `reference_queries` results, DuckDuckGo snippets) and asks the
   LLM Gateway (`127.0.0.1:18789`, project `searchproduct_vet` at `~/projects/searchproduct_vet_llm_gateway`,
@@ -87,4 +91,6 @@ set) + Windows toast; each listing alerted once per price level.
   "buy" needs confirmed requirements. Rules only make a verdict stricter.
 - `tests\run_tests.cmd` — price_watch unit tests (shopping-deals venv)
 - `scripts\install_schedule.ps1 [-Time 08:00] [-Uninstall]` — (re)register the daily task
+- `scripts\install_local_schedule.ps1 [-Start 09:00] [-EveryHours 2] [-Hours 14] [-Uninstall]` — task
+  `searchProduct-PriceWatch-Local`: `run --local` every 2 h, 09:00-23:00
 - Logs: `data/logs/price_watch.log`. eBay public scrape returns 403 → eBay coverage needs the official API keys.

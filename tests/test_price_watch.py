@@ -543,7 +543,7 @@ def _crash_setup(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> list:
     wl = config.Watchlist(items=[], defaults=Defaults(), notify=config.NotifyConfig(discord_target="123", toast=True))
     monkeypatch.setattr(config, "load_watchlist", lambda *a, **k: wl)
 
-    async def boom(item_ids: object, notify: bool) -> int:
+    async def boom(item_ids: object, notify: bool, local: bool = False) -> int:
         raise ModuleNotFoundError("No module named 'dotenv'")
     monkeypatch.setattr(cli, "_run", boom)
     return sent

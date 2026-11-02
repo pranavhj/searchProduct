@@ -164,7 +164,6 @@ SOURCE_SHORT = {"facebook_marketplace": "FB", "craigslist": "CL", "offerup": "Of
                 "ebay": "eBay", "ebay_public": "eBay", "serpapi_google_shopping": "Google"}
 KIND_SHORT = {"target_hit": "TARGET", "big_drop": "DROP", "listing_drop": "CUT"}
 ALERT_ICON = {"TARGET": "🎯", "DROP": "📉", "CUT": "✂️"}
-MAX_ROWS_PER_ITEM = 3
 
 
 def good_listings(s: ItemSummary) -> list[Observation]:
@@ -179,42 +178,52 @@ def good_listings(s: ItemSummary) -> list[Observation]:
     return sorted(ok, key=lambda o: o.price)
 
 
-def _digest_rows(s: ItemSummary) -> list[tuple[Observation, str]]:
-    """(listing, alert flag) rows for one item: its alerted good listings plus the cheapest good one."""
+def _digest_rows(s: ItemSummary, alerts_only: bool = False) -> list[tuple[Observation, str]]:
+    """(listing, alert flag) rows for one item, cheapest first: every alert (alerts are recorded as sent, so
+    none may be dropped here; 'avoid' ones were already withheld, trap-flagged ones are left out) plus,
+    unless alerts_only, the cheapest good listing."""
+    rows = {}
+    for a in s.alerts:
+        if getattr(a.obs.cheap, "verdict", None) == "probably a trap":
+            continue
+        rows[a.obs.key] = (a.obs, KIND_SHORT.get(a.kind, a.kind) + (" retry" if a.message.endswith("(retry)") else ""))
     good = good_listings(s)
-    if not good:
-        return []
-    alerts = {a.obs.key: a for a in s.alerts}
-    picks = [o for o in good if o.key in alerts]
-    if good[0] not in picks:
-        picks.append(good[0])
-    rows = []
-    for o in sorted(picks, key=lambda o: o.price)[:MAX_ROWS_PER_ITEM]:
-        a = alerts.get(o.key)
-        flag = (KIND_SHORT.get(a.kind, a.kind) + (" retry" if a.message.endswith("(retry)") else "")) if a else ""
-        rows.append((o, flag))
-    return rows
+    if good and not alerts_only and good[0].key not in rows:
+        rows[good[0].key] = (good[0], "")
+    return sorted(rows.values(), key=lambda r: r[0].price)
 
 
-def digest(summaries: list[ItemSummary], report_path: Path, run_at: datetime | None = None) -> str:
+def _digest_line(s: ItemSummary, o: Observation, flag: str) -> str:
+    v = s.vettings.get(o.key)
+    target = f" (target {_money(s.item.target_price)})" if s.item.target_price is not None else ""
+    where = SOURCE_SHORT.get(o.source, o.source)
+    if o.distance_mi is not None:
+        where += f" {o.distance_mi:.0f} mi"
+    icon = f"{ALERT_ICON.get(flag.split()[0], '')} {flag} · " if flag else "• "
+    title = _cell(o.title).replace("[", "(").replace("]", ")")[:60]
+    return (f"{icon}**{s.item.id}** · **{_money(o.price)}**{target} · {v.verdict if v else 'unchecked'} · "
+            f"{where} · [{title}](<{o.url}>)")
+
+
+def digest(summaries: list[ItemSummary], report_path: Path, run_at: datetime | None = None,
+           alerts_only: bool = False) -> str:
     """Discord digest: one line per deal with its link inline (each item's best good listing + alerted good
-    ones); bad listings never shown."""
+    ones); bad listings never shown. alerts_only (frequent local runs): just the alerted lines."""
     alerts = [a for s in summaries for a in s.alerts]
-    table = [(s, o, flag) for s in summaries for o, flag in _digest_rows(s)]
+    table = [(s, o, flag) for s in summaries for o, flag in _digest_rows(s, alerts_only)]
+    when = f" {run_at:%b %d %H:%M}" if run_at and alerts_only else (f" {run_at:%b %d}" if run_at else "")
+    if alerts_only:
+        if not table:
+            return ""
+        lines = [f"**Local pickup watch{when}** — {len(table)} new deal(s) on FB / Craigslist / OfferUp"]
+        lines += [_digest_line(s, o, flag) for s, o, flag in table]
+        lines.append(f"Full report: {report_path}")
+        return "\n".join(lines)
     with_deal = len({s.item.id for s, _, _ in table})
-    when = f" {run_at:%b %d}" if run_at else ""
     lines = [f"**Price watch{when}** — {len(alerts)} alert(s) · {with_deal} of {len(summaries)} items have a good deal"]
-    for s, o, flag in table:
-        v = s.vettings.get(o.key)
-        target = f" (target {_money(s.item.target_price)})" if s.item.target_price is not None else ""
-        where = SOURCE_SHORT.get(o.source, o.source)
-        if o.distance_mi is not None:
-            where += f" {o.distance_mi:.0f} mi"
-        icon = f"{ALERT_ICON.get(flag.split()[0], '')} {flag} · " if flag else "• "
-        title = _cell(o.title).replace("[", "(").replace("]", ")")[:60]
-        lines.append(f"{icon}**{s.item.id}** · **{_money(o.price)}**{target} · {v.verdict if v else 'unchecked'} · "
-                     f"{where} · [{title}](<{o.url}>)")
-    none = [s.item.id for s in summaries if not good_listings(s)]
+    lines += [_digest_line(s, o, flag) for s, o, flag in table]
+    shown = {s.item.id for s, _, _ in table}
+    none = [s.item.id for s in summaries if s.item.id not in shown]
     if none:
         lines.append(f"No good deal yet: {', '.join(none)}")
     missing = [s.item.id for s in summaries if not s.item.requirements]
