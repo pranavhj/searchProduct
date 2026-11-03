@@ -602,6 +602,80 @@
         "Garmin Running Dynamics Pod",
         "COROS POD performance"
       ]
+    },
+    {
+      "id": "motor-775-pair",
+      "query": "775 motor",
+      "enabled": true,
+      "sources": null,
+      "condition": "any",
+      "price_min": 4.0,
+      "price_max": 45.0,
+      "target_price": 20.0,
+      "drop_pct": null,
+      "max_miles": 10.0,
+      "must_include": [
+        "775|rs-775|rs775"
+      ],
+      "exclude": [
+        "gearbox",
+        "gear motor",
+        "geared",
+        "bracket only",
+        "mount only",
+        "power wheels",
+        "36v",
+        "for parts",
+        "not working",
+        "burnt"
+      ],
+      "notes": "Ball launcher rev 4 (two-wheel pitching machine), added 2026-10-31. Need 2 motors. New 2-pack $26.99 Amazon B0D2Y1P5LH (12-24V 12000 RPM, 4.2 stars, live 2026-10-31). Target $20 for the pair is an assumption (not asked) - tune. Single-motor listings: double the price to compare. Buying rule (user 2026-10-31): used/marketplace first; recommend new only if the price difference vs used is very small. Pickup within 10 mi (user).",
+      "requirements": "Two matching 775-size brushed DC motors (RS-775), 12 V, about 10,000-12,000 rpm no-load at 12 V, ball bearings, 5 mm shaft (round or D) so standard 5 mm wheel hubs fit. For a two-wheel ball launcher, so both must be the same model. Plain motors, not geared/gearbox versions (too slow) and not 36 V-only motors. Working, not burnt. Buying rule (user 2026-10-31): used/marketplace first; recommend new only if the price difference vs used is very small. Pickup within 10 miles of Milpitas, otherwise shipped.",
+      "reference_queries": [
+        "775 DC motor 12V 12000RPM 2 pack"
+      ]
+    },
+    {
+      "id": "launcher-wheels-110-125mm",
+      "query": "scooter wheels",
+      "enabled": false,
+      "sources": null,
+      "condition": "any",
+      "price_min": 2.0,
+      "price_max": 40.0,
+      "target_price": 12.0,
+      "drop_pct": null,
+      "max_miles": 10.0,
+      "must_include": [
+        "wheel"
+      ],
+      "exclude": [
+        "skateboard",
+        "longboard",
+        "scooter deck",
+        "bearings only",
+        "spacer",
+        "wheelchair",
+        "car wheel",
+        "rim",
+        "tire chains",
+        "inline",
+        "rollerblade",
+        "skate wheels",
+        "52mm",
+        "54mm",
+        "56mm",
+        "58mm",
+        "60mm",
+        "80mm",
+        "90mm"
+      ],
+      "notes": "Ball launcher rev 4, added 2026-10-31; changed to 110-125 mm the same day (user wants bigger wheels: fewer rpm and more stored energy, REV4-PLAN.md section 3). Need 2 matching wheels. They get a 5 mm flange coupler bolted to the core (uxcell-type, about $7 for 4). Target $12 for the pair is an assumption (not asked) - tune. Buying rule (user 2026-10-31): used/marketplace first; recommend new only if the price difference vs used is very small. Pickup within 10 mi (user).",
+      "requirements": "Two matching kick-scooter wheels, 110-125 mm diameter (100 mm only if nothing else), PU tyre on a metal or solid plastic core with spokes or holes so a flange coupler can be bolted on. They will spin at about 3,500-4,600 rpm in a ball launcher, so: round, not worn flat, no cracks, tyre firmly bonded to the core (no peeling). A whole used scooter is fine if cheap. Not inline-skate or skateboard wheels (too small), not pneumatic tyres, not printed. Buying rule (user 2026-10-31): used/marketplace first; recommend new only if the price difference vs used is very small. Pickup within 10 miles of Milpitas, otherwise shipped.",
+      "reference_queries": [
+        "pro scooter wheels 110mm pair",
+        "pro scooter wheels 120mm pair"
+      ]
     }
   ]
 }
