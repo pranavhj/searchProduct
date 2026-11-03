@@ -20,6 +20,8 @@ One row per item. Status: `want` → `searching` → `found` → `bought` / `dro
 | Webcam x4 (same model; test 1 first) | $25 each (assumed) | used first | 1080p30 OK, MJPEG, lockable exposure/focus/WB on Windows, reliable | searching | FB Milpitas 2026-10-30: C920S $20 San Jose https://www.facebook.com/marketplace/item/2155873988344260 ; C920 $32 Sunnyvale https://www.facebook.com/marketplace/item/2021456178570845 ; C922-class $50 Milpitas https://www.facebook.com/marketplace/item/2267441474091377 |
 | Tripods x4 (webcam, desk height 20-60 in) | $8 each (assumed) | used first | 1/4-20 mount, holds <1 lb, stable | searching | not yet priced |
 | Activforce 2 | $60 used only | used (new ~$90) | working unit, only under ~$60 | searching | none yet |
+| 775 DC motors x2 (ball launcher) | $20 pair (assumed) | used first | 2 matching RS-775, 12 V, ~10-12k rpm, 5 mm shaft, not geared; pickup ≤ 10 mi | searching | new 2-pack $26.99 Amazon https://www.amazon.com/dp/B0D2Y1P5LH (2026-10-31) |
+| Launcher wheels x2, 110-125 mm scooter (ball launcher) | $12 (assumed) | used first | 2 matching kick-scooter wheels, round, uncracked, tyre well bonded; core takes a bolted 5 mm flange coupler; pickup ≤ 10 mi | dropped | 2026-10-31: user will 3D-print the wheels instead; watch disabled |
 | Garmin Running Dynamics Pod + watch (P3) | later | used first | L/R ground-contact-time balance; COROS POD alternative | want (P3, watch disabled) | not yet priced |
 
 ## Marketplace saved searches / alerts (set up 2026-11-03, account pranav.hj.umd@gmail.com)
