@@ -22,6 +22,27 @@ One row per item. Status: `want` → `searching` → `found` → `bought` / `dro
 | Activforce 2 | $60 used only | used (new ~$90) | working unit, only under ~$60 | searching | none yet |
 | Garmin Running Dynamics Pod + watch (P3) | later | used first | L/R ground-contact-time balance; COROS POD alternative | want (P3, watch disabled) | not yet priced |
 
+## Marketplace saved searches / alerts (set up 2026-11-03, account pranav.hj.umd@gmail.com)
+The sites notify on new listings themselves; the daily price watch still runs. Change or remove them on the site.
+
+| Search term | Max price | Facebook alert (San Jose, 55 mi) | Craigslist email alert (95035, 25 mi) |
+|---|---|---|---|
+| logitech c920 | $35 | on | on |
+| logitech c922 | $35 | on | on |
+| tripod | $15 | on | on |
+| yoga mat | $15 | on | on |
+| ankle weights | $25 | on | on |
+| resistance bands | $25 | on | on |
+| activforce | $60 | on | on |
+| gaming pc | $100 | on | on |
+| robot arm | $200 | on | on |
+
+- Facebook: facebook.com/marketplace/you/alerts. Older alert "pc" (Milpitas, 55 mi, no price cap) kept;
+  M.2 NVMe SSD, 43 inch tv, model rocket, toyota, hyundai deleted 2026-11-03 at the user's request.
+- Craigslist: accounts.craigslist.org/login/home?show_tab=searches (had none before).
+- OfferUp: the website has no saved searches (only "Saved items"); saved-search alerts need the OfferUp phone app.
+- Not set up on the sites: PoE switch, plyo box (user's choice), Garmin pod (P3).
+
 ## Notes per item
 <!-- ### <Item name>
 - Specs/models acceptable:
