@@ -92,5 +92,6 @@ set) + Windows toast; each listing alerted once per price level.
 - `tests\run_tests.cmd` — price_watch unit tests (shopping-deals venv)
 - `scripts\install_schedule.ps1 [-Time 08:00] [-Uninstall]` — (re)register the daily task
 - `scripts\install_local_schedule.ps1 [-Start 09:00] [-EveryHours 2] [-Hours 14] [-Uninstall]` — task
-  `searchProduct-PriceWatch-Local`: `run --local` every 2 h, 09:00-23:00
+  `searchProduct-PriceWatch-Local`: `run --local` every 2 h, 09:00-23:00. **Not installed** (user removed it
+  2026-11-03: wants the sites' own saved searches instead, created via Claude in Chrome in their logged-in browser).
 - Logs: `data/logs/price_watch.log`. eBay public scrape returns 403 → eBay coverage needs the official API keys.
