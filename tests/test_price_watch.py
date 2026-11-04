@@ -387,6 +387,25 @@ def test_geocoder_caches_misses_after_unbounded_retry(tmp_path: Path) -> None:
     assert (first, second, http.calls) == (None, None, 2)
 
 
+class RecordingHttp(FakeHttp):
+    def __init__(self, rows: list) -> None:
+        super().__init__(rows)
+        self.params: list[dict] = []
+
+    def get(self, url: str, params: dict) -> "RecordingHttp":
+        self.params.append(dict(params))
+        return super().get(url, params)
+
+
+def test_bay_area_lookup_only_matches_towns_not_streets_or_parks(tmp_path: Path) -> None:
+    # 2026-11-03: "Carmichael, California" matched Carmichael Park in Santa Clara (8 mi instead of ~100).
+    import sqlite3
+    from price_watch.geo import Geocoder
+    http = RecordingHttp([{"lat": "38.6171", "lon": "-121.3283"}])
+    Geocoder(sqlite3.connect(tmp_path / "g.db"), client=http).distance_miles("Carmichael, California")
+    assert http.params[0].get("featureType") == "settlement"
+
+
 def test_cheapest_url_sorts_by_price_and_filters_band_in_cents() -> None:
     from price_watch.amazon_cheap import cheapest_url
     assert cheapest_url("power bank", 8, 45) == \
@@ -473,7 +492,7 @@ def test_geocoder_outage_is_not_cached_and_trips_breaker(tmp_path: Path, monkeyp
     http = BrokenHttp()
     g = geo_mod.Geocoder(sqlite3.connect(tmp_path / "g.db"), client=http)
     results = [g.distance_miles(p) for p in ["a, ca", "a, ca", "b, ca", "c, ca", "d, ca", "e, ca"]]
-    cached = g.conn.execute("SELECT COUNT(*) FROM geocache").fetchone()[0]
+    cached = g.conn.execute("SELECT COUNT(*) FROM geocache_v2").fetchone()[0]
     assert (results, http.calls, cached, g.error is not None) == ([None] * 6, 3, 0, True)
 
 

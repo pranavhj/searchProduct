@@ -24,7 +24,8 @@ NON_PLACES = {"remote", "local pickup", "pickup", "local", "shipping", "nationwi
               "north", "south", "east", "west", "central", "bay area", "sf bay area", "sfbay", "area"}
 
 CACHE_SCHEMA = """
-CREATE TABLE IF NOT EXISTS geocache (
+DROP TABLE IF EXISTS geocache;  -- v1 cached street/park matches (fixed 2026-11-03)
+CREATE TABLE IF NOT EXISTS geocache_v2 (
     place TEXT PRIMARY KEY,
     lat REAL,
     lon REAL,
@@ -80,7 +81,8 @@ class Geocoder:
             time.sleep(wait)
         params: dict[str, str | int] = {"q": place, "format": "json", "limit": 1, "countrycodes": "us"}
         if bounded:
-            params |= {"viewbox": BAY_VIEWBOX, "bounded": 1}
+            # Towns/neighborhoods only: without this, "Carmichael" matched a Santa Clara park, "Ontario" a San Jose street.
+            params |= {"viewbox": BAY_VIEWBOX, "bounded": 1, "featureType": "settlement"}
         self._last_call = time.monotonic()
         resp = self.client.get(NOMINATIM, params=params)
         resp.raise_for_status()
@@ -88,7 +90,7 @@ class Geocoder:
         return (float(rows[0]["lat"]), float(rows[0]["lon"])) if rows else None
 
     def lookup(self, place: str) -> tuple[float, float] | None:
-        row = self.conn.execute("SELECT lat, lon, fetched_at FROM geocache WHERE place=?", (place,)).fetchone()
+        row = self.conn.execute("SELECT lat, lon, fetched_at FROM geocache_v2 WHERE place=?", (place,)).fetchone()
         if row is not None and row[0] is not None:
             return (row[0], row[1])
         if row is not None and datetime.now(timezone.utc) - datetime.fromisoformat(row[2]) < MISS_TTL:
@@ -106,7 +108,7 @@ class Geocoder:
                 log.error("geocoding disabled for this run after %d failures", BREAKER_AFTER)
             return None  # not cached: retried next run
         self._consecutive_errors = 0
-        self.conn.execute("INSERT OR REPLACE INTO geocache VALUES (?,?,?,?)",
+        self.conn.execute("INSERT OR REPLACE INTO geocache_v2 VALUES (?,?,?,?)",
                           (place, *(coords or (None, None)), datetime.now(timezone.utc).isoformat()))
         self.conn.commit()
         log.debug("geocoded %r -> %s", place, coords)
