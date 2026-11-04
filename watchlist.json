@@ -494,8 +494,8 @@
       "sources": null,
       "condition": "any",
       "price_min": 40.0,
-      "price_max": 80.0,
-      "target_price": 50.0,
+      "price_max": 120.0,
+      "target_price": 80.0,
       "drop_pct": null,
       "max_miles": 15.0,
       "must_include": [
@@ -516,7 +516,7 @@
         "iso ",
         "looking for"
       ],
-      "notes": "Interview 2026-11-04: pair of adjustable dumbbells up to 50-52.5 lb each, any mechanism (dial/pin or spin-lock plates), pickup within 15 mi. Live 2026-11-04: used 50-52 lb pairs $99-150 (CL San Jose 2x52 lb $99), new $120-200 (Yaheetech $120, BowFlex Results SelectTech $200). New reference 2026-11-04: spin-lock 90 lb sets (45 lb/hand) $99.99-188 on Amazon (e.g. https://www.amazon.com/dp/B0CZ3HT6X6 $99.99, 4.4*); the $50-70 search prices are the 20-22 lb variants. Used target $50 / cap $80 (50% / 80% of new, CLAUDE.md rule). Buying rule (user 2026-10-30): used/marketplace first; recommend new only if the price difference vs used is very small. Priority (user 2026-11-04): as cheap as possible; willing to wait for a low price.",
+      "notes": "Interview 2026-11-04: pair of adjustable dumbbells up to 50-52.5 lb each, any mechanism (dial/pin or spin-lock plates), pickup within 15 mi. Live 2026-11-04: used 50-52 lb pairs $99-150 (CL San Jose 2x52 lb $99), new $120-200 (Yaheetech $120, BowFlex Results SelectTech $200). New reference 2026-11-04: 90 lb spin-lock set (45 lb/hand) is $153 new on Amazon (user checked the 90 lb variant; search results show $50-70 for the 20-22 lb variants). Used target $80 / cap $120 (about 52% / 80% of new, CLAUDE.md rule). Buying rule (user 2026-10-30): used/marketplace first; recommend new only if the price difference vs used is very small. Priority (user 2026-11-04): as cheap as possible; willing to wait for a low price.",
       "requirements": "A PAIR (two dumbbells) of adjustable dumbbells, each going up to about 50-52.5 lb (45 lb max is acceptable, e.g. a '90 lb' spin-lock set = 45 lb per dumbbell; set totals in titles are for both dumbbells; 25-40 lb max is too light; 90 lb is fine if the price fits). Any mechanism: dial/pin quick-select (BowFlex, NordicTrack, PowerBlock, Yaheetech) or spin-lock plates with collars, as long as all plates/collars are included and the selector works. Not a single dumbbell, not fixed-weight dumbbells, not a stand or rack only. Buying rule (user 2026-10-30): used/marketplace first; recommend new only if the price difference vs used is very small. Priority (user 2026-11-04): as cheap as possible; willing to wait for a low price.",
       "reference_queries": [
         "BowFlex SelectTech 552 adjustable dumbbells",
