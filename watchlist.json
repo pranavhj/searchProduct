@@ -488,6 +488,89 @@
       ]
     },
     {
+      "id": "adjustable-dumbbells",
+      "query": "adjustable dumbbells",
+      "enabled": true,
+      "sources": null,
+      "condition": "any",
+      "price_min": 40.0,
+      "price_max": 150.0,
+      "target_price": 80.0,
+      "drop_pct": null,
+      "max_miles": 15.0,
+      "must_include": [
+        "dumbbell|dumbell|selecttech|powerblock|552|1090",
+        "adjust|selecttech|powerblock|bowflex|ironmaster|spin lock|spin-lock|spinlock|nordictrack|plate|handle|552|1090"
+      ],
+      "exclude": [
+        "ankle",
+        "wrist",
+        "vest",
+        "kettlebell",
+        "stand only",
+        "rack only",
+        "handle only",
+        "replacement",
+        "for parts",
+        "wanted",
+        "iso ",
+        "looking for"
+      ],
+      "notes": "Interview 2026-11-04: pair of adjustable dumbbells up to 50-52.5 lb each, any mechanism (dial/pin or spin-lock plates), pickup within 15 mi. Live 2026-11-04: used 50-52 lb pairs $99-150 (CL San Jose 2x52 lb $99), new $120-200 (Yaheetech $120, BowFlex Results SelectTech $200). Target $80 / cap $150 (top of used range) set after user asked for cheapest (2026-11-04). Buying rule (user 2026-10-30): used/marketplace first; recommend new only if the price difference vs used is very small. Priority (user 2026-11-04): as cheap as possible; willing to wait for a low price.",
+      "requirements": "A PAIR (two dumbbells) of adjustable dumbbells, each going up to about 50-52.5 lb (45 lb max is borderline acceptable; 25-40 lb max is too light; 90 lb is fine if the price fits). Any mechanism: dial/pin quick-select (BowFlex, NordicTrack, PowerBlock, Yaheetech) or spin-lock plates with collars, as long as all plates/collars are included and the selector works. Not a single dumbbell, not fixed-weight dumbbells, not a stand or rack only. Buying rule (user 2026-10-30): used/marketplace first; recommend new only if the price difference vs used is very small. Priority (user 2026-11-04): as cheap as possible; willing to wait for a low price.",
+      "reference_queries": [
+        "BowFlex SelectTech 552 adjustable dumbbells",
+        "Yaheetech adjustable dumbbells 52.5 lb"
+      ]
+    },
+    {
+      "id": "weight-bench",
+      "query": "weight bench",
+      "enabled": true,
+      "sources": null,
+      "condition": "any",
+      "price_min": 10.0,
+      "price_max": 80.0,
+      "target_price": 25.0,
+      "drop_pct": null,
+      "max_miles": 15.0,
+      "must_include": [
+        "bench"
+      ],
+      "exclude": [
+        "smith",
+        "cage",
+        "leg press",
+        "workbench",
+        "work bench",
+        "bench grinder",
+        "benchtop",
+        "bench top",
+        "vise",
+        "piano",
+        "picnic",
+        "park bench",
+        "storage bench",
+        "garden",
+        "dining",
+        "shoe",
+        "pad only",
+        "wanted",
+        "looking for",
+        "for parts",
+        "squat rack",
+        "power rack",
+        "half rack",
+        "uprights"
+      ],
+      "notes": "Interview 2026-11-04: any bench type (flat, adjustable incline, adjustable+foldable); foldable preferred for limited space. Pickup within 15 mi. Live 2026-11-04: used flat $15-50, used adjustable $20-80 (Gold's Gym XR 5.9 $20 San Jose, Reebok $60), new foldable adjustable $45-105 (FLYBIRD $104). Target $25 / cap $80 set after user asked for cheapest (2026-11-04). Buying rule (user 2026-10-30): used/marketplace first; recommend new only if the price difference vs used is very small. Priority (user 2026-11-04): as cheap as possible; willing to wait for a low price.",
+      "requirements": "Standalone workout bench for dumbbell work: flat, adjustable incline (decline optional) or adjustable+foldable are all acceptable; foldable or compact is preferred because space is limited (rank it higher); a large non-folding bench is an acceptable trade-off only if clearly cheaper. Sturdy steel frame, stable, pads not torn, all pins/knobs present. Not a combo with squat rack/uprights/Smith machine/leg press, not a home-gym machine, not a workbench or furniture bench. Buying rule (user 2026-10-30): used/marketplace first; recommend new only if the price difference vs used is very small. Priority (user 2026-11-04): as cheap as possible; willing to wait for a low price.",
+      "reference_queries": [
+        "FLYBIRD adjustable weight bench",
+        "Marcy flat utility bench"
+      ]
+    },
+    {
       "id": "webcam-1080p-mjpeg",
       "query": "webcam 1080p",
       "enabled": true,
