@@ -10,7 +10,7 @@ One row per item. Status: `want` → `searching` → `found` → `bought` / `dro
 | Desk motor driver (replace fried BTS7960) + desk cable management | cheap | new | single DC motor, Arduino PWM; supply voltage TBD | dropped | BTS7960 2-pack $14.99 https://www.amazon.com/dp/B0D732VYGZ ; Cytron MD13S $15.30 https://www.amazon.com/dp/B07CW3GRL6 (2026-10-04) |
 | Electric precision screwdriver (slim pen, fwd/rev buttons, bit set) | cheap | either | thin, 2 buttons, decent torque, many bits | dropped | HOTO 25-in-1 $32.99 Amazon https://www.amazon.com/dp/B09MR5HFPB ; cheapest SHARDEN $19.99 https://www.amazon.com/dp/B0CY2LCWBZ (2026-10-04) |
 | Smart plug (works with Alexa) | cheap | either | Alexa-compatible, no hub; qty not given | dropped | Kasa HS103P2 2-pack $14.99 Amazon https://www.amazon.com/dp/B07B8W2KHZ ; used: Amazon Smart Plug NEW $8 Craigslist Santa Clara (2026-10-05) |
-| Desktop PC (home server / VMs) | $100 (raised from $30, 2026-10-08) | either | no RAM minimum (64 GB requirement dropped 2026-10-29), ≥256 GB storage (lowered from 512 GB, 2026-10-08), complete machine; **GPU included (strict)**; **total < $100 (strict)** (both strict since 2026-10-29) | searching | none ≤ $100; complete 64 GB Dell T5810 renewed $358.99 Amazon (2026-10-08) |
+| Desktop workstation (CAD / MATLAB; spec 2026-11-03) | great < $150, fair $150-250, ≤ $300 only Precision/Z with workstation GPU | either | Intel 8th gen+ / Ryzen 2000+, ≥ 6 cores, ≥ 16 GB DDR4 (32 GB-capable), Win 11 officially; storage optional (user has a spare 512 GB SSD); pickup ≤ 15 mi or shipped | searching | see "Desktop workstation" notes (2026-11-04) |
 | 8-port PoE switch (for 5 Basler GigE cameras) | $40 target (assumed, not asked) | either | gigabit, ≥5 PoE (802.3af/at) ports, ≥30 W, jumbo frames, unmanaged OK, with power brick; pickup ≤ 10 mi | searching | new: TP-Link LS108GP (8 PoE, 62 W) $59.99 https://www.amazon.com/dp/B0CWJMRTWY ; Netgear GS308PP (8 PoE+, 83 W) $69.99 https://www.amazon.com/dp/B082G2G2F8 (Amazon, 2026-10-17); no used listing within 10 mi |
 | Desktop robot arm (desk assistant, not a hobby kit) | $200 | either | factory-built (uArm / DexArm / Dobot / myCobot / Mirobot class), position feedback, complete; pickup ≤ 50 mi or shipped | searching | none ≤ $200; nearest: uArm Swift Pro used $300 + $19.80 eBay https://www.ebay.com/itm/336837689254 ; DexArm unused $444.95 eBay https://www.ebay.com/itm/307164940790 (2026-10-26) |
 | Resistance bands (long loops) | $15 (assumed) | used first | 41 in loop set, light to heavy, 3-5 resistances, no cracks | searching | not yet priced |
@@ -138,7 +138,17 @@ The sites notify on new listings themselves; the daily price watch still runs. C
   - Amazon Smart Plug $10 FB Mountain View https://www.facebook.com/marketplace/item/856371850367085
   - Bundle (TP-Link bulb + Gosund plugs + Amazon plug) $10 FB Danville https://www.facebook.com/marketplace/item/2144310656205987
 
-### Desktop PC (GPU included, < $100; RAM requirement dropped 2026-10-29; ≥256 GB storage) — added 2026-10-06
+### Desktop workstation (CAD / MATLAB) — spec from the user 2026-11-03 (replaces the home-server PC below)
+- Use: SolidWorks, Fusion 360, AutoCAD, MATLAB, coding, light simulation. Full must-haves / nice-to-haves / budget /
+  avoid list is in `watchlist.json` `requirements` of the `cad-pc-*` items (optiplex, precision, hp, lenovo, custom).
+- User priorities: drive less (pickup ≤ 15 mi is my pick, not the user's number); find the right machine, no rush;
+  slightly more is fine if it resells for about the same. 16 GB is fine (user can add RAM); no SSD is fine (spare 512 GB SSD).
+- Caveat: the user's laptop RAM is SO-DIMM; it fits only the Mini/Tiny/Micro models (EliteDesk Mini, ThinkCentre Tiny,
+  OptiPlex Micro), not SFF or tower desktops.
+- 2026-11-03: the distance filter matched town names to Bay Area streets/parks ("Carmichael" = Santa Clara park,
+  8 mi instead of ~100). Fixed in `geo.py` (towns/neighborhoods only); old geocode cache dropped.
+
+### Desktop PC (GPU included, < $100; RAM requirement dropped 2026-10-29; ≥256 GB storage) — added 2026-10-06 — replaced 2026-11-03
 - **Interview 2026-10-08:** use = home server / VMs; target raised to $100; GPU nice-to-have only if
   included (made strict 2026-10-29, with price < $100 also strict); DIY (base PC + RAM) OK if cheaper overall. Watched as `desktop-pc-64gb-ram` + `workstation-64gb-ram` (ids kept for history; RAM filter removed 2026-10-29).
 - Live price tiers 2026-10-08:
