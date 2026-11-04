@@ -983,8 +983,6 @@
       "query": "ryzen gaming pc",
       "enabled": true,
       "sources": [
-        "amazon",
-        "ebay_public",
         "craigslist",
         "offerup",
         "facebook_marketplace"
@@ -1045,7 +1043,7 @@
         "door assembly",
         "motherboard only"
       ],
-      "notes": "2026-11-03 CAD workstation spec (user). Pickup within 15 mi (user: drive less; 15 is my pick). Custom builds: Ryzen 5 3600+ or Intel 8th gen+ (vetting checks CPU).",
+      "notes": "2026-11-03 CAD workstation spec (user). Pickup within 15 mi (user: drive less; 15 is my pick). Custom builds: Ryzen 5 3600+ or Intel 8th gen+ (vetting checks CPU). Local sources only: Amazon returned bare motherboards for this query (2026-11-04).",
       "max_miles": 15.0,
       "reference_queries": [
         "Dell OptiPlex 7070 i7 refurbished",
