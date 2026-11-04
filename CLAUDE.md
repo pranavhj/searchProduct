@@ -57,7 +57,7 @@ set) + Windows toast; each listing alerted once per price level.
 - Prices are sticker + shipping, **before tax**; `target_price` compares against that.
 - Local pickup listings (FB/Craigslist/OfferUp) farther than the item's `max_miles` (straight line from
   Milpitas, geocoded via OpenStreetMap Nominatim, cached in the DB) or with unknown location are dropped;
-  shippable listings are exempt. Default 25 mi; power bank 10, CAD workstation (`cad-pc-*`) 15. Bay Area lookup matches towns/neighborhoods only (`featureType=settlement`; streets/parks gave false 8-mi hits, fixed 2026-11-03).
+  shippable listings are exempt. Default 25 mi; power bank 10, CAD workstation (`cad-pc-*`), dumbbells and bench 15. Bay Area lookup matches towns/neighborhoods only (`featureType=settlement`; streets/parks gave false 8-mi hits, fixed 2026-11-03).
 - Google Shopping (SerpApi, `tools/price_watch/google_shopping.py`) is a default source: Best Buy / Walmart / Micro Center /
   Newegg etc., searched with the home city so local store stock shows as "<store> store, 9 mi (in stock nearby)". One SerpApi
   search per item per run (Free plan: 250/month); skipped once `defaults.serpapi_reserve` (50) or fewer are left, and for
