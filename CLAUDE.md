@@ -31,6 +31,13 @@ Before searching for or watching any new item, find out what the user actually n
    trade-offs, brand premium the user accepts) and set `reference_queries` to the standard /
    most-recommended product(s) for those answers. Daily vetting judges every listing against these;
    items without `requirements` are flagged in the report and Discord digest until this is done.
+5. **Price new before setting used prices (user rule 2026-11-04).** Before setting any `target_price` /
+   `price_max` that used listings will be judged by, live-price the cheapest acceptable NEW option
+   (Amazon + Google Shopping, a decent-rating brand) in the exact size/variant the requirements need.
+   Search results often show the smallest variant's price (e.g. "20/45/90 lb" sets list the 20 lb price):
+   search the size or open the product page. Defaults, landed cost incl. tax: used target ≈ 50-60% of
+   that new price, used cap ≈ 80% of it; if used can't beat new by that margin, recommend new. Write the
+   new reference (price, link, date) into the item's notes.
 
 ## Workflow
 1. Read `wishlist.md`; for each item in `want`/`searching`, search both servers.
