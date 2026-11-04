@@ -36,8 +36,17 @@ The sites notify on new listings themselves; the daily price watch still runs. C
 | ankle weights | $25 | on | on |
 | resistance bands | $25 | on | on |
 | activforce | $60 | on | on |
-| gaming pc | $100 | on | on |
 | robot arm | $200 | on | on |
+
+CAD workstation (updated 2026-11-04; Facebook San Jose 20 mi, Craigslist 95035 15 mi):
+
+| Search term | Max price | Facebook alert | Craigslist email alert |
+|---|---|---|---|
+| optiplex | $250 | on | on |
+| dell precision | $300 | on | on |
+| elitedesk | $250 | on | on |
+| thinkcentre | $250 | on | on |
+| gaming pc | $250 (was $100) | on (edited) | on (old $100 search deleted, re-saved) |
 
 - Facebook: facebook.com/marketplace/you/alerts. Older alert "pc" (Milpitas, 55 mi, no price cap) kept;
   M.2 NVMe SSD, 43 inch tv, model rocket, toyota, hyundai deleted 2026-11-03 at the user's request.
