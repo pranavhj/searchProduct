@@ -61,6 +61,22 @@ def test_deep_only_drops_unmarked_items_and_non_pickup_sources() -> None:
     assert [(i.id, i.sources) for i in got] == [("pc", ["facebook_marketplace", "craigslist"])]
 
 
+def test_vetting_checks_only_cheapest_alerts_so_one_big_item_cannot_use_the_whole_budget() -> None:
+    import asyncio
+
+    from price_watch.__main__ import MAX_ALERTS_VETTED, _vet_summary
+    obs = [SimpleNamespace(key=f"k{n}", price=float(n)) for n in range(30)]
+    summary = SimpleNamespace(fetch=SimpleNamespace(observations=obs), vettings={}, skipped_alerts=[],
+                              alerts=[SimpleNamespace(obs=o, kind="target_hit") for o in obs])
+    seen: list = []
+
+    async def vetter(item: object, to_vet: list, peers: list) -> dict:
+        seen.extend(to_vet)
+        return {}
+    asyncio.run(_vet_summary(vetter, SimpleNamespace(id="webcam"), summary, 5))
+    assert len(seen) == 5 + MAX_ALERTS_VETTED
+
+
 def test_watchlist_deep_items_load() -> None:
     from price_watch.config import load_watchlist
     wl = load_watchlist()
