@@ -70,12 +70,18 @@ def _deliver(wl: config.Watchlist, summaries: list, alerts: list, path: Path, no
     return True
 
 
+MAX_ALERTS_VETTED = 8  # per item per run, beyond the top-N report rows; the rest are held and retried
+
+
 async def _vet_summary(vetter: Any, item: WatchItem, summary: Any, top_n: int) -> None:
     """Vet reported listings + alert listings; withhold alerts on listings vetted 'avoid', then cap."""
     from price_watch import analyze
 
     obs = sorted(summary.fetch.observations, key=lambda o: o.price)
-    to_vet = obs[:top_n] + [a.obs for a in summary.alerts if a.obs not in obs[:top_n]]
+    # Only MAX_TARGET_ALERTS_PER_ITEM alerts are sent per run, so vet just the cheapest few: vetting all of a
+    # big deep-search item (99 webcam alerts, 2026-11-05) used up the run budget before later items got any.
+    alert_obs = sorted({a.obs.key: a.obs for a in summary.alerts}.values(), key=lambda o: o.price)
+    to_vet = obs[:top_n] + [o for o in alert_obs if o not in obs[:top_n]][:MAX_ALERTS_VETTED]
     try:
         summary.vettings = await vetter(item, to_vet, obs)
     except Exception:  # vetting is advisory: never lose the price report over it
