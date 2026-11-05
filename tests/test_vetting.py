@@ -120,6 +120,37 @@ def _run_vetted(store: Store, tmp_path: Path, notifier: FakeNotifier, verdict: s
                           datetime(2026, 10, 1, 8).astimezone(), vetter=_fake_vetter(verdict)))
 
 
+def _run_good_only(store: Store, tmp_path: Path, notifier: FakeNotifier, verdict: str) -> None:
+    from price_watch.__main__ import run_items
+    wl = _wl()
+    asyncio.run(run_items(store, FakeService(25), wl, wl.items, True, notifier, tmp_path,
+                          datetime(2026, 10, 1, 8).astimezone(), vetter=_fake_vetter(verdict),
+                          alerts_only=True, good_only=True))
+
+
+def test_good_only_run_sends_nothing_for_unvetted_alert(store: Store, tmp_path: Path) -> None:
+    notifier = FakeNotifier(ok=True)
+    _run_good_only(store, tmp_path, notifier, "unvetted")
+    assert notifier.discord == []
+
+
+def test_good_only_run_keeps_unvetted_alert_pending_for_retry(store: Store, tmp_path: Path) -> None:
+    _run_good_only(store, tmp_path, FakeNotifier(ok=True), "unvetted")
+    assert list(store.pending("duster")) != []
+
+
+def test_good_only_run_sends_alert_vetted_ok(store: Store, tmp_path: Path) -> None:
+    notifier = FakeNotifier(ok=True)
+    _run_good_only(store, tmp_path, notifier, "ok")
+    assert " ok " in notifier.discord[0]
+
+
+def test_good_only_digest_has_no_daily_summary_lines(store: Store, tmp_path: Path) -> None:
+    notifier = FakeNotifier(ok=True)
+    _run_good_only(store, tmp_path, notifier, "ok")
+    assert "No good deal yet" not in notifier.discord[0]
+
+
 def test_run_withholds_alert_on_listing_vetted_avoid(store: Store, tmp_path: Path) -> None:
     notifier = FakeNotifier(ok=True)
     _run_vetted(store, tmp_path, notifier, "avoid")

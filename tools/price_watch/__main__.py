@@ -1,6 +1,6 @@
 """Price watch CLI.
 
-  pricewatch run [--item ID ...] [--no-notify] [--local]   search every enabled item, report, alert
+  pricewatch run [--item ID ...] [--no-notify] [--local | --deep]   search enabled items, report, alert
   pricewatch list                                show the watchlist
   pricewatch add "query" [--target 30] [--include "a|b"] [--exclude x] ...
   pricewatch remove ID | enable ID | disable ID
@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import dataclasses
+import functools
 import logging
 import os
 import sys
@@ -95,8 +96,12 @@ async def run_items(store: Any, service: Any, wl: config.Watchlist, items: list[
                     geocoder: Any = None, amazon_cheapest: Any = None,
                     local_cheapest: Any = None, amazon_counts: Any = None,
                     page_fetcher: Any = None, vetter: Any = None,
-                    google_shopping: Any = None, alerts_only: bool = False) -> tuple[str, Path | None]:
-    """One full run. Returns (status, report path). Testable with fake service/notifier/store."""
+                    google_shopping: Any = None, alerts_only: bool = False,
+                    good_only: bool = False) -> tuple[str, Path | None]:
+    """One full run. Returns (status, report path). Testable with fake service/notifier/store.
+
+    good_only: send only alerts whose listing was vetted buy/ok (user 2026-11-05: "only come to me
+    with really good deals"); the rest stay pending and are retried next run."""
     from price_watch import analyze, cheap_flags, report, vet
     from price_watch.fetch import FetchResult, fetch_item, resolve_sources
 
@@ -145,8 +150,13 @@ async def run_items(store: Any, service: Any, wl: config.Watchlist, items: list[
             except Exception:  # evidence is extra; never lose the report/alerts over it
                 log.exception("item=%s vetting failed", summary.item.id)
 
+        held = hold_unproven_alerts(summaries) if good_only and vetter is not None else []
         path = report.write(report.render(summaries, run_at, wl.defaults.top_n_report), reports_dir, run_at)
         alerts = [a for s in summaries for a in s.alerts]
+        for a in held:  # not vetted buy/ok yet (e.g. vetting budget ran out): retry on the next run
+            store.save_pending(a.item_id, a.obs.key, a.obs.price, a.kind, a.old_price, a.message)
+        if held:
+            log.info("%d alert(s) held back: not vetted buy/ok", len(held))
         delivered = notify and _deliver(wl, summaries, alerts, path, notifier, alerts_only)
         for a in alerts:
             if delivered:
@@ -162,6 +172,21 @@ async def run_items(store: Any, service: Any, wl: config.Watchlist, items: list[
         store.finish_run(run_id, status, summary_text)
         log.info("run %d %s: %s", run_id, status, summary_text)
     return status, path
+
+
+GOOD_VERDICTS = ("buy", "ok")
+
+
+def hold_unproven_alerts(summaries: list) -> list:
+    """Remove alerts not vetted buy/ok from each summary; return them (they go back to pending)."""
+    held = []
+    for s in summaries:
+        keep = []
+        for a in s.alerts:
+            verdict = getattr(s.vettings.get(a.obs.key), "verdict", None)
+            (keep if verdict in GOOD_VERDICTS else held).append(a)
+        s.alerts = keep
+    return held
 
 
 # Longer than the longest scheduled run (local task limit 90 min), so a lock this old is from a killed run.
@@ -199,7 +224,12 @@ def local_only(items: list[WatchItem], default_sources: list[str]) -> list[Watch
     return out
 
 
-async def _run(item_ids: list[str] | None, notify: bool, local: bool = False) -> int:
+def deep_only(items: list[WatchItem], default_sources: list[str]) -> list[WatchItem]:
+    """`run --deep`: only items marked "deep", restricted to pickup sources."""
+    return local_only([i for i in items if i.deep], default_sources)
+
+
+async def _run(item_ids: list[str] | None, notify: bool, local: bool = False, deep: bool = False) -> int:
     from price_watch import notify as notifier
     from price_watch.store import Store
 
@@ -213,7 +243,10 @@ async def _run(item_ids: list[str] | None, notify: bool, local: bool = False) ->
             log.error("unknown item ids: %s", sorted(missing))
             return 2
     items = [i for i in wl.items if i.enabled and (not item_ids or i.id in item_ids)]
-    if local:
+    if deep:  # selected items only, pickup sources only, scrolled deeper
+        items = deep_only(items, wl.defaults.sources)
+        wl.defaults.max_results_local = wl.defaults.deep_max_results_local
+    elif local:
         items = local_only(items, wl.defaults.sources)
     if not items:
         log.warning("nothing to watch (no enabled items)")
@@ -237,14 +270,18 @@ async def _run(item_ids: list[str] | None, notify: bool, local: bool = False) ->
                 return await vet.vet_listings(store, item, to_vet, peers, wl.defaults, runner,
                                               detail=amazon_detail.fetch_detail,
                                               reference=amazon_detail.search_reference, budget=budget)
-        reports_dir = config.REPORTS_DIR / "local" if local else config.REPORTS_DIR  # keep latest.md = daily run
+        # keep latest.md = daily run
+        reports_dir = config.REPORTS_DIR / ("deep" if deep else "local" if local else "")
+        local_cheapest = (functools.partial(fetch_cheapest_local, pages=wl.defaults.deep_pages) if deep
+                          else fetch_cheapest_local)
+        # Every run is alerts-only and sends only vetted buy/ok deals (user 2026-11-05: no daily digest).
         status, path = await run_items(store, ShoppingDealsService(), wl, items, notify, notifier, reports_dir,
                                        geocoder=geo, amazon_cheapest=fetch_cheapest,
-                                       local_cheapest=fetch_cheapest_local, amazon_counts=fetch_review_counts,
+                                       local_cheapest=local_cheapest, amazon_counts=fetch_review_counts,
                                        page_fetcher=fetch_product_page, vetter=vetter,
                                        google_shopping=GoogleShopping(wl.defaults.serpapi_reserve, store,
                                                                       wl.defaults.google_cache_days),
-                                       alerts_only=local)
+                                       alerts_only=True, good_only=True)
     print(path)
     return 1 if status == "failed" else 0
 
@@ -332,6 +369,8 @@ def main(argv: list[str] | None = None) -> int:
     r.add_argument("--no-notify", action="store_true", help="report only; no Discord/toast, alerts not marked sent")
     r.add_argument("--local", action="store_true",
                    help="pickup sources only (FB/Craigslist/OfferUp); Discord only for new good deals, no digest")
+    r.add_argument("--deep", action="store_true",
+                   help="only items with \"deep\": true; pickup sources scrolled deeper (FB several pages)")
     sub.add_parser("list")
     a = sub.add_parser("add")
     a.add_argument("query")
@@ -356,10 +395,11 @@ def main(argv: list[str] | None = None) -> int:
     if args.cmd == "run":
         lock = config.DATA_DIR / "run.lock"
         config.DATA_DIR.mkdir(parents=True, exist_ok=True)
-        deadline = time.time() + (0 if args.local else DAILY_LOCK_WAIT_S)  # local runs skip; daily waits its turn
+        frequent = args.local or args.deep
+        deadline = time.time() + (0 if frequent else DAILY_LOCK_WAIT_S)  # frequent runs skip; daily waits its turn
         while not acquire_run_lock(lock):
             if time.time() >= deadline:
-                if args.local:
+                if frequent:
                     log.info("another price-watch run is in progress (%s); skipping this local run", lock)
                     return 0
                 log.error("another price-watch run held %s for %d min; daily run gave up", lock, DAILY_LOCK_WAIT_S // 60)
@@ -368,7 +408,7 @@ def main(argv: list[str] | None = None) -> int:
                 return 1
             time.sleep(30)
         try:
-            return asyncio.run(_run(args.item, notify=not args.no_notify, local=args.local))
+            return asyncio.run(_run(args.item, notify=not args.no_notify, local=args.local, deep=args.deep))
         except Exception as exc:  # e.g. a broken venv: ImportError before any item runs
             log.exception("run crashed before finishing")
             if not args.no_notify:
