@@ -215,7 +215,7 @@ def digest(summaries: list[ItemSummary], report_path: Path, run_at: datetime | N
     if alerts_only:
         if not table:
             return ""
-        lines = [f"**Local pickup watch{when}** — {len(table)} new deal(s) on FB / Craigslist / OfferUp"]
+        lines = [f"**Price watch{when}** — {len(table)} new good deal(s)"]
         lines += [_digest_line(s, o, flag) for s, o, flag in table]
         lines.append(f"Full report: {report_path}")
         return "\n".join(lines)

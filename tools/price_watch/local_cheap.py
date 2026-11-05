@@ -50,6 +50,29 @@ def facebook_sort_variables(variables: dict) -> dict:
     return out
 
 
+def facebook_deep_variables(variables: dict, price_min: float | None, price_max: float | None,
+                            sort: str | None, cursor: str | None) -> dict:
+    """Variables for one page of a deep Facebook search: the price band is applied server-side (cents,
+    probed 2026-11-05), so every extra page is in budget; `cursor` is the previous page's end_cursor."""
+    out = json.loads(json.dumps(variables))
+    brp = out["params"]["browse_request_params"]
+    brp["commerce_enable_shipping"] = False  # deep pages otherwise fill up with listings shipped from other states
+    if price_min is not None:
+        brp["filter_price_lower_bound"] = int(price_min * 100)
+    if price_max is not None:
+        brp["filter_price_upper_bound"] = int(price_max * 100)
+    if sort:
+        brp["commerce_search_sort_by"] = sort
+    if cursor:
+        out["cursor"] = cursor
+    return out
+
+
+def facebook_next_cursor(data: dict) -> str | None:
+    info = data.get("data", {}).get("marketplace_search", {}).get("feed_units", {}).get("page_info") or {}
+    return info.get("end_cursor") if info.get("has_next_page") else None
+
+
 async def _craigslist(query, price_min, price_max, limit):
     from shopping_deals_mcp.config import settings
     from shopping_deals_mcp.sources.craigslist import _parse_html
@@ -101,12 +124,64 @@ async def _facebook(query, price_min, price_max, limit):
                                                   price_min=price_min, price_max=price_max)
 
 
+async def _facebook_deep(query: str, price_min: float | None, price_max: float | None, pages: int) -> list:
+    """Scroll Facebook: `pages` pages of 24 in both price-ascending and Facebook's own order
+    (the default order is where mid-priced good-value listings sit; probed 2026-11-05: page 2 had 0 overlap)."""
+    from shopping_deals_mcp.config import settings
+    from shopping_deals_mcp.sources import facebook_marketplace as fb
+
+    coords = fb._resolve_coordinates(None, settings)
+    if not coords:
+        return []
+    headers = fb._facebook_headers()
+    out, seen = [], set()
+    async with httpx.AsyncClient(timeout=max(settings.http_timeout_seconds, 20.0), follow_redirects=True,
+                                 headers=headers) as client:
+        token, referer = await fb._fetch_lsd_token(client, query)
+        post_headers = {**headers, "Accept": "*/*", "Content-Type": "application/x-www-form-urlencoded",
+                        "Origin": "https://www.facebook.com", "Referer": referer, "x-fb-lsd": token}
+        for sort in ("PRICE_ASCEND", None):
+            cursor = None
+            for page in range(pages):
+                payload = fb._search_payload(query=query, latitude=coords[0], longitude=coords[1],
+                                             radius_km=settings.facebook_marketplace_radius_km,
+                                             max_results=24, lsd=token)
+                payload["variables"] = json.dumps(
+                    facebook_deep_variables(json.loads(payload["variables"]), price_min, price_max, sort, cursor),
+                    separators=(",", ":"))
+                try:
+                    resp = await client.post(fb.FACEBOOK_GRAPHQL_URL, data=payload, headers=post_headers)
+                    resp.raise_for_status()
+                    data = fb._loads_graphql_response(resp.text)
+                except (httpx.HTTPError, ValueError) as exc:
+                    if not out:  # nothing yet: let fetch_item record the source error
+                        raise
+                    log.warning("facebook deep sort=%s page=%d failed, keeping %d earlier: %s",
+                                sort or "default", page + 1, len(out), exc)
+                    break
+                got = fb._parse_facebook_marketplace_results(data, max_results=24, price_min=price_min,
+                                                             price_max=price_max)
+                new = [x for x in got if x.id not in seen]
+                seen.update(x.id for x in new)
+                out += new
+                log.debug("facebook deep sort=%s page=%d got=%d new=%d", sort or "default", page + 1, len(got), len(new))
+                cursor = facebook_next_cursor(data)
+                if not cursor:
+                    break
+    return out
+
+
 _FETCHERS = {"craigslist": _craigslist, "offerup": _offerup, "facebook_marketplace": _facebook}
 
 
 async def fetch_cheapest_local(source: str, query: str, price_min: float | None, price_max: float | None,
-                               limit: int) -> list[dict]:
-    listings = await _FETCHERS[source](query, price_min, price_max, limit)
+                               limit: int, pages: int = 1) -> list[dict]:
+    """pages > 1 = deep search: Facebook scrolls `pages` pages in two orders; Craigslist/OfferUp keep
+    everything their single page returns (Craigslist's page holds every match; OfferUp ~50)."""
+    if pages > 1 and source == "facebook_marketplace":
+        listings = await _facebook_deep(query, price_min, price_max, pages)
+    else:
+        listings = await _FETCHERS[source](query, price_min, price_max, limit)
     kept = [x for x in listings if in_band(x.price, price_min, price_max)]
     log.info("%s cheapest-first query=%r got=%d in_band=%d", source, query, len(listings), len(kept))
     return [{"listing": x.model_dump(), "deal_score": None} for x in kept]

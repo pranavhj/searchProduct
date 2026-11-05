@@ -95,7 +95,8 @@ def analyze_item(
     for o in obs:
         pend = pending.get(o.key)
         if pend and o.price <= pend[0]:
-            alerts.append(Alert(item.id, pend[1], o, pend[2], pend[3] + " (retry)"))
+            msg = pend[3] if pend[3].endswith(" (retry)") else pend[3] + " (retry)"  # held alerts come back often
+            alerts.append(Alert(item.id, pend[1], o, pend[2], msg))
     # (a) at/below the user's target price
     if item.target_price is not None:
         for o in [o for o in obs if o.price <= item.target_price]:

@@ -45,6 +45,8 @@ class WatchItem:
     requirements: str = ""
     # Live Amazon searches for the standard / name-brand product(s) the vetting compares against.
     reference_queries: list[str] = field(default_factory=list)
+    # Also searched by `run --deep` (several times a day, scrolls deeper into FB/Craigslist/OfferUp).
+    deep: bool = False
 
 
 @dataclass
@@ -61,6 +63,8 @@ class Defaults:
     serpapi_reserve: int = 50  # skip Google Shopping once this few SerpApi searches are left this month
     google_cache_days: int = 3  # reuse Google Shopping results this many days before searching again (0 = daily)
     vet_cache_days: int = 7  # reuse a verdict (and web-search results) for the same listing+price this long
+    deep_pages: int = 5  # `run --deep`: Facebook pages of 24 per sort order (price-ascending + Facebook's own)
+    deep_max_results_local: int = 300  # `run --deep`: pickup-source cap before the distance filter
 
 
 @dataclass

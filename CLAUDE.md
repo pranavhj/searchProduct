@@ -55,7 +55,7 @@ See `tools-research.md` for other tools considered.
 
 ## Price watch (daily tracked products) — `tools/price_watch/`
 Tracked products live in `watchlist.json` (separate from `wishlist.md`, which is the human notes).
-A Windows scheduled task (`searchProduct-PriceWatch`, daily 08:00, catches up after sleep) runs
+A Windows scheduled task (`searchProduct-PriceWatch`, daily 07:00 since 2026-11-05, catches up after sleep) runs
 `pricewatch.cmd run`: searches each enabled item via `ShoppingDealsService` (no MCP/Claude needed),
 stores every relevant listing in `data/price_watch.db`, writes `reports/price-watch/latest.md`,
 and alerts on: price ≤ `target_price`, best ≥ `drop_pct` below the 30-day median (after 3 days),
@@ -83,11 +83,19 @@ set) + Windows toast; each listing alerted once per price level.
 
 ## Available Automation
 - `pricewatch list | add "query" --target 30 --include "a|b" --exclude x | remove/enable/disable ID | history ID`
-- `pricewatch run [--item ID] [--no-notify] [--local]` — manual run (`--no-notify` = report only; `--local` =
+- **Alerts policy (user 2026-11-05):** every run is alerts-only (no daily digest) and sends only alerts whose
+  listing was vetted buy/ok; unvetted ones stay pending and are retried next run (`run_items(good_only=True)`).
+- **Deep search** for items with `"deep": true` (CAD workstation `cad-pc-*`, dumbbells, bench, webcam):
+  `pricewatch run --deep` = pickup sources only, Facebook scrolled `defaults.deep_pages` (5) pages of 24 in both
+  price-ascending and Facebook's own order, price band + local-pickup-only applied server-side (probed 2026-11-05:
+  cursor paging works, page 2 had 0 overlap; amounts are cents); Craigslist keeps its whole page (it holds every
+  match); OfferUp ~50 (its next page needs a different API - not done). Task `searchProduct-PriceWatch-Deep`
+  at 08:00, 12:00, 16:00, 20:00; reports in `reports/price-watch/deep/`. Daily run moved to 07:00 so they don't collide.
+- `pricewatch run [--item ID] [--no-notify] [--local | --deep]` — manual run (`--no-notify` = report only; `--local` =
   FB/Craigslist/OfferUp only, report in `reports/price-watch/local/`, Discord only for new good deals, no digest).
   One run at a time (`data/run.lock`, stale after 100 min): a local run skips if another is running; the daily run waits up to 20 min, then sends a crash alert.
-- Discord digest (daily): one line per deal, link inline; only listings vetted buy/ok (unvetted shown as "unchecked"
-  only when vetting did not run). Avoid / "probably a trap" listings never appear; full detail is in the report.
+- Discord: alert lines only (the daily digest was turned off 2026-11-05, see Alerts policy); only listings vetted
+  buy/ok. Avoid / "probably a trap" listings never appear; full detail is in the report.
 - Quality vetting (in every run): each reported listing + alert gets a buy/ok/avoid verdict. price_watch
   gathers evidence (Amazon product page, live `reference_queries` results, DuckDuckGo snippets) and asks the
   LLM Gateway (`127.0.0.1:18789`, project `searchproduct_vet` at `~/projects/searchproduct_vet_llm_gateway`,
