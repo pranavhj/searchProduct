@@ -1370,6 +1370,48 @@
       ],
       "requirements": "Engineering workstation for CAD (SolidWorks, Fusion 360, AutoCAD), MATLAB, coding and light simulation. MUST: CPU Intel 8th gen or newer (i5/i7-8xxx, 9xxx, 10xxx+) or AMD Ryzen 2000 or newer, officially supported by Windows 11; 6 or more cores (4-core CPUs = avoid; i3/Pentium/Celeron = avoid); 16GB DDR4 or more and able to take 32GB (less than 16GB = avoid; 16GB is fine, the user will add RAM); Windows 10/11 or able to run Windows 11 without a workaround; working and tested, seller with a decent rating. Storage is NOT a deal-breaker: the user has a spare 512GB SSD, so an HDD-only or no-drive machine is acceptable (note it). AVOID: Intel 7th gen or older (i7-7700, 6700, 4790 etc.), 4-core CPUs, under 16GB RAM, no specs or no photos, for-parts. NICE: 32GB already installed; dedicated GPU (Nvidia T600/T1000/P1000/P2000/Quadro or GTX 1650 or better); second drive; tower or mid-size case rather than tiny SFF. BUDGET: great under $150; fair $150-250, especially with a dedicated GPU or 32GB; up to $300 only for a Dell Precision or HP Z-series / ThinkStation with a workstation GPU - anything else over $250 = avoid. The user prefers a short drive and can wait for the right machine; paying slightly more is fine if it would resell for about the same.",
       "deep": true
+    },
+    {
+      "id": "walking-pad",
+      "query": "walking pad",
+      "enabled": true,
+      "sources": null,
+      "condition": "any",
+      "price_min": 20.0,
+      "price_max": 100.0,
+      "target_price": 60.0,
+      "drop_pct": null,
+      "max_miles": 25.0,
+      "must_include": [
+        "walking pad|walkingpad|under desk|underdesk|mini treadmill|compact treadmill|folding treadmill"
+      ],
+      "exclude": [
+        "belt only",
+        "motor only",
+        "controller only",
+        "remote only",
+        "for parts",
+        "broken",
+        "not working",
+        "manual treadmill",
+        "curved",
+        "nordictrack",
+        "proform",
+        "peloton",
+        "life fitness",
+        "bowflex",
+        "wanted",
+        "looking for",
+        "desk only",
+        "treadmill mat"
+      ],
+      "notes": "Interview 2026-11-11 (net-cost goal: money back after resale). Live asking prices 2026-11-11, not sold prices (eBay sold-comps lookup is down: 401, keys missing): used generic/UREVO walking pads $40-100 (UREVO FB Concord $40, Craigslist UREVO Strol U1 $95-100 SF), used WalkingPad C2 $225-250 FB Mountain View/Modesto (new C2 $399 Amazon = ~60%), used WalkingPad A1 Pro $320 SF. New: unbranded Amazon $78-115, UREVO B097BKS6Z9 $134.99 https://www.amazon.com/dp/B097BKS6Z9, FOUSAE 10% incline $159.99, WalkingPad B0D2ZVB8DJ $349. Cheapest reputable new = UREVO $134.99 (+tax ~$148); target $60 / cap $100 (about 45% / 74% of it; cap = user's $100 cash limit). Tax is not owed on private-party purchases, so used saves ~9% too. Low-priced used units hold their price (unbranded $50-65 asks are close to what they cost new), so the expected loss on a $60 purchase is small; a $225+ WalkingPad loses $50+ even at 60% resale. Assumptions (not asked): max_miles 25, target $60, 'deep' search on.",
+      "requirements": "Walking pad for walking only, under a desk (user 2026-11-11): top speed ~4 mph is enough, no running. Goal is the lowest NET cost: buy so that selling it again in under 6 months returns about what was paid; the user does not need it to last for years. Cash limit about $100. Incline is nice to have, not required (the user picked both 'incline' and 'none of these'; treated as a nice-to-have). Must be a complete working unit with its remote/controller and power adapter, belt not worn or torn, motor runs smoothly (seller says it was tested or is like new). Brand matters for resale: UREVO, WalkingPad/KingSmith, Sperax, Sunny Health and similar known names resell more easily than unbranded white-label pads; an unbranded pad is an acceptable trade-off only if clearly cheaper (about $40-50). Not a full-size home treadmill, not a manual (non-motorized) one, not a belt/motor/part sale. Local pickup only is fine; the price must be for the whole unit.",
+      "reference_queries": [
+        "UREVO Smart Walking Pad under desk treadmill",
+        "WalkingPad C2 foldable"
+      ],
+      "deep": true
     }
   ]
 }
