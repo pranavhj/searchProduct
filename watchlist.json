@@ -282,7 +282,7 @@
     {
       "id": "poe-switch-8port",
       "query": "8 port gigabit PoE switch",
-      "enabled": true,
+      "enabled": false,
       "sources": null,
       "condition": "any",
       "price_min": 15.0,
@@ -368,7 +368,7 @@
     {
       "id": "resistance-bands-loop",
       "query": "resistance bands loop set",
-      "enabled": true,
+      "enabled": false,
       "sources": null,
       "condition": "any",
       "price_min": 3.0,
@@ -399,7 +399,7 @@
     {
       "id": "plyo-box-foam",
       "query": "foam plyo box",
-      "enabled": true,
+      "enabled": false,
       "sources": null,
       "condition": "any",
       "price_min": 10.0,
@@ -428,7 +428,7 @@
     {
       "id": "exercise-mat-yoga",
       "query": "yoga mat",
-      "enabled": true,
+      "enabled": false,
       "sources": null,
       "condition": "any",
       "price_min": 2.0,
@@ -460,7 +460,7 @@
     {
       "id": "strap-on-weights",
       "query": "adjustable ankle wrist weights",
-      "enabled": true,
+      "enabled": false,
       "sources": null,
       "condition": "any",
       "price_min": 3.0,
@@ -490,7 +490,7 @@
     {
       "id": "adjustable-dumbbells",
       "query": "adjustable dumbbells",
-      "enabled": true,
+      "enabled": false,
       "sources": null,
       "condition": "any",
       "price_min": 40.0,
@@ -527,7 +527,7 @@
     {
       "id": "weight-bench",
       "query": "weight bench",
-      "enabled": true,
+      "enabled": false,
       "sources": null,
       "condition": "any",
       "price_min": 10.0,
