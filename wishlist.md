@@ -34,9 +34,6 @@ The sites notify on new listings themselves; the daily price watch still runs. C
 | logitech c920 | $35 | on | on |
 | logitech c922 | $35 | on | on |
 | tripod | $15 | on | on |
-| yoga mat | $15 | on | on |
-| ankle weights | $25 | on | on |
-| resistance bands | $25 | on | on |
 | activforce | $60 | on | on |
 | robot arm | $200 | on | on |
 
@@ -52,6 +49,7 @@ CAD workstation (updated 2026-11-04; Facebook San Jose 20 mi, Craigslist 95035 1
 
 - Facebook: facebook.com/marketplace/you/alerts. Older alert "pc" (Milpitas, 55 mi, no price cap) kept;
   M.2 NVMe SSD, 43 inch tv, model rocket, toyota, hyundai deleted 2026-11-03 at the user's request.
+- 2026-11-10: yoga mat, ankle weights, resistance bands alerts deleted on both sites (items dropped).
 - Craigslist: accounts.craigslist.org/login/home?show_tab=searches (had none before).
 - OfferUp: the website has no saved searches (only "Saved items"); saved-search alerts need the OfferUp phone app.
 - Not set up on the sites: PoE switch, plyo box (user's choice), Garmin pod (P3).
