@@ -10,7 +10,7 @@ One row per item. Status: `want` → `searching` → `found` → `bought` / `dro
 | Desk motor driver (replace fried BTS7960) + desk cable management | cheap | new | single DC motor, Arduino PWM; supply voltage TBD | dropped | BTS7960 2-pack $14.99 https://www.amazon.com/dp/B0D732VYGZ ; Cytron MD13S $15.30 https://www.amazon.com/dp/B07CW3GRL6 (2026-10-04) |
 | Electric precision screwdriver (slim pen, fwd/rev buttons, bit set) | cheap | either | thin, 2 buttons, decent torque, many bits | dropped | HOTO 25-in-1 $32.99 Amazon https://www.amazon.com/dp/B09MR5HFPB ; cheapest SHARDEN $19.99 https://www.amazon.com/dp/B0CY2LCWBZ (2026-10-04) |
 | Smart plug (works with Alexa) | cheap | either | Alexa-compatible, no hub; qty not given | dropped | Kasa HS103P2 2-pack $14.99 Amazon https://www.amazon.com/dp/B07B8W2KHZ ; used: Amazon Smart Plug NEW $8 Craigslist Santa Clara (2026-10-05) |
-| Desktop workstation (CAD / MATLAB; spec 2026-11-03) | great < $150, fair $150-250, ≤ $300 only Precision/Z with workstation GPU | either | Intel 8th gen+ / Ryzen 2000+, ≥ 6 cores, ≥ 16 GB DDR4 (32 GB-capable), Win 11 officially; storage optional (user has a spare 512 GB SSD); pickup ≤ 15 mi or shipped | searching | see "Desktop workstation" notes (2026-11-04) |
+| Desktop workstation (CAD / MATLAB; spec 2026-11-03, RAM-focused 2026-11-12) | great < $150, fair $150-250 (esp. 32 GB), ≤ $300 only Precision/Z/ThinkStation with 32 GB | either | RAM first: ≥ 16 GB DDR4 installed, board must take 32 GB, RAM type/form factor must match the board; Intel 8th gen+ / Ryzen 2000+, ≥ 6 cores, Win 11 officially; GPU NOT required (add later: free PCIe x16 slot helps); storage optional (user has a spare 512 GB SSD); pickup ≤ 15 mi or shipped | searching | see "Desktop workstation" notes (2026-11-04, 2026-11-12) |
 | 8-port PoE switch (for 5 Basler GigE cameras) | $40 target (assumed, not asked) | either | gigabit, ≥5 PoE (802.3af/at) ports, ≥30 W, jumbo frames, unmanaged OK, with power brick; pickup ≤ 10 mi | dropped (2026-11-10) | new: TP-Link LS108GP (8 PoE, 62 W) $59.99 https://www.amazon.com/dp/B0CWJMRTWY ; Netgear GS308PP (8 PoE+, 83 W) $69.99 https://www.amazon.com/dp/B082G2G2F8 (Amazon, 2026-10-17); no used listing within 10 mi |
 | Desktop robot arm (desk assistant, not a hobby kit) | $200 | either | factory-built (uArm / DexArm / Dobot / myCobot / Mirobot class), position feedback, complete; pickup ≤ 50 mi or shipped | searching | none ≤ $200; nearest: uArm Swift Pro used $300 + $19.80 eBay https://www.ebay.com/itm/336837689254 ; DexArm unused $444.95 eBay https://www.ebay.com/itm/307164940790 (2026-10-26) |
 | Resistance bands (long loops) | $15 (assumed) | used first | 41 in loop set, light to heavy, 3-5 resistances, no cracks | dropped (2026-11-10) | not yet priced |
@@ -157,6 +157,12 @@ CAD workstation (updated 2026-11-04; Facebook San Jose 20 mi, Craigslist 95035 1
   OptiPlex Micro), not SFF or tower desktops.
 - 2026-11-03: the distance filter matched town names to Bay Area streets/parks ("Carmichael" = Santa Clara park,
   8 mi instead of ~100). Fixed in `geo.py` (towns/neighborhoods only); old geocode cache dropped.
+- 2026-11-12 (user): no powerful GPU needed; no GPU at all is fine (buy later if needed). Focus is RAM and compatibility.
+  Changed in all `cad-pc-*` requirements: GPU moved out of MUST/budget (now NICE only); RAM is the first MUST: ≥ 16 GB
+  installed, DDR4 only, board must accept 32 GB, RAM type/form factor must match the board. A later GPU needs a free
+  PCIe x16 slot, so tower/mid-size is nicer; Mini/SFF models stay in but are noted as no GPU upgrade path.
+  Open questions: (1) should 32 GB installed be a MUST rather than NICE (it is the main RAM lever); (2) form factor: the
+  SO-DIMM laptop RAM caveat above still applies only if you plan to move that RAM into the new machine.
 
 ### Desktop PC (GPU included, < $100; RAM requirement dropped 2026-10-29; ≥256 GB storage) — added 2026-10-06 — replaced 2026-11-03
 - **Interview 2026-10-08:** use = home server / VMs; target raised to $100; GPU nice-to-have only if
